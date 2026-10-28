@@ -225,3 +225,46 @@ test('Ashby: the Draft button on an optional question; the success screen is rec
   });
   await expectTracked(page, panel, extension, form, { question: 'Why Wealthsimple', answer });
 });
+
+test('Greenhouse embedded in a company site: the panel fills the form inside its frame', async ({
+  page,
+  sites,
+  extension,
+}) => {
+  test.setTimeout(150_000);
+  await seedTestProfile(extension);
+  const form = formFixture('greenhouse/mongodb-2026-10-28');
+  await sites.replay(`${form.name}.har`);
+  await stubSideRequests(page.context(), form.ats);
+  await servePublicApi(
+    page.context(),
+    'https://boards-api.greenhouse.io/v1/boards/mongodb/jobs/8258279?questions=true&pay_transparency=true',
+    {
+      title: 'Software Engineer Intern',
+      company_name: 'MongoDB',
+      content: `&lt;p&gt;${DESCRIPTION}&lt;/p&gt;`,
+    },
+  );
+  const { frame, panel } = await openPosting(page, extension, form, '#first_name');
+
+  await clickFill(panel);
+  await expect(fieldRow(panel, 'first_name')).toHaveAttribute('data-outcome', 'filled');
+  await expect(frame.locator('#first_name')).toHaveValue('Sam');
+  expect(await outlineOf(frame, '#first_name')).toBe('solid');
+  expect(await submits(frame)).toBe(0);
+  expect(sites.requests.filter((r) => isSubmission(form, r))).toEqual([]);
+
+  // The embedded board shows its confirmation inside the frame (simulated).
+  await frame.evaluate(() => {
+    history.pushState({}, '', `/embed/job_app/confirmation${location.search}`);
+  });
+  await expect(panel.getByTestId('application-recorded')).toBeVisible({ timeout: 15_000 });
+  const tracker = await extension.openDashboard('tracker');
+  await tracker.getByTestId('application-row').click();
+  await expect(tracker.getByTestId('snapshot-description')).toContainText(DESCRIPTION);
+  await expect(tracker.getByTestId('snapshot-answers')).toContainText('sam.lee@example.com');
+
+  await page.goto(form.url, { waitUntil: 'load' });
+  await expect(panel.getByTestId('already-applied')).toBeVisible({ timeout: 20_000 });
+  expect(extension.errors).toEqual([]);
+});

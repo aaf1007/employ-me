@@ -229,11 +229,27 @@ export const test = base.extend<Fixtures & Options>({
     };
 
     const tabIdOf = async (page: Page) => {
-      const tabId = await serviceWorker.evaluate(async (url) => {
-        const { chrome } = globalThis as unknown as { chrome: ChromeForHarness };
-        const tabs = await chrome.tabs.query({});
-        return tabs.find((tab) => tab.url === url)?.id ?? null;
-      }, page.url());
+      const frameUrls = page.frames().map((frame) => frame.url());
+      const tabId = await serviceWorker.evaluate(
+        async ([url, frames]) => {
+          const { chrome } = globalThis as unknown as { chrome: ChromeForHarness };
+          const tabs = await chrome.tabs.query({});
+          const byUrl = tabs.find((tab) => tab.url === url)?.id;
+          if (byUrl !== undefined) return byUrl;
+          // A company site embedding a form hides its URL (no permission for it):
+          // find the tab by the content script in one of its frames.
+          for (const tab of tabs) {
+            if (tab.id === undefined || tab.url !== undefined) continue;
+            const pong = (await chrome.tabs.sendMessage(tab.id, { type: 'ping' }).then(
+              (answer) => answer,
+              () => null,
+            )) as { url?: string } | null;
+            if (pong?.url !== undefined && frames.includes(pong.url)) return tab.id;
+          }
+          return null;
+        },
+        [page.url(), frameUrls] as const,
+      );
       if (tabId === null) throw new Error(`No tab with URL ${page.url()} visible to the extension`);
       return tabId;
     };
