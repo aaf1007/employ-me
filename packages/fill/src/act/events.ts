@@ -29,11 +29,6 @@ function prototypeOf(value: object): object | null {
 
 const BUBBLES = { bubbles: true, composed: true, cancelable: true } as const;
 
-// jsdom (unit tests) has no PointerEvent; a MouseEvent of the same name is what handlers see there.
-// Chosen per event, not at load: fill must import where there is no page at all (Node unit tests).
-const pointer = (type: string, init: MouseEventInit): MouseEvent =>
-  typeof PointerEvent === 'function' ? new PointerEvent(type, init) : new MouseEvent(type, init);
-
 export function fireInput(el: Element, data?: string): void {
   el.dispatchEvent(
     new InputEvent('input', { ...BUBBLES, ...(data === undefined ? {} : { data, inputType: 'insertText' }) }),
@@ -73,10 +68,16 @@ export function fireKey(el: Element, type: 'keydown' | 'keyup', key: string): vo
 /** pointerdown → mousedown → pointerup → mouseup → click (research §5 "Dropdowns"). */
 export function firePress(el: Element, until: 'mousedown' | 'click' = 'click'): void {
   const init = { ...BUBBLES, button: 0, buttons: 1, view: el.ownerDocument.defaultView };
-  el.dispatchEvent(pointer('pointerdown', init));
+  const up = { ...init, buttons: 0 };
+  // jsdom (unit tests) has no PointerEvent; a MouseEvent of the same name is what handlers see there.
+  // Checked per press, not at load: fill must import where there is no page at all (Node unit tests).
+  const pointers = typeof PointerEvent === 'function';
+  if (pointers) el.dispatchEvent(new PointerEvent('pointerdown', init));
+  else el.dispatchEvent(new MouseEvent('pointerdown', init));
   el.dispatchEvent(new MouseEvent('mousedown', init));
   if (until === 'mousedown') return;
-  el.dispatchEvent(pointer('pointerup', { ...init, buttons: 0 }));
+  if (pointers) el.dispatchEvent(new PointerEvent('pointerup', up));
+  else el.dispatchEvent(new MouseEvent('pointerup', up));
   el.dispatchEvent(new MouseEvent('mouseup', { ...init, buttons: 0 }));
   el.dispatchEvent(new MouseEvent('click', { ...init, buttons: 0 }));
 }
