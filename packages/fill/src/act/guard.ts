@@ -17,7 +17,8 @@ export type ActOperation =
   | 'chooseOption'
   | 'choiceButton'
   | 'file'
-  | 'addAnother';
+  | 'addAnother'
+  | 'typeaheadOption';
 
 export type Refusal =
   | { readonly reason: 'forbiddenControl'; readonly detail: string }
@@ -120,12 +121,26 @@ function kindMismatch(el: Element, operation: ActOperation): Refusal | null {
       return ok(el.closest(CLICKABLE) !== null, 'a button');
     case 'file':
       return ok(isInput(el) && el.type === 'file', 'a file input');
+    case 'typeaheadOption':
+      // A suggestion under a search-as-you-type box (Lever's location): plain
+      // text in a dropdown, never a control of its own.
+      return ok(
+        el.closest(SUGGESTION_LIST) !== null && el.closest(CLICKABLE) === null && !isFormControl(el),
+        'a suggestion in a dropdown list',
+      );
     case 'addAnother': {
       const control = el.closest(CLICKABLE);
       const name = control === null ? '' : primaryName(control);
       return ok(control !== null && ADD_ANOTHER.test(name), 'an "Add another" button');
     }
   }
+}
+
+const SUGGESTION_LIST =
+  '[role="listbox"], [class*="dropdown"], [class*="suggest"], [class*="autocomplete"], [class*="results"], [class*="menu"]';
+
+function isFormControl(el: Element): boolean {
+  return ['input', 'select', 'textarea', 'button'].includes(el.localName);
 }
 
 function nameHaystack(el: Element): string {

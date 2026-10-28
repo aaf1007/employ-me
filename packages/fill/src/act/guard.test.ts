@@ -34,9 +34,12 @@ describe('act/ refuses every way of moving the form on', () => {
     ['aria-label', '<button data-target type="button" aria-label="Submit your application">→</button>'],
     ['Add and continue', '<button data-target type="button">Add and continue</button>'],
     ['Autofill with resume', '<button data-target type="button">Autofill with MyGreenhouse</button>'],
-  ])('%s', (_name, html) => {
+  ])('%s', async (_name, html) => {
     const el = render(html);
-    for (const result of [pressAddAnother(el), chooseButtonOption(el, { fieldType: 'screening.referred' })]) {
+    for (const result of [
+      await pressAddAnother(el),
+      await chooseButtonOption(el, { fieldType: 'screening.referred' }),
+    ]) {
       expect(result).toMatchObject({ ok: false, error: { reason: 'forbiddenControl' } });
     }
   });
@@ -74,17 +77,17 @@ describe('act/ allows section and option controls', () => {
 });
 
 describe('act/ refuses sensitive field types', () => {
-  it('never ticks an Attestation', () => {
+  it('never ticks an Attestation', async () => {
     const el = render('<input data-target type="checkbox">');
-    expect(setChecked(el, true, { fieldType: 'attestation.certify' })).toMatchObject({
+    expect(await setChecked(el, true, { fieldType: 'attestation.certify' })).toMatchObject({
       ok: false,
       error: { reason: 'sensitiveFieldType' },
     });
   });
 
-  it('never types a password', () => {
+  it('never types a password', async () => {
     const el = render('<input data-target type="text">');
-    expect(setText(el, 'x', { fieldType: 'never.password' })).toMatchObject({
+    expect(await setText(el, 'x', { fieldType: 'never.password' })).toMatchObject({
       ok: false,
       error: { reason: 'sensitiveFieldType' },
     });
@@ -95,9 +98,9 @@ describe('act/ refuses sensitive field types', () => {
     expect(checkTarget(el, 'text', 'contact.email')).toMatchObject({ reason: 'wrongElementKind' });
   });
 
-  it('refuses options of the wrong kind', () => {
+  it('refuses options of the wrong kind', async () => {
     const el = render('<div data-target>Canada</div>');
-    expect(chooseOption(el, { fieldType: 'address.country' })).toMatchObject({
+    expect(await chooseOption(el, { fieldType: 'address.country' })).toMatchObject({
       ok: false,
       error: { reason: 'wrongElementKind' },
     });

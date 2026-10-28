@@ -1,0 +1,67 @@
+import { atsForFormHost, type PostingKey } from '@employ-me/core';
+
+// Posting identity from URLs (research §7 "De-duplication"): key on
+// (ats, board, jobId), with tracking parameters stripped.
+
+const TRACKING =
+  /^(utm_.*|gh_src|t|source|src|ref|referrer|referer|lever-source.*|lever-origin|lever-via|gclid|fbclid|msclkid|mc_cid|mc_eid|_hs.*|trk|trackingid|ashby_jid|ashby_source)$/i;
+
+/** `(ats, board, jobId)` from a form or job URL, or null if it isn't one we know. */
+export function postingKeyFromUrl(url: URL): PostingKey | null {
+  const ats = atsForFormHost(url.hostname);
+  const parts = url.pathname.split('/').filter((p) => p !== '');
+  switch (ats) {
+    case 'greenhouse': {
+      // job-boards.greenhouse.io/embed/job_app?for=acme&token=123
+      if (parts[0] === 'embed') {
+        const board = url.searchParams.get('for');
+        const jobId = url.searchParams.get('token') ?? url.searchParams.get('gh_jid');
+        return board !== null && jobId !== null ? key('greenhouse', board, jobId) : null;
+      }
+      // job-boards.greenhouse.io/acme/jobs/123
+      const [board, jobs, jobId] = parts;
+      return board !== undefined && jobs === 'jobs' && jobId !== undefined && /^\d+$/.test(jobId)
+        ? key('greenhouse', board, jobId)
+        : null;
+    }
+    case 'lever': {
+      const [company, jobId] = parts;
+      return company !== undefined && jobId !== undefined && isUuid(jobId)
+        ? key('lever', company, jobId)
+        : null;
+    }
+    case 'ashby': {
+      const [org, jobId] = parts;
+      return org !== undefined && jobId !== undefined && isUuid(jobId) ? key('ashby', org, jobId) : null;
+    }
+    case null:
+      return null;
+  }
+}
+
+/**
+ * A Posting on a company's own site. Greenhouse embeds say which job they
+ * show with `?gh_jid=`; other sites are keyed by host and path.
+ */
+export function genericPostingKey(url: URL): PostingKey {
+  const jobId = url.searchParams.get('gh_jid') ?? (url.pathname.replace(/\/+$/, '') || '/');
+  return key('generic', url.hostname.replace(/^www\./, ''), jobId);
+}
+
+/** Removes utm_* and other tracking parameters, and the fragment (research §7 "De-duplication"). */
+export function canonicalPostingUrl(url: URL): URL {
+  const out = new URL(url.href);
+  out.hash = '';
+  for (const name of [...out.searchParams.keys()]) {
+    if (TRACKING.test(name)) out.searchParams.delete(name);
+  }
+  return out;
+}
+
+function key(ats: PostingKey['ats'], employer: string, jobId: string): PostingKey {
+  return { ats, employer: employer.toLowerCase().slice(0, 200), jobId: jobId.slice(0, 200) };
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
