@@ -1,5 +1,6 @@
 import { EXTENSION_ID } from '@employ-me/core';
 import { expect, test } from './harness';
+import { servePublicApi } from './panel';
 
 const FORMS = [
   {
@@ -50,9 +51,26 @@ test('content script runs inside an embedded Greenhouse iframe, and not on the c
     .toEqual([{ type: 'pong', ats: 'greenhouse', url: embedUrl, topFrame: false }]);
 });
 
+test('the toolbar icon opens the side panel', async ({ extension }) => {
+  // Playwright can't click Chrome's toolbar; this is what Chrome does on that click (design.md "Starting a Fill").
+  const behavior = await extension.serviceWorker.evaluate(async () => {
+    const { chrome } = globalThis as unknown as {
+      chrome: { sidePanel: { getPanelBehavior(): Promise<{ openPanelOnActionClick?: boolean }> } };
+    };
+    return chrome.sidePanel.getPanelBehavior();
+  });
+  expect(behavior).toEqual({ openPanelOnActionClick: true });
+});
+
 test('side panel and dashboard open without errors', async ({ page, sites, extension }) => {
   const [form] = FORMS;
   await sites.serve(form.url, form.fixture);
+  // The panel reads the Posting's public job API (research §7) as soon as it finds the form.
+  await servePublicApi(
+    page.context(),
+    'https://boards-api.greenhouse.io/v1/boards/acme/jobs/1234567?questions=true&pay_transparency=true',
+    { title: 'Software Engineer', company_name: 'Acme', content: '' },
+  );
   await page.goto(form.url);
 
   const panel = await extension.openSidePanel({ forPage: page });

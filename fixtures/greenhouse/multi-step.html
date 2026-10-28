@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Synthetic, for the side panel's multi-step spec (e2e/side-panel.spec.ts):
+     a Greenhouse-shaped form whose Next button swaps step 1 for step 2 in
+     place, as single-page multi-step forms do. Not a recorded form: no
+     Milestone 1 ATS splits its form into steps. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Job Application for Platform Engineer at Acme</title>
+  </head>
+  <body>
+    <h1>Platform Engineer</h1>
+    <form id="application-form" method="post" action="/acme/jobs/7654321">
+      <div id="step" data-step="1">
+        <label for="first_name">First Name *</label>
+        <input id="first_name" name="first_name" type="text" required />
+        <label for="last_name">Last Name *</label>
+        <input id="last_name" name="last_name" type="text" required />
+        <button type="button" id="next">Next</button>
+      </div>
+    </form>
+    <script>
+      document.getElementById('next').addEventListener('click', () => {
+        const step = document.getElementById('step');
+        step.dataset.step = '2';
+        step.innerHTML = `
+          <label for="email">Email *</label>
+          <input id="email" name="email" type="email" required />
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" />
+          <label for="question_2002">What would you build first? *</label>
+          <textarea id="question_2002" name="question_2002" required></textarea>
+          <button type="submit">Submit application</button>`;
+      });
+    </script>
+  </body>
+</html>
