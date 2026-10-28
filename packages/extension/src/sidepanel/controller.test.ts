@@ -271,4 +271,43 @@ describe('PanelController', () => {
     expect(tab.sent.filter((s) => s.type === 'fill')).toHaveLength(2);
     expect(state().fill).toBe('done');
   });
+
+  describe('on a Posting’s description page', () => {
+    const LEVER = 'https://jobs.lever.co/acme/a20b80c5-53c4-4c34-b8de-c6d9208994a6?lever-source=x';
+
+    it('offers its Application Form’s address, and navigates there without clicking anything', async () => {
+      const { controller, tab, state } = await started(fakeTab({ postingPage: LEVER }));
+      expect(state()).toMatchObject({
+        phase: 'noForm',
+        formUrl: 'https://jobs.lever.co/acme/a20b80c5-53c4-4c34-b8de-c6d9208994a6/apply',
+      });
+      // The content script answered "no form" once: the panel didn't keep polling for one.
+      expect(tab.sent).toEqual([]);
+
+      await controller.openApplicationForm();
+      await settle();
+      expect(tab.sent).toEqual([
+        { type: 'open', url: 'https://jobs.lever.co/acme/a20b80c5-53c4-4c34-b8de-c6d9208994a6/apply' },
+      ]);
+      // The form's page loaded: the panel found it, and Fill is ready.
+      expect(state()).toMatchObject({ phase: 'ready', formUrl: null, detected: DETECTED });
+    });
+
+    it('offers nothing on a page that has no form and no rule for one', async () => {
+      const { controller, tab, state } = await started(
+        fakeTab({ postingPage: 'https://job-boards.greenhouse.io/acme' }),
+      );
+      // It polls for a form that may still render, then says there's none.
+      await vi.waitFor(() => {
+        expect(state()).toMatchObject({ phase: 'noForm', formUrl: null });
+      });
+      await controller.openApplicationForm();
+      expect(tab.sent).toEqual([]);
+    });
+
+    it('offers nothing where the form is on the page', async () => {
+      const { state } = await started();
+      expect(state()).toMatchObject({ phase: 'ready', formUrl: null });
+    });
+  });
 });

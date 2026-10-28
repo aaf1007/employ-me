@@ -37,6 +37,8 @@ export interface TabLink {
   url(): Promise<string | null>;
   /** True when the content script answers in any frame of the tab. */
   hasContentScript(): Promise<boolean>;
+  /** Points the tab at `url` (Open application form); false when the tab is gone. Clicks nothing. */
+  open(url: string): Promise<boolean>;
   /**
    * The generic fallback: runs the content script in every frame of the tab
    * employ-me may read. Only after you click Fill on that page.
@@ -192,6 +194,16 @@ export function tabLink(tabId: number): TabLink {
     },
     async hasContentScript() {
       return pongSchema.safeParse(await send({ type: 'ping' }, undefined)).success;
+    },
+    async open(url) {
+      try {
+        await browser.tabs.update(tabId, { url });
+        return true;
+      } catch (error) {
+        // The tab closed.
+        if (error instanceof Error) return false;
+        throw error;
+      }
     },
     async reach() {
       // A new page: the frames and the form's frame are found again.

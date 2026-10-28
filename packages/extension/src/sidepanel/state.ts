@@ -52,6 +52,8 @@ export interface PanelState {
   readonly pageUrl: string | null;
   /** Sites of frames on the page that employ-me can't read until you allow them. */
   readonly unreachable: readonly string[];
+  /** On a Posting's description page, its Application Form's address: Open application form. */
+  readonly formUrl: string | null;
   /** The Posting, with what its public job API adds. */
   readonly posting: Posting | null;
   /** Applications for this Posting: the already-applied warning. */
@@ -74,6 +76,7 @@ export const INITIAL_STATE: PanelState = {
   detected: null,
   pageUrl: null,
   unreachable: [],
+  formUrl: null,
   posting: null,
   applied: [],
   resumes: [],

@@ -7,6 +7,7 @@ import { tabLink } from '../../sidepanel/tab-link';
 import { DebugReportButton } from './DebugReportButton';
 import { FillProgressBar } from './FillProgressBar';
 import { FrameAccessCard } from './FrameAccessCard';
+import { NoFormCard } from './NoFormCard';
 import { OutcomeGroups } from './OutcomeGroups';
 import { PostingHeader } from './PostingHeader';
 import { SubmissionNotice } from './SubmissionNotice';
@@ -45,17 +46,7 @@ export function FillPanel({ tabId }: { readonly tabId: number }) {
         </p>
       ) : null}
       {phase === 'unknownSite' ? <UnknownSiteCard state={state} controller={controller} /> : null}
-      {phase === 'noForm' ? (
-        <div className="card" data-testid="no-form">
-          <p>There’s no Application Form on this page.</p>
-          <p className="small muted">Open the job’s application page, then look again.</p>
-          <div className="row">
-            <button type="button" onClick={() => void controller.detect()}>
-              Look again
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {phase === 'noForm' ? <NoFormCard formUrl={state.formUrl} controller={controller} /> : null}
       {phase === 'ready' ? <PostingHeader state={state} controller={controller} /> : null}
       {phase === 'noForm' ? <FrameAccessCard state={state} controller={controller} /> : null}
       <SubmissionNotice

@@ -27,7 +27,7 @@ export function SidePanel() {
         </button>
       </header>
       {tabId === undefined ? null : tabId === null ? (
-        <p className="muted">Open a job’s application page, then click the employ-me icon.</p>
+        <p className="muted">Open a Posting’s Application Form, then click the employ-me icon.</p>
       ) : (
         <FillPanel key={tabId} tabId={tabId} />
       )}

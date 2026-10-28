@@ -4,7 +4,7 @@ import type { Detected, SessionEvent } from '../messaging/content';
 import { buildDebugReport } from './debug-report';
 import type { PanelDeps } from './deps';
 import { FillFlow } from './fill-flow';
-import { companySitePosting, submissionOf, withPageText, withPublicDetails } from './posting';
+import { companySitePosting, formElsewhere, submissionOf, withPageText, withPublicDetails } from './posting';
 import { INITIAL_STATE, Store, type PanelState } from './state';
 
 /**
@@ -59,15 +59,17 @@ export class PanelController {
   /** Looks for the Application Form; the panel says so when there isn't one. */
   async detect(): Promise<void> {
     const generation = ++this.generation;
-    this.store.set({ phase: 'detecting', notice: null });
-    const { detected, scripted } = await this.findForm();
+    this.store.set({ phase: 'detecting', notice: null, formUrl: null });
+    const formUrl = formElsewhere(await this.deps.tab.url());
+    if (generation !== this.generation) return;
+    const { detected, scripted } = await this.findForm(formUrl !== null);
     if (generation !== this.generation) return;
     if (detected === null && !scripted) {
       await this.showUnknownSite();
       return;
     }
     if (detected === null || detected.fieldCount === 0) {
-      this.store.set({ phase: 'noForm', detected });
+      this.store.set({ phase: 'noForm', detected, formUrl });
       return;
     }
     // Started before the Fill button shows: a Fill clicked at once waits for them instead of going without.
@@ -75,6 +77,18 @@ export class PanelController {
     this.loading = Promise.all([this.loadProfile(), this.loadApplied(detected.posting)]);
     this.store.set({ phase: 'ready', detected, posting: detected.posting });
     await this.loading;
+  }
+
+  /**
+   * Open application form: points the tab at the Posting's Application Form,
+   * whose load the panel then detects. It navigates, and never clicks the
+   * page's Apply button (design.md "Starting a Fill").
+   */
+  async openApplicationForm(): Promise<void> {
+    const { phase, formUrl } = this.store.get();
+    if (phase !== 'noForm' || formUrl === null) return;
+    this.store.set({ phase: 'detecting', formUrl: null, notice: null });
+    if (!(await this.deps.tab.open(formUrl))) this.store.set({ phase: 'noForm', formUrl });
   }
 
   selectResume(resumeId: string): void {
@@ -169,9 +183,11 @@ export class PanelController {
   /**
    * The Application Form, polled while the page renders it. `scripted` is
    * false when no content script answers at all: a site employ-me doesn't
-   * know, where it runs only once you click Fill.
+   * know, where it runs only once you click Fill. On a Posting's description
+   * page whose form is `elsewhere`, the content script's first "no form" is
+   * the answer.
    */
-  private async findForm(): Promise<{ detected: Detected | null; scripted: boolean }> {
+  private async findForm(elsewhere = false): Promise<{ detected: Detected | null; scripted: boolean }> {
     const attempts = this.deps.detectAttempts ?? 12;
     for (let attempt = 0; attempt < attempts; attempt++) {
       const detected = await this.deps.tab.detect();
@@ -179,6 +195,7 @@ export class PanelController {
       if (detected !== null && (detected.fieldCount > 0 || detected.confirmed)) {
         return { detected, scripted: true };
       }
+      if (elsewhere && (await this.scripted())) return { detected, scripted: true };
       // A known job site's content script answers as soon as it loads, before its form renders.
       if (attempt + 1 >= NO_SCRIPT_ATTEMPTS && !(await this.scripted()))
         return { detected: null, scripted: false };

@@ -5,7 +5,12 @@ import {
   type Snapshot,
   type SubmittedAnswer,
 } from '@employ-me/core';
-import { canonicalPostingUrl, genericPostingKey, type PublicPostingDetails } from '@employ-me/fill';
+import {
+  applicationFormUrl,
+  canonicalPostingUrl,
+  genericPostingKey,
+  type PublicPostingDetails,
+} from '@employ-me/fill';
 
 /**
  * The Posting a company site's address names, before anything reads the
@@ -18,6 +23,12 @@ export function companySitePosting(href: string): Posting | null {
   const url = new URL(href);
   if (atsForFormHost(url.hostname) !== null) return null;
   return { key: genericPostingKey(url), url: canonicalPostingUrl(url).href };
+}
+
+/** The Application Form's address when the tab shows a Posting whose form is elsewhere (fill's applicationFormUrl). */
+export function formElsewhere(href: string | null): string | null {
+  if (href === null || !/^https?:\/\//.test(href)) return null;
+  return applicationFormUrl(new URL(href))?.href ?? null;
 }
 
 /** A company site's own text is the Snapshot's description when nothing better has one. */

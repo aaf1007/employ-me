@@ -139,15 +139,28 @@ export interface UnknownSite {
  * follows the feedback the panel sends, as plan() would. With `unknownSite`,
  * no content script answers until the panel reaches the site.
  */
-export function fakeTab(options: { readonly aiPolicy?: boolean; readonly unknownSite?: UnknownSite } = {}) {
-  const sent: Array<{ type: string; provider?: ProviderFeedbackMessage; origins?: readonly string[] }> = [];
+export function fakeTab(
+  options: {
+    readonly aiPolicy?: boolean;
+    readonly unknownSite?: UnknownSite;
+    /** The tab shows this Posting's description page, with no form, until open() loads the form. */
+    readonly postingPage?: string;
+  } = {},
+) {
+  const sent: Array<{
+    type: string;
+    provider?: ProviderFeedbackMessage;
+    origins?: readonly string[];
+    url?: string;
+  }> = [];
   let onEvent: (event: SessionEvent) => void = () => undefined;
   let onGone: () => void = () => undefined;
   let watched: { onLoaded: () => void; onClosed: () => void } | null = null;
   const site = options.unknownSite;
   let scripted = site === undefined;
   let unreachable = site?.unreachable ?? [];
-  let detected: Detected | null = site === undefined ? DETECTED : null;
+  let detected: Detected | null = site === undefined && options.postingPage === undefined ? DETECTED : null;
+  let tabUrl = site === undefined ? (options.postingPage ?? DETECTED.url) : site.url;
   const view = (feedback: ProviderFeedbackMessage): FillView => {
     const accepted = feedback.accepted?.find((a) => a.fieldId === 'why');
     const mapped = feedback.mappings?.some((m) => m.fieldId === 'u') ?? false;
@@ -236,8 +249,15 @@ export function fakeTab(options: { readonly aiPolicy?: boolean; readonly unknown
         watched = null;
       };
     },
-    url: () => Promise.resolve(site === undefined ? DETECTED.url : site.url),
+    url: () => Promise.resolve(tabUrl),
     hasContentScript: () => Promise.resolve(scripted),
+    open: (url) => {
+      sent.push({ type: 'open', url });
+      tabUrl = url;
+      detected = DETECTED;
+      watched?.onLoaded();
+      return Promise.resolve(true);
+    },
     reach: () => {
       sent.push({ type: 'reach' });
       if (site?.readable === false) return Promise.resolve(err(NO_ACCESS));
