@@ -1,0 +1,340 @@
+{
+  "fixture": "greenhouse/geotab-2026-10-28",
+  "ats": "greenhouse",
+  "posting": {
+    "title": "Computer Vision Engineering",
+    "company": "Geotab",
+    "location": "Oakville, Ontario - Canada",
+    "country": "CA"
+  },
+  "fields": [
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "last_name",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "country",
+      "label": "Country",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "(416) 555-0123"
+    },
+    {
+      "fieldId": "candidate-location",
+      "label": "Location (City)",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, Ontario, Canada"
+    },
+    {
+      "fieldId": "resume",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "<uploading>"
+    },
+    {
+      "fieldId": "cover_letter",
+      "label": "Cover Letter",
+      "fieldType": "file.coverLetter",
+      "outcome": "couldNotFill",
+      "reason": "coverLetter",
+      "value": ""
+    },
+    {
+      "fieldId": "school--0",
+      "label": "School",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Waterloo"
+    },
+    {
+      "fieldId": "degree--0",
+      "label": "Degree",
+      "fieldType": "edu.degree",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Bachelor's Degree"
+    },
+    {
+      "fieldId": "discipline--0",
+      "label": "Discipline",
+      "fieldType": "edu.discipline",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Computer Science"
+    },
+    {
+      "fieldId": "question_18658574008",
+      "label": "Current company",
+      "fieldType": "work.currentEmployer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Northwind Analytics"
+    },
+    {
+      "fieldId": "question_18658575008",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "question_18658576008",
+      "label": "Github URL",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "question_18658577008",
+      "label": "Portfolio URL",
+      "fieldType": "link.portfolio",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "question_18658578008",
+      "label": "Other Website",
+      "fieldType": "link.other",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "question_18658579008",
+      "label": "How did you hear about Geotab?",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Geotab Careers Page"
+    },
+    {
+      "fieldId": "question_18658580008",
+      "label": "How did you hear about this job opportunity?",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Geotab Careers Page"
+    },
+    {
+      "fieldId": "question_18658581008",
+      "label": "City & Country in which you are currently located",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, ON, Canada"
+    },
+    {
+      "fieldId": "question_18658582008",
+      "label": "Are you legally authorized to work in the region in which the position you are applying for is located?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_18658583008",
+      "label": "Will you now or in the future require sponsorship to be able to work in the Country in which the position you are applying for is located?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "question_18658584008",
+      "label": "Do you currently work for a partner or reseller of Geotab?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_18658585008",
+      "label": "Are there any post-employment restrictions from your current or most recent employer (such as hiring restrictions or confidentiality obligations)?",
+      "fieldType": "screening.nonCompete",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "question_18658586008",
+      "label": "What are your compensation expectations for the role you are applying for?",
+      "fieldType": "pref.salary",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "120,000 - 140,000 CAD per year"
+    },
+    {
+      "fieldId": "question_18658587008",
+      "label": "Will you consent to a background check? (All offers of employment are contingent on passing a background check)",
+      "fieldType": "screening.backgroundCheck",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_18658588008",
+      "label": "What date would you be available to onboard with Geotab?",
+      "fieldType": "pref.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "January 4, 2027"
+    },
+    {
+      "fieldId": "question_18658589008",
+      "label": "How many years of C# development experience do you have?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_18658590008",
+      "label": "How many years of Javascript/Typescript experience do you have?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_18658591008",
+      "label": "What frameworks/libraries are you most proficient in?",
+      "fieldType": "freeText.question",
+      "outcome": "filled",
+      "reason": "savedAnswer",
+      "value": "React, Node.js and Django."
+    },
+    {
+      "fieldId": "question_18658592008",
+      "label": "Do you have experience working with cloud computing? (GCP/Azure/AWS)",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_18658593008",
+      "label": "Do you have any Systems Design/ Architecture experience?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_18658594008",
+      "label": "Were you previously employed with Geotab?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "question_18658595008",
+      "label": "If you are a veteran of the armed forces in your country and would like to identify this fact to our recruiting team, please write \"YES\" in the text box below.",
+      "fieldType": "selfId.other",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I do not wish to answer"
+    },
+    {
+      "fieldId": "4005224008",
+      "label": "I identify my ethnicity as (select all that apply):",
+      "fieldType": "selfId.other",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Prefer not to respond"
+    },
+    {
+      "fieldId": "4005225008",
+      "label": "What gender do you identify as?",
+      "fieldType": "selfId.ca.genderIdentity",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Male"
+    },
+    {
+      "fieldId": "4005226008",
+      "label": "Does the role you are applying for include managing direct reports?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "4005227008",
+      "label": "Geotab is committed to connecting, hiring and providing equal opportunity to qualified people with disabilities. Please select a response below as it relates to disability.",
+      "fieldType": "selfId.ca.disability",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No, I don’t have a disability, or a history/record of having a disability"
+    },
+    {
+      "fieldId": "gdpr_demographic_data_consent_given",
+      "label": "By checking this box, I consent to Geotab collecting, storing, and processing my responses to the demographic data surveys above.",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "school--1",
+      "label": "School",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Toronto"
+    },
+    {
+      "fieldId": "degree--1",
+      "label": "Degree",
+      "fieldType": "edu.degree",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Master's Degree"
+    },
+    {
+      "fieldId": "discipline--1",
+      "label": "Discipline",
+      "fieldType": "edu.discipline",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Engineering (Computer)"
+    }
+  ]
+}

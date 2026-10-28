@@ -1,0 +1,210 @@
+{
+  "fixture": "greenhouse/mongodb-2026-10-28",
+  "ats": "greenhouse",
+  "posting": {
+    "title": "2027 - Software Engineer Intern, Dublin - 6 Month Internship",
+    "company": "MongoDB"
+  },
+  "fields": [
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "last_name",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "country",
+      "label": "Country",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "(416) 555-0123"
+    },
+    {
+      "fieldId": "candidate-location",
+      "label": "Location (City)",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, Ontario, Canada"
+    },
+    {
+      "fieldId": "resume",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "<uploading>"
+    },
+    {
+      "fieldId": "cover_letter",
+      "label": "Cover Letter",
+      "fieldType": "file.coverLetter",
+      "outcome": "couldNotFill",
+      "reason": "coverLetter",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658270",
+      "label": "Preferred Name",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sammy"
+    },
+    {
+      "fieldId": "question_69658271",
+      "label": "What are your pronouns?",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658272",
+      "label": "What college/university do you attend?",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Toronto"
+    },
+    {
+      "fieldId": "question_69658273",
+      "label": "What is your expected graduation date?",
+      "fieldType": "edu.endDate",
+      "outcome": "couldNotFill",
+      "reason": "noMatchingOption",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658274",
+      "label": "If you answered \"Other\" above, please note your graduation date.",
+      "fieldType": "edu.endDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "April 2025"
+    },
+    {
+      "fieldId": "question_69658275",
+      "label": "Will you now or in the future require employment sponsorship?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "needsReview",
+      "reason": "countryUnclear",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658276",
+      "label": "Are you available to work full-time for 6 months starting January 2027?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658279",
+      "label": "Have you ever worked at MongoDB before?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "question_69658280",
+      "label": "Why do you want to work at MongoDB?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658281",
+      "label": "How did you learn about this job?",
+      "fieldType": "screening.howHeard",
+      "outcome": "needsReview",
+      "reason": "ambiguousOption",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658282",
+      "label": "If you answered MongoDB Employee, MongoDB Event, or Other, please specify here:",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658283",
+      "label": "Would you like to stay up to date with MongoDB Culture and Careers content?",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658284",
+      "label": "Receive alerts for similar jobs?",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "question_69658285",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "question_69658287",
+      "label": "Github",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "32288",
+      "label": "Gender Identity (Select one)",
+      "fieldType": "selfId.other",
+      "outcome": "needsReview",
+      "reason": "countryUnclear",
+      "value": ""
+    },
+    {
+      "fieldId": "gdpr_demographic_data_consent_given",
+      "label": "By checking this box, I consent to MongoDB collecting, storing, and processing my responses to the demographic data surveys above.",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    }
+  ]
+}

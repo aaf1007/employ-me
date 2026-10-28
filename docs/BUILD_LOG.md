@@ -117,3 +117,46 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 
 **Gotchas**
 - `STUB_*` knobs are unchanged: the Codex stub's catalog already offers `stub-big` and `stub-default` (default), which is what the new tests use.
+
+## 2026-10-28 · Fill engine (packages/fill), fixtures and fill e2e
+
+**Landed**
+- `extract/`: every control under a form root, open shadow roots included, as `{fieldId, label, section, control, options, required, maxLength}` plus the widget act/ needs. Labels from `aria-labelledby`, `label[for]`, wrapping labels, `legend`, group labels, the field's container, then nearby text. Options from native selects, radio/checkbox groups, answer buttons (Ashby's Yes/No) and open listboxes; react-select menus render only while open, so act/ remembers what it saw for the next plan.
+- `classify/`: adapter map → deterministic never-stored / Attestation / Self-ID checks (label, options, section) → taxonomy regexes (the visible label beats a wrong `autocomplete` token) → `autocomplete` → exact Saved Answer match. Self-ID types follow the Posting's country (a question naming a country wins); a topic the country keeps no answer for is `selfId.other`, which fills only a decline option.
+- `answer/` + `plan/`: one step per field (write, review, skip with a fix, or await the Provider). Work Authorization, salary and Self-ID by country; unclear country → review with each country's answer side by side. Option matching (`match/`): exact, normalized, synonym patterns, token overlap, salary ranges, seasons for graduation dates; two equal hits are `ambiguousOption`.
+- `act/`: React-safe setter, the combobox driver (full press, ArrowDown fallback, type to search, pick, read back, close), Lever's search-as-you-type box (new guarded op `typeaheadOption`), radios and checkboxes (click for React, events only on Lever), answer buttons, DataTransfer files, "Add another". Every write is read back after a 60 ms settle, so a value React snaps back is `valueDidNotStick`.
+- `execute()`: Resume first and wait for the parse where the ATS parses it (Lever), one "Add another" per extra Profile entry (Greenhouse education/employment), then every write, then up to two rounds for questions that appear because of earlier answers. Idempotent: executing a re-plan doesn't re-upload or re-pick.
+- Adapters: Greenhouse (ids, EEOC block, education, `#grnhse_iframe` embeds), Lever (`baseTemplate` JSON for cards and surveys, typeahead location, resume-parse wait), Ashby (`_systemfield_*`, autofill box ignored), generic (largest `<form>`).
+- `detect-submission/`: `isConfirmation` and `watchForSubmission` (Greenhouse `/confirmation`, Lever `/thanks`, Ashby success container; "Did you apply?" after 15 s without one).
+- `posting/`: `readPosting` (ATS markup, then JSON-LD), keys, canonical URLs, location → country, `publicApiRequest` (URL descriptor for the net module) and `parsePublicPosting` (incl. Greenhouse's option lists, passed back as `postingDetails`).
+- Fixtures: 12 live public forms recorded 2026-10-28 as HAR (`tools/fixtures/record.ts`, scrubbed by `scrub.ts`): Greenhouse Anthropic (US, EEO, AI policy, arbitration), MongoDB (embedded, Dublin, GDPR), GetYourGuide (Berlin, GDPR retention), Geotab and Faire (Canada); Lever EQ Bank (Canadian equity survey), Palantir (US EEO, signature), Spotify (UK); Ashby Wealthsimple, OpenAI, ElevenLabs; generic Helsing. Nothing was submitted.
+- e2e: `fill.spec.ts` (one per fixture: every outcome and DOM value, Attestations untouched, no submit event, no submission request), `fill-seam.spec.ts` (Provider mappings incl. low confidence, accepted Draft, polish mode, no Profile data in the mapFields body). Harness: `sites.replay(har)`, `sites.requests`.
+- `pnpm fill-rate` and the README coverage table: Greenhouse 71%, Lever 77%, Ashby 67%, generic 57% of fields filled by rules alone; the rest are review or "couldn't fill" with a reason.
+
+**The API integration calls** (all from `@employ-me/fill`):
+- `plan(document, profileView, savedAnswers, { resume: { meta, file }, posting?, postingDetails?, provider? })` → `FillPlan` (read-only), then `await execute(plan)` → `FillReport { outcomes, awaitingProvider, fields, plan }`.
+- Seam: send `plan.providerRequest` (`{ats, fields, savedQuestions}`, built by core's `toProviderField`) as `helper.mapFields`; build Drafts from `plan.draftRequests` (`question`, `mode` 'polish' when the form has an AI policy, `posting`, `employer`, `fieldType`) with core's `toDraftContext`. Then `plan()` again with `provider: { state: 'answered' | 'unavailable', unavailableFix, mappings: output.mappings, draftsReady, accepted: [{fieldId, text}] }` and `execute()` it. Mappings below `MIN_MAPPING_CONFIDENCE` (0.7) go to review as a suggestion, never written.
+- `watchForSubmission(document, plan.ats, onSignal)`; `plan.posting.key` for `applications.findByPosting`.
+
+**Core changes**: none.
+
+**Lint/config changes**: `e2e/.build/` (the generated fill bundle) is ignored by ESLint and Prettier; the root tsconfig allows `.ts` import extensions so `tools/*.ts` run directly under Node; root devDependencies gain `@employ-me/fill` (e2e bundle) and `zod` 4.6.7 (HAR and expected-file schemas). CODING_STANDARDS "Adapters" now describes HAR fixtures (own commit).
+
+**Decisions the docs didn't cover**
+- e2e injects a test-only IIFE bundle of the engine into the replayed frame (main world); the content script wiring comes with the side panel.
+- An optional free-text question with no Saved Answer is "Couldn't fill: notInProfile" with "click Draft"; a required one awaits a Draft. An accepted Draft fills with source `savedAnswer`.
+- A company missing from "worked here before" is review (`askEachTime`), not "No". A language not in the Profile is "Couldn't fill", not "No".
+- Lever's radios and checkboxes are set without clicks (its hCaptcha watches scripted clicks); React sites get the element's own click.
+
+**Left**
+- Side panel and content script wiring. The content script needs `profile.get`, `resumes.getFile` (base64 → `File`) and Saved Answers; the side panel needs `helper.mapFields`, `helper.draftAnswer`, `savedAnswers.saveAcceptedDraft` (with `DraftRequestRef.fieldType`), `applications.findByPosting` and `applications.recordSubmission` on a `confirmed` signal. The net module can use `publicApiRequest`/`parsePublicPosting`; `src/tracker/posting-key.ts` can switch to `postingKeyFromUrl`.
+- Executing again overwrites a user's edits to fields the rules filled; re-execute only after a re-plan.
+- Workday; closed shadow roots; date pickers other than MM/DD/YYYY; work-history sections on ATSs other than Greenhouse; a per-label cache of mappings.
+
+**Gotchas**
+- Greenhouse wraps react-select and keeps the menu state itself: it opens on mouseup (or a keyup), and commits a choice when the menu closes. A synthetic mousedown alone does nothing.
+- intl-tel-input keeps a hidden `[role=listbox]` of 244 countries in the page; only visible listboxes count.
+- Greenhouse swaps the file input for an upload widget that waits for XHR upload progress, which Playwright's `route.fulfill` never emits: e2e reads `<uploading>` there.
+- Ashby autosaves every value as it's entered (`ApiSetFormValue`), Lever parses the Resume on attach, Helsing fetches an upload token: the specs answer these as side requests; any other write to the form's site fails the spec.
+- Playwright's HAR replay refuses `_file` paths outside the HAR's folder, so bodies live in `fixtures/<ats>/har/` (shared by that ATS's fixtures). Re-recording prunes unused bodies.
+- Node can't load core's extensionless imports, so `tools/fill-rate.ts` has its own small schema; the specs check the full one.

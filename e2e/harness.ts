@@ -49,8 +49,16 @@ export interface Sites {
    * Playwright glob.
    */
   serve(url: string | RegExp, fixture: string): Promise<void>;
+  /**
+   * Replays a recorded HAR (fixtures/<ats>/<name>.har, made by
+   * tools/fixtures/record.ts): every request it recorded gets its recorded
+   * response, offline. Anything else stays blocked.
+   */
+  replay(har: string): Promise<void>;
   /** http(s) requests nothing served. They were aborted. */
   readonly blocked: readonly string[];
+  /** Every http(s) request the pages made, served or not, in order. */
+  readonly requests: readonly { readonly method: string; readonly url: string }[];
 }
 
 export interface Extension {
@@ -166,6 +174,10 @@ export const test = base.extend<Fixtures & Options>({
 
   sites: async ({ context }, use) => {
     const blocked: string[] = [];
+    const requests: { method: string; url: string }[] = [];
+    context.on('request', (request) => {
+      if (/^https?:/.test(request.url())) requests.push({ method: request.method(), url: request.url() });
+    });
     // Registered first so every later route takes precedence over it.
     await context.route(
       (url) => url.protocol === 'http:' || url.protocol === 'https:',
@@ -177,6 +189,12 @@ export const test = base.extend<Fixtures & Options>({
     );
     await use({
       blocked,
+      requests,
+      async replay(har) {
+        const file = path.join(FIXTURES_DIR, har);
+        await access(file);
+        await context.routeFromHAR(file, { notFound: 'fallback' });
+      },
       async serve(url, fixture) {
         const file = path.join(FIXTURES_DIR, fixture);
         await access(file);

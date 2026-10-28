@@ -11,3 +11,5 @@ test-results/
 .keys/
 # Agent worktrees
 .claude/worktrees/
+# The fill engine's e2e bundle (e2e/fill-bundle/build.ts)
+e2e/.build/

@@ -1,0 +1,132 @@
+{
+  "fixture": "lever/spotify-2026-10-28",
+  "ats": "lever",
+  "posting": {
+    "title": "Account Executive - Commercial, Spotify Technology",
+    "company": "Spotify",
+    "location": "London",
+    "country": "GB"
+  },
+  "fields": [
+    {
+      "fieldId": "resume-upload-input",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "name",
+      "label": "Full name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "pronouns",
+      "label": "Pronouns",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "noMatchingOption",
+      "value": ""
+    },
+    {
+      "fieldId": "customPronounsOption",
+      "label": "Pronouns",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "noMatchingOption",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "location-input",
+      "label": "Current location",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, ON, CAN"
+    },
+    {
+      "fieldId": "org",
+      "label": "Current company",
+      "fieldType": "work.currentEmployer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Northwind Analytics"
+    },
+    {
+      "fieldId": "urls[LinkedIn]",
+      "label": "LinkedIn URL",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "urls[GitHub]",
+      "label": "GitHub URL",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "urls[Portfolio]",
+      "label": "Portfolio URL",
+      "fieldType": "link.portfolio",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "urls[Other]",
+      "label": "Other website",
+      "fieldType": "link.other",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "cards[92a51f92-d683-4f7b-be57-e25376f60abe][field0]",
+      "label": "Have you ever been previously employed by Spotify?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "candidate-location-select",
+      "label": "What is your location?",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "noMatchingOption",
+      "value": ""
+    },
+    {
+      "fieldId": "consent[marketing]",
+      "label": "Spotify has my consent to contact me about future job opportunities.",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+@font-face {
+    font-family: 'Whitney SSm';
+    src: url('./woff2/WhitneySSm-Light_Web.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-LightItalic_Web.woff2') format('woff2');
+    font-weight: 300;
+    font-style: italic;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-Book_Web.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-BookItalic_Web.woff2') format('woff2');
+    font-weight: 400;
+    font-style: italic;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-Medium_Web.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-MediumItalic_Web.woff2') format('woff2');
+    font-weight: 500;
+    font-style: italic;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-Semibold_Web.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-SemiboldItalic_Web.woff2') format('woff2');
+    font-weight: 600;
+    font-style: italic;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-Bold_Web.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: fallback;
+}
+
+@font-face {
+    font-family: 'Whitney SSm';
+    src:url('./woff2/WhitneySSm-BoldItalic_Web.woff2') format('woff2');
+    font-weight: 700;
+    font-style: italic;
+    font-display: fallback;
+}

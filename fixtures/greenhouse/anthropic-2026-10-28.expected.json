@@ -1,0 +1,220 @@
+{
+  "fixture": "greenhouse/anthropic-2026-10-28",
+  "ats": "greenhouse",
+  "posting": {
+    "title": "3P Revenue Accounting & Reporting",
+    "company": "Anthropic",
+    "location": "San Francisco, CA | Seattle, WA",
+    "country": "US"
+  },
+  "fields": [
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "last_name",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "country",
+      "label": "Country",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "(416) 555-0123"
+    },
+    {
+      "fieldId": "resume",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "<uploading>"
+    },
+    {
+      "fieldId": "question_19018737008",
+      "label": "Personal Preferences",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018738008",
+      "label": "Website",
+      "fieldType": "link.portfolio",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "question_19018739008",
+      "label": "Are you open to working in-person in one of our offices 25% of the time?",
+      "fieldType": "pref.workModel",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_19018740008",
+      "label": "When is the earliest you would want to start working with us?",
+      "fieldType": "pref.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "January 4, 2027"
+    },
+    {
+      "fieldId": "question_19018741008",
+      "label": "Do you have any deadlines or timeline considerations we should be aware of?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018742008",
+      "label": "AI Policy for Application",
+      "fieldType": "attestation.aiPolicy",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018743008",
+      "label": "Why Anthropic?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018744008",
+      "label": "Do you require visa sponsorship?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_19018745008",
+      "label": "Will you now or will you in the future require employment visa sponsorship to work in the country in which the job you're applying for is located?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_19018746008",
+      "label": "Additional Information",
+      "fieldType": "freeText.question",
+      "outcome": "filled",
+      "reason": "savedAnswer",
+      "value": "Happy to share more about my projects on request."
+    },
+    {
+      "fieldId": "question_19018747008",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "question_19018748008",
+      "label": "Are you open to relocation for this role?",
+      "fieldType": "pref.relocation",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_19018749008",
+      "label": "What is the address from which you plan on working? If you would need to relocate, please type \"relocating\".",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018750008",
+      "label": "Have you ever interviewed at Anthropic before?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018751008",
+      "label": "Please read the arbitration agreement below",
+      "fieldType": "attestation.other",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "question_19018752008",
+      "label": "Agreement to Arbitrate",
+      "fieldType": "attestation.other",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "gender",
+      "label": "Gender",
+      "fieldType": "selfId.us.sex",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Male"
+    },
+    {
+      "fieldId": "hispanic_ethnicity",
+      "label": "Are you Hispanic/Latino?",
+      "fieldType": "selfId.us.hispanicLatino",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No"
+    },
+    {
+      "fieldId": "veteran_status",
+      "label": "Veteran Status",
+      "fieldType": "selfId.us.veteran",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I am not a protected veteran"
+    },
+    {
+      "fieldId": "race",
+      "label": "Please identify your race",
+      "fieldType": "selfId.us.race",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Asian"
+    }
+  ]
+}

@@ -14,6 +14,8 @@ export default defineConfig(
     'playwright-report/',
     'test-results/',
     'fixtures/',
+    // The fill engine bundled for e2e (e2e/fill-bundle/build.ts): generated.
+    'e2e/.build/',
   ]),
   {
     linterOptions: {

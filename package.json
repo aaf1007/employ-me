@@ -16,10 +16,12 @@
     "build": "pnpm -r build",
     "setup:local": "pnpm build && node packages/helper/dist/cli.mjs setup --extension packages/extension/.output/chrome-mv3",
     "smoke:providers": "vitest run --config packages/helper/vitest.smoke.config.ts",
-    "format": "prettier --write . && eslint . --fix"
+    "format": "prettier --write . && eslint . --fix",
+    "fill-rate": "node tools/fill-rate.ts"
   },
   "devDependencies": {
     "@employ-me/core": "workspace:*",
+    "@employ-me/fill": "workspace:*",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
     "@types/node": "26.6.5",
@@ -29,6 +31,7 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vite": "8.3.5",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
   }
 }

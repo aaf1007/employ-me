@@ -1,0 +1,108 @@
+{
+  "fixture": "ashby/elevenlabs-2026-10-28",
+  "ats": "ashby",
+  "posting": {
+    "title": "Full-Stack Engineer (Backend Leaning)",
+    "company": "ElevenLabs",
+    "location": "United Kingdom",
+    "country": "GB"
+  },
+  "fields": [
+    {
+      "fieldId": "_systemfield_name",
+      "label": "Name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "_systemfield_email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "6f1b584f-ba7d-47eb-a987-ae7e13a9c5d3",
+      "label": "Location",
+      "fieldType": "address.country",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada"
+    },
+    {
+      "fieldId": "_systemfield_resume",
+      "label": "Resume",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "1974207c-3454-40da-b5c7-ac1b86c9ed91_9ea8b1bb-a272-4352-9e26-50b387d8c025",
+      "label": "How did you hear about ElevenLabs?",
+      "fieldType": "screening.howHeard",
+      "outcome": "couldNotFill",
+      "reason": "noMatchingOption",
+      "value": ""
+    },
+    {
+      "fieldId": "f1d7e277-0c8f-4ff9-87d1-3d17914a8063",
+      "label": "If other, please specify below",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "e4a64e8d-f4aa-4cc5-964f-38a42480fc66",
+      "label": "Link to your Github profile",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "c4f15582-25b5-49d8-a22c-b994689cb957",
+      "label": "Link to your LinkedIn profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "29e8435d-6a3d-4cd4-91b4-8e82afa0c1f3",
+      "label": "Why ElevenLabs, and why now?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "94b85326-2bf1-445f-ab41-7f2d316ca9f8",
+      "label": "What's the most impactful thing you've built? What was your specific contribution?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "832af6e6-f4c6-49de-b4d6-e6d3c7041863",
+      "label": "How did you know it worked? What did success actually look like?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "81600888-8c3f-43e6-a3cf-13d5166f5f6c",
+      "label": "Have you used ElevenLabs - even in a personal or side project? What did you build or explore?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    }
+  ]
+}

@@ -6,5 +6,6 @@ playwright-report/
 test-results/
 # Saved ATS forms are kept byte-for-byte as captured.
 fixtures/
+e2e/.build/
 # Prose is written by hand; Prettier would re-wrap tables and lists.
 *.md

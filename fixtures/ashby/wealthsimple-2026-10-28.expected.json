@@ -1,0 +1,92 @@
+{
+  "fixture": "ashby/wealthsimple-2026-10-28",
+  "ats": "ashby",
+  "posting": {
+    "title": "Staff Software Developer, Production Engineering",
+    "company": "Wealthsimple Technologies",
+    "location": "Canada",
+    "country": "CA"
+  },
+  "fields": [
+    {
+      "fieldId": "_systemfield_name",
+      "label": "Name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "_systemfield_email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "_systemfield_resume",
+      "label": "Resume",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "a9db55f8-d0a6-4c52-80d5-da3ebb943502",
+      "label": "Phone Number",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "7397f22a-93e2-4f9d-a3c8-59c83b9ede46",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "4739d095-04c7-4c2c-a5c0-ab305c2a71b9",
+      "label": "Why Wealthsimple?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "2bb4a84c-cba7-407b-be32-04a9424b86d3",
+      "label": "At Wealthsimple, we deeply value diversity, equity, inclusion and belonging. This is optional, however if you feel comfortable, what are your pronouns?",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "205a4ebb-5835-4734-86c6-879d1142e1f7__systemfield_recording_consent",
+      "label": "Interview Recording Consent",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "e2a73ff7-521c-47cb-b7a0-d2a4b0902478",
+      "label": "Are you legally eligible to work in Canada?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "2f76a575-f17c-42a7-93f2-fa1bcbef358d",
+      "label": "What is the location where you permanently reside?",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, Ontario, Canada"
+    }
+  ]
+}

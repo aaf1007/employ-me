@@ -1,0 +1,123 @@
+{
+  "fixture": "generic/helsing-2026-10-28",
+  "ats": "generic",
+  "posting": {
+    "title": "Accountant",
+    "company": "Helsing",
+    "location": "Munich - London"
+  },
+  "fields": [
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "last_name",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phone_number",
+      "label": "Phone Number",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "file",
+      "label": "Resume",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": ""
+    },
+    {
+      "fieldId": "file#2",
+      "label": "Cover Letter",
+      "fieldType": "file.coverLetter",
+      "outcome": "couldNotFill",
+      "reason": "coverLetter",
+      "value": ""
+    },
+    {
+      "fieldId": "question_9310679101",
+      "label": "I have reviewed and understood Helsing's privacy and confidentiality regime. By entering the recruitment process, I consent to the processing of my data as outlined in the policy below* Policy can be found here",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "question_9310680101",
+      "label": "Do you currently hold national security clearance? If yes, please indicate: Country & Level",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_9310681101",
+      "label": "What is your country of residence?",
+      "fieldType": "address.country",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada"
+    },
+    {
+      "fieldId": "question_9310682101",
+      "label": "What is your notice period?",
+      "fieldType": "pref.noticePeriod",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2 weeks"
+    },
+    {
+      "fieldId": "question_9310683101",
+      "label": "Are you open to relocation?",
+      "fieldType": "pref.relocation",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_9310684101",
+      "label": "Do you hold the applicable right to work in the country where the role is located?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "needsReview",
+      "reason": "countryUnclear",
+      "value": ""
+    },
+    {
+      "fieldId": "headlessui-listbox-button-_R_rjlainpfiupivb_",
+      "label": "Which office would you be applying to? Please let us know the closest Helsing office that you wish to apply to",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": "Please select"
+    },
+    {
+      "fieldId": "question_9310686101",
+      "label": "To ensure the most effective and engaging interview experience for both you and our interviewers, we offer the option to utilise Metaview, our interview recording platform. Should you choose to opt-in by clicking 'Yes', an audio-only recording of your interview will be saved, allowing our team to review discussions thoroughly and maintain focus. You retain the right to opt-out of this feature at any point. Please be assured that any video feed will not be recorded or stored. * Your participation is entirely voluntary and will not impact your candidacy. Please see more information on our privacy policy here.",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    }
+  ]
+}

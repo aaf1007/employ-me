@@ -1,0 +1,148 @@
+{
+  "fixture": "greenhouse/faire-2026-10-28",
+  "ats": "greenhouse",
+  "posting": {
+    "title": "Growth Platform, Marketing Engineer",
+    "company": "Faire",
+    "location": "Toronto, ON",
+    "country": "CA"
+  },
+  "fields": [
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "last_name",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "preferred_name",
+      "label": "Preferred First Name",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sammy"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "country",
+      "label": "Country",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "(416) 555-0123"
+    },
+    {
+      "fieldId": "candidate-location",
+      "label": "Location (City)",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, Ontario, Canada"
+    },
+    {
+      "fieldId": "resume",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "<uploading>"
+    },
+    {
+      "fieldId": "cover_letter",
+      "label": "Cover Letter",
+      "fieldType": "file.coverLetter",
+      "outcome": "couldNotFill",
+      "reason": "coverLetter",
+      "value": ""
+    },
+    {
+      "fieldId": "question_38404568002",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "question_38404569002",
+      "label": "Website",
+      "fieldType": "link.portfolio",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "question_38404570002",
+      "label": "Please select your current province of residence. Select “Not in Canada” if you reside outside of Canada. This information helps us understand our talent pool and ensures we provide accurate resources throughout the hiring process.",
+      "fieldType": "address.region",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Ontario"
+    },
+    {
+      "fieldId": "question_38404571002",
+      "label": "This role will be in-office on a hybrid schedule, can you commit to being in-office three days per week at the location where this position is posted?",
+      "fieldType": "pref.workModel",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "question_38404572002",
+      "label": "Before seeing this job posting, how familiar were you with Faire as a company? (Your response will not impact your application)",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "question_38404573002[]",
+      "label": "How did you hear about Faire? (Select all that apply)",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Faire's website"
+    },
+    {
+      "fieldId": "4000460002",
+      "label": "Which categories describe you? Select all that apply to you:",
+      "fieldType": "selfId.other",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I don't wish to answer"
+    },
+    {
+      "fieldId": "4000461002",
+      "label": "How do you currently describe your gender identity?",
+      "fieldType": "selfId.ca.genderIdentity",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Man, male or masculine"
+    }
+  ]
+}

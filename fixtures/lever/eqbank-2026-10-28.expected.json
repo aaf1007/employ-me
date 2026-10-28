@@ -1,0 +1,108 @@
+{
+  "fixture": "lever/eqbank-2026-10-28",
+  "ats": "lever",
+  "posting": {
+    "title": "AI Solutions Engineer, Technology Workplace Services",
+    "company": "EQ Bank | Canada's Challenger Bank",
+    "location": "Toronto",
+    "country": "CA"
+  },
+  "fields": [
+    {
+      "fieldId": "resume-upload-input",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "name",
+      "label": "Full name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "location-input",
+      "label": "Current location",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, ON, CAN"
+    },
+    {
+      "fieldId": "org",
+      "label": "Current company",
+      "fieldType": "work.currentEmployer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Northwind Analytics"
+    },
+    {
+      "fieldId": "cards[b9fc5bb5-a874-42a8-ae8f-b1cc075b96bf][field0]",
+      "label": "Are you legally entitled to work in Canada?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "cards[7ee7f6f6-3de1-45f8-9863-a580748a877a][field0]",
+      "label": "Have you been referred to us by someone that currently works at Equitable Bank? or Are you related to someone working at EQ Bank? If so, who?",
+      "fieldType": "screening.referred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "surveysResponses[54d5f494-8f40-45ec-a0d4-736d5c1eac87][responses][field0]",
+      "label": "Gender Identity:",
+      "fieldType": "selfId.ca.genderIdentity",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Male"
+    },
+    {
+      "fieldId": "surveysResponses[54d5f494-8f40-45ec-a0d4-736d5c1eac87][responses][field1]",
+      "label": "Do you self-identify as an Indigenous or Aboriginal person of North America (Including First Nations, Métis, Inuit)?",
+      "fieldType": "selfId.ca.indigenous",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No"
+    },
+    {
+      "fieldId": "surveysResponses[54d5f494-8f40-45ec-a0d4-736d5c1eac87][responses][field2]",
+      "label": "Do you self-identify as a person with a disability?",
+      "fieldType": "selfId.ca.disability",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No"
+    },
+    {
+      "fieldId": "surveysResponses[54d5f494-8f40-45ec-a0d4-736d5c1eac87][responses][field3]",
+      "label": "Do you self-identify as a racialized person?",
+      "fieldType": "selfId.ca.visibleMinority",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Yes"
+    }
+  ]
+}

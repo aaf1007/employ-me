@@ -1,0 +1,220 @@
+{
+  "fixture": "lever/palantir-2026-10-28",
+  "ats": "lever",
+  "posting": {
+    "title": "Administrative Business Partner - ShipOS",
+    "company": "Palantir Technologies",
+    "location": "New York, NY",
+    "country": "US"
+  },
+  "fields": [
+    {
+      "fieldId": "resume-upload-input",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "name",
+      "label": "Full name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phone",
+      "label": "Phone",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "location-input",
+      "label": "Current location",
+      "fieldType": "address.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, ON, CAN"
+    },
+    {
+      "fieldId": "org",
+      "label": "Current company",
+      "fieldType": "work.currentEmployer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Northwind Analytics"
+    },
+    {
+      "fieldId": "urls[LinkedIn]",
+      "label": "LinkedIn URL",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "urls[GitHub]",
+      "label": "GitHub URL",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "urls[Portfolio]",
+      "label": "Portfolio URL",
+      "fieldType": "link.portfolio",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://sam-lee.example.com"
+    },
+    {
+      "fieldId": "cards[a69a985a-eae9-4c14-90fb-b5a4b891523e][field0]",
+      "label": "Language Skill(s) (Check all that apply)",
+      "fieldType": "language.name",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "English (ENG) | French (FRA)"
+    },
+    {
+      "fieldId": "cards[a69a985a-eae9-4c14-90fb-b5a4b891523e][field1]",
+      "label": "Preferred Name | What would you like us to call you?",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sammy"
+    },
+    {
+      "fieldId": "cards[a69a985a-eae9-4c14-90fb-b5a4b891523e][field2]",
+      "label": "Name Pronunciation | How do you pronounce your name?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "cards[1c719ca9-5069-4afe-9e82-39ca420e0edb][field0]",
+      "label": "Are you legally authorized to work in the country for which you are applying?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "cards[1c719ca9-5069-4afe-9e82-39ca420e0edb][field1]",
+      "label": "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B, etc.)?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "cards[3da58b41-acf5-40a1-945e-c7f047ef8050][field0]",
+      "label": "Which university are you currently attending or did you last attend? Please select \"Other (School Not Listed)\" if your school is not listed.",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Toronto"
+    },
+    {
+      "fieldId": "cards[a6197d84-549e-4a91-8bb0-6af972510013][field0]",
+      "label": "Please tell us how you heard about this opportunity.",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Palantir Website"
+    },
+    {
+      "fieldId": "cards[f30bc442-2120-4db9-b5ac-2f9bf563cad9][field0]",
+      "label": "Do you currently hold an active US security clearance?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "cards[f30bc442-2120-4db9-b5ac-2f9bf563cad9][field1]",
+      "label": "Are you eligible to obtain the security clearance specified in the job description? Please see https://state.gov/security-clearances for further details on security clearance requirements.",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "cards[ce72d538-c9ad-41f3-8e9a-618d40c82e3a][field0]",
+      "label": "What has been your favorite project or proudest accomplishment? Why?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "cards[ce72d538-c9ad-41f3-8e9a-618d40c82e3a][field1]",
+      "label": "Why do you want to work at Palantir?",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "cards[73796cde-fc01-4758-9002-c85155f3503d][field0]",
+      "label": "As part of our interview process, we may use AI notetakers to transcribe conversations for accuracy and efficiency. Please see our candidate privacy policy for more information on how we process your data. Your decision to opt in or out of this tooling will not impact your candidacy.",
+      "fieldType": "attestation.aiPolicy",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "additional-information",
+      "label": "Additional information",
+      "fieldType": "freeText.question",
+      "outcome": "filled",
+      "reason": "savedAnswer",
+      "value": "Happy to share more about my projects on request."
+    },
+    {
+      "fieldId": "eeo[veteran]",
+      "label": "Veteran status",
+      "fieldType": "selfId.us.veteran",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I am not a protected veteran"
+    },
+    {
+      "fieldId": "disabilitySelectElement",
+      "label": "Disability status",
+      "fieldType": "selfId.us.disability",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No, I do not have a disability and have not had one in the past"
+    },
+    {
+      "fieldId": "eeo[disabilitySignature]",
+      "label": "Name",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "eeo[disabilitySignatureDate]",
+      "label": "Date",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    }
+  ]
+}
