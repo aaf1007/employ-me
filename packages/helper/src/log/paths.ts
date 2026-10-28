@@ -2,6 +2,11 @@ import { join, win32 } from 'node:path';
 
 export type HelperPlatform = 'darwin' | 'linux' | 'win32';
 
+/** The platforms the helper supports, or null for any other `process.platform`. */
+export function asHelperPlatform(platform: string): HelperPlatform | null {
+  return platform === 'darwin' || platform === 'linux' || platform === 'win32' ? platform : null;
+}
+
 /**
  * Where the helper writes its log. Documented in CLAUDE.md "Logs".
  * - macOS:   ~/Library/Logs/employ-me/helper.log (shows up in Console.app)

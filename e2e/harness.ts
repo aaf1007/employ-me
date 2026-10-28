@@ -1,6 +1,8 @@
+import { execFile } from 'node:child_process';
 import { access, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { test as base, chromium, type BrowserContext, type Page, type Worker } from '@playwright/test';
 
 // The e2e harness: real Chromium, the built extension loaded unpacked, and
@@ -11,6 +13,7 @@ import { test as base, chromium, type BrowserContext, type Page, type Worker } f
 const ROOT = path.resolve(import.meta.dirname, '..');
 export const EXTENSION_DIR = path.join(ROOT, 'packages/extension/.output/chrome-mv3');
 export const FIXTURES_DIR = path.join(ROOT, 'fixtures');
+const HELPER_CLI = path.join(ROOT, 'packages/helper/dist/cli.mjs');
 
 export type DashboardRoute = 'profile' | 'saved-answers' | 'tracker' | 'settings';
 
@@ -57,6 +60,16 @@ interface Fixtures {
   extension: Extension;
 }
 
+interface Options {
+  /**
+   * `test.use({ helper: 'fake' })` installs the real helper, with the fake
+   * Provider forced on, into this test's browser profile, so the extension
+   * talks to it over Native Messaging. Any other HelperErrorReason makes
+   * every fake Provider call fail with it. Off by default: no helper at all.
+   */
+  helper: 'none' | 'fake' | `fail:${string}`;
+}
+
 // Just enough of chrome.* for the harness. Used only inside evaluate()
 // callbacks, which run in the extension's service worker.
 interface ChromeForHarness {
@@ -66,11 +79,23 @@ interface ChromeForHarness {
   };
 }
 
-export const test = base.extend<Fixtures>({
-  // A fresh profile per test. To e2e the helper later, write a host manifest
-  // into `${userDataDir}/NativeMessagingHosts/` before the context starts.
-  userDataDir: async ({}, use) => {
+export const test = base.extend<Fixtures & Options>({
+  helper: ['none', { option: true }],
+
+  // A fresh profile per test. With a helper, its host manifest goes into
+  // `${userDataDir}/NativeMessagingHosts/` before the context starts.
+  userDataDir: async ({ helper }, use) => {
     const dir = await mkdtemp(path.join(tmpdir(), 'employ-me-e2e-'));
+    if (helper !== 'none') {
+      const fail = helper.startsWith('fail:') ? ['--fail', helper.slice('fail:'.length)] : [];
+      await promisify(execFile)(process.execPath, [
+        HELPER_CLI,
+        'install-test-host',
+        '--user-data-dir',
+        dir,
+        ...fail,
+      ]);
+    }
     await use(dir);
     await rm(dir, { recursive: true, force: true });
   },

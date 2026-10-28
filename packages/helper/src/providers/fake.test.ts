@@ -5,6 +5,7 @@ import {
   type ProviderField,
 } from '@employ-me/core/protocol';
 import { describe, expect, it } from 'vitest';
+import { silentLogger } from '../log/logger';
 import { createFakeProvider } from './fake';
 import { selectProvider } from './select';
 
@@ -61,8 +62,10 @@ describe('fake provider', () => {
 });
 
 describe('selectProvider', () => {
+  const context = { platform: 'darwin', workDir: '/tmp', logger: silentLogger } as const;
+
   it('uses the fake when EMPLOY_ME_PROVIDER=fake, even with no CLI installed', () => {
-    expect(selectProvider('claude', {}, { EMPLOY_ME_PROVIDER: 'fake' })?.isFake).toBe(true);
+    expect(selectProvider('claude', {}, { EMPLOY_ME_PROVIDER: 'fake' }, context)?.isFake).toBe(true);
   });
 
   it('passes EMPLOY_ME_FAKE_FAIL through to the fake', async () => {
@@ -70,13 +73,14 @@ describe('selectProvider', () => {
       'codex',
       {},
       { EMPLOY_ME_PROVIDER: 'fake', EMPLOY_ME_FAKE_FAIL: 'providerTimeout' },
+      context,
     );
     const result = await provider?.mapFields(input, signal);
     expect(result).toMatchObject({ ok: false, error: { reason: 'providerTimeout' } });
   });
 
   it('uses the real CLI otherwise, and nothing when it was not found', () => {
-    expect(selectProvider('claude', { claude: '/usr/local/bin/claude' }, {})?.isFake).toBe(false);
-    expect(selectProvider('codex', {}, {})).toBeNull();
+    expect(selectProvider('claude', { claude: '/usr/local/bin/claude' }, {}, context)?.isFake).toBe(false);
+    expect(selectProvider('codex', {}, {}, context)).toBeNull();
   });
 });
