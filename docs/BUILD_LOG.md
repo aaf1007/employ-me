@@ -455,3 +455,30 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 **Gotchas**
 - Playwright keeps no trace for a passing test. To see where a slow Fill spends its time, log from the content script and write the harness's `logs` to `testInfo.outputPath()` for every test (temporarily).
 - On macOS, busy loops starve Chromium far more than their count suggests: 11 loops gave load averages over 200 and the browsers about one core.
+
+## 2026-10-28 · Side panel: Fill progress, and Open application form (fill posting, extension side panel, docs)
+
+**Landed**
+- **Fill progress.** A bar tops the Fill's results: "Filled 18 of 22 (82%)" (`role="progressbar"`, aria value min/max/now/text) and "Required: 9 of 10". It counts every field in the Fill's view across its steps, the same set as the three groups; only `filled` counts, so Needs your review, Couldn't fill, Attestations and fields waiting for the AI don't. `sidepanel/progress.ts` (pure, unit-tested); the percentage shows 100 only when everything is filled and 0 only when nothing is. Required-ness was already in `FieldView.required` (fill's extract), so extract is unchanged. Field rows gained `data-required` for the spec.
+- **Open application form.** fill `posting/form-url.ts`: `applicationFormUrl(postingPage)` gives Lever `/{co}/{id}/apply`, Ashby `/{org}/{id}/application`, Workday `…/job/…/{slug}_{id}/apply/applyManually` (the address the Workday specs already use; `/details/` pages get none), tracking parameters and the fragment dropped, same host. Greenhouse never: its form is on the description page. On `noForm`, the panel shows the button when the tab's URL gives one; it calls `tabs.update` (`TabLink.open`) and the load that follows runs detection as before, so Fill is ready. Nothing on the page is clicked; act and its guard are untouched. On a page with a rule, detection stops at the content script's first "no form" instead of polling 6 s.
+- No-form wording uses the glossary ("Open the Posting’s Application Form…"), and so does the panel's empty state.
+- Docs: design.md "Starting a Fill" and "What you see", README "Your first Fill".
+
+**Tests**
+- Unit: `form-url.test.ts` (each ATS, the forms themselves, boards, Greenhouse, Workday `/details/`, tracking), `progress.test.ts`, three controller cases (offer and navigate, no rule, form on the page).
+- e2e `fill-progress.spec.ts`: the multi-step synthetic form through rules, the AI round, the Draft's re-plan and step 2 (2/2 → 4/5 → 5/5; a MutationObserver checks the bar matched the rows at every render, including while a field waited for the AI); Anthropic's recorded form with its three Attestations.
+- e2e `open-form.spec.ts`: Lever (then a Fill), Ashby and Workday from the description page to the form with no click or submit on the page (counted in sessionStorage across the navigation); Greenhouse has no button.
+- New synthetic fixtures: `lever/eqbank-description.html`, `ashby/wealthsimple-description.html` (made-up text; the forms are the recorded HARs). Workday uses the recorded RBC Posting page.
+- Load: both specs `--repeat-each 10`, idle 60/60, and with 6 `yes` loops beside 5 workers (load average ~30) 60/60. Full `pnpm test:e2e`: 60/60; `pnpm check` green.
+
+**Interface changes outside the extension**
+- fill exports `applicationFormUrl`; `key.ts` exports `isUuid` inside the package.
+
+**Left**
+- An Ashby Overview you switch to Application yourself is an in-page route change, not a load: the panel still needs Look again there, as before.
+- Workday's `/apply/applyManually` leads to the employer's sign-in, which you complete yourself; not checked against a live Workday.
+- The description-page fixtures are synthetic, not recorded: the recorder only records forms in `e2e/forms.ts`, and fill.spec fills every entry there.
+
+**Gotchas**
+- `sites.serve(url)` matches the exact URL; a page opened with a query needs a RegExp.
+- Specs that open a form must answer its public job API (`servePublicApi`): a blocked fetch logs `ERR_BLOCKED_BY_CLIENT` in the panel, and `extension.errors` catches it.

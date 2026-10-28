@@ -32,9 +32,14 @@ Agreed 2026-10-27. Terms in **bold** are defined in [GLOSSARY.md](../GLOSSARY.md
 
 **Starting a Fill**
 - Nothing happens when a page loads. You click the toolbar icon, the side panel detects the **Application Form**, and you click Fill.
+- **Open application form.** On a Posting's description page whose Application Form is at another address, the side panel shows this button:
+  - Lever `/{co}/{id}` → `/{co}/{id}/apply`; Ashby `/{org}/{id}` → `/{org}/{id}/application`; Workday `…/job/…/{slug}_{id}` → `…/apply/applyManually`.
+  - Greenhouse has no button: its form is on the description page, so Fill works there.
+  - The button only navigates the tab to the form's address on the same job site. It never clicks the page's Apply button, or anything else on the page. Once the form loads, the panel detects it and Fill is ready.
 - One Fill carries on through each later step as you click Next.
 
 **What you see**
+- A progress bar tops the results: "Filled 18 of 22 (82%)", over every field the Fill lists across its steps. Only filled fields count; Needs your review, Couldn't fill, Attestations and fields still waiting for the AI don't. A second line counts the required ones: "Required: 9 of 10". It updates as outcomes arrive: the AI round, each accepted Draft, each later step.
 - The side panel lists fields under Filled, Needs your review, and Couldn't fill.
 - The same fields get matching outlines on the page.
 - Nothing is injected into job sites' own pages.

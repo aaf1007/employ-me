@@ -50,9 +50,9 @@ Nothing else changes: not your shell, not your CLIs' settings, and in Chrome onl
 
 ### 5. Your first Fill
 
-1. Open a job's application page on Greenhouse, Lever or Ashby (or a company site that embeds one).
-2. Click the employ-me icon. The side panel shows the Posting; click **Fill**.
-3. Fields are listed under **Filled**, **Needs your review** and **Couldn't fill**, each with its reason (and for Couldn't fill, what to do), and outlined on the page. Required free-text questions get Drafts: edit and accept them, or write your own. Attestations ("I certify…") are always left for you.
+1. Open a Posting on Greenhouse, Lever or Ashby (or a company site that embeds one): its Application Form, or just its description.
+2. Click the employ-me icon. On a Lever, Ashby or Workday description page, the side panel offers **Open application form**: it takes the tab to the form's address. It doesn't click the page's Apply button. The side panel shows the Posting; click **Fill**.
+3. A bar at the top says how far the Fill got ("Filled 18 of 22 (82%)", and "Required: 9 of 10"), and follows it as the AI answers, as you accept Drafts and on each later step. Only filled fields count. Fields are listed under **Filled**, **Needs your review** and **Couldn't fill**, each with its reason (and for Couldn't fill, what to do), and outlined on the page. Required free-text questions get Drafts: edit and accept them, or write your own. Attestations ("I certify…") are always left for you.
 4. Check the whole form, then click Submit on the page yourself. employ-me never submits. When the site confirms, or you answer **Did you apply?**, the Application and its Snapshot are in the **Tracker**.
 
 On a company's own careers site (not one of those three), employ-me may read the page only after you click its icon on that page, so open the panel from there before you click Fill.
