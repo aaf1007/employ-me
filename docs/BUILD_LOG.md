@@ -198,3 +198,41 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 **Gotchas**
 - `no-restricted-properties` with only `property` also matches object patterns, parameters included (`({ submit }) => …`, renamed or not). Don't give your own objects a field with a banned name (`submit`, `click`, `remove`, `style`, and in core and fill `open`, `browser`).
 - In fill, `const x: Record<string, T> = {}; x[k] = v` fails lint. Build it with `Object.fromEntries`.
+
+## 2026-10-28 · Integration: Milestone 1 in the real extension (extension, fill, lint, e2e)
+
+**Landed**
+- **Opening the panel.** The toolbar icon opens the side panel (`setPanelBehavior`, now checked in `smoke.spec.ts`); it follows the window's active tab (`?tabId=` pins it in e2e). The content script (`src/content/`) answers `detect` from the frame holding the Application Form, so embedded Greenhouse boards work without frame ids. The panel shows the Posting, the already-applied warning (`applications.findByPosting`) and a Resume picker on the default Resume, and reads the Posting's public job API through the net module (now implemented: `fetchPublicPosting`, no cookies, referrer or redirects).
+- **The Fill.** The content script runs `plan`/`execute` with `profile.get` and `resumes.getFile`, and answers a `FillView` (plain JSON: each field's descriptor, type, outcome, review details, Draft request; the `mapFields` input; the answers so far). The panel (`src/sidepanel/`: `PanelController`, `FillFlow`) sends `providerRequest` to `helper.mapFields` and drafts every required free-text question at once (`toDraftContext` from the panel's Profile), then sends `feedback` so the content script plans again (up to 3 rounds, for mappings that turn into Drafts). Fields list under Filled / Needs your review / Couldn't fill (reason and fix); matching outlines go on the page. The AI unavailable: the rules' Fill stands, the helper's fix shows, Retry asks again.
+- **Drafts.** Editable, with unsupported claims flagged. Accept writes through a re-plan (`accepted`) and calls `savedAnswers.saveAcceptedDraft`. Optional questions and cover-letter text fields get a Draft button (fill's `draftRequestFor`). An AI-use policy switches to polish: you write, Polish sends `userDraft`, required questions wait for you (`draftReady`). "Use this" accepts a similar Saved Answer.
+- **Re-planning** (fill, own commit). `execute(plan, previous)` writes only fields the re-plan resolved newly or differently (`writeKey`, a different Resume counts), never a field you changed on the page since the last execute (`userEdited`); when it has an answer for one anyway, the outcome is the new core reason `needsReview: keptYourEdit`. Fields that left the page keep their outcomes. Tests in `execute/replan.test.ts`.
+- **Multi-step.** The content script watches for fields no plan has seen (`formChanged` on the session port) and the panel carries the same Fill on; a form whose steps are separate page loads is filled as each page of the same Posting loads, and answers carry across pages.
+- **Submission.** The session port carries your answers (on edits, and at once on pointerdown and submit, before a Submit navigates away) and `watchForSubmission`'s signal. A confirmation (Greenhouse's history change, Lever's `/thanks` load, Ashby's success screen, the embed's `/embed/job_app/confirmation`) records the Application with its Snapshot: the public API's description, the answers (fill's `submittedAnswers`: never files, never-stored types or signatures; Self-ID included, it stays local) and the Resume. Leaving a filled form without one (another page, the tab closed, or a submit with no confirmation in 15 s) asks "Did you apply?".
+- **Copy debug report**: labels, types, outcomes, reasons and fixes; no values, suggestions, Drafts or option text, query strings stripped, and any of your own words still found in it replaced with `[removed]`.
+- **e2e** (`helper: 'fake'`): `milestone-1.spec.ts` runs the whole flow per ATS (Greenhouse geotab, Lever palantir in polish mode, Ashby wealthsimple, and the MongoDB embed), Tracker and Snapshot included, then the already-applied warning. `side-panel.spec.ts`: next step on a synthetic multi-step form (`fixtures/greenhouse/multi-step.html`) with your edit kept, "Did you apply?", the debug report, and a rate-limited Provider.
+
+**Cross-package changes** (each its own commit)
+- core: `keptYourEdit` review reason.
+- fill: `execute(plan, previous)` and `FillReport.planned/values/writes/userEdited`; `read/` (`readFieldValue`, `fieldFingerprint`, `submittedAnswers`, `keptInSnapshot`); `act.outlineField`/`act.clearOutlines` (guard op `outline`) and `showOutcomes`/`clearOutcomes`; `draftRequestFor`/`draftFieldType`; `act/events` picks `PointerEvent` per press so fill imports outside a page (the extension's Node unit tests). No adapter or registry change.
+- helper: the fake Provider's Drafts carry one unsupported claim, and polish returns your text marked `(polished)`.
+- Convention (hard rule 5): CODING_STANDARDS said "no styles" on job sites' pages, design.md asks for outlines. Outlines are now the one exception, act-only (CODING_STANDARDS "DOM"). The content script has its own lint scope, `extension-content`, with fill's read-only rules plus no network and no global object (firing cases in `boundaries.test.ts`); it reads `location.ancestorOrigins` instead of `window.top`.
+- e2e harness: `tabIdOf` finds a tab whose URL is hidden (a company site embedding a form) by its content script's frame.
+
+**Decisions the docs didn't cover**
+- The panel drives the helper (extension pages only may) and owns the ProviderFeedback; the content script keeps the plan and the last report for its document. One session port per Fill: when it closes (panel closed, page gone) the content script clears the outlines and forgets the Fill.
+- A page load is `loading` then `complete`; history changes keep the document and aren't loads.
+- The Posting stored with an Application has no description; it lives in the Snapshot (as the Tracker expects).
+- Polish-mode required questions count as `draftReady` (the card waits for your text), not "Couldn't fill".
+
+**Left**
+- Unverified: Chrome's real side panel (Playwright opens sidepanel.html in a tab), following the active tab, real Claude and Codex Drafts, the tab-closed "Did you apply?" path and forms whose steps are separate pages (unit-tested only).
+- The generic fallback isn't wired: the content script only runs on ATS hosts, so company sites show "no Application Form". It needs the optional host permission requested on a Fill click, then `scripting.executeScript` of the content script.
+- Drafts are always requested in English (`language: 'en'` in fill's draft request); design.md wants the question's language.
+- Each Fill (and each step) re-reads the Profile and the Resume file from the background; fine locally, could be cached per session.
+- Commit 169a5e4's message predates main's lint hardening: its narrow style rule was dropped in the rebase for main's `READ_ONLY_DOM`, which already bans `style` in fill.
+
+**Gotchas**
+- Opening the side panel reads the Posting's public API, and Chrome logs a console error for a blocked request: any spec that opens the panel on a form must answer that API (`servePublicApi` in `e2e/panel.ts`), or `extension.errors` fails.
+- Playwright can't grant clipboard permissions to an extension origin; the debug-report spec stubs `navigator.clipboard`.
+- Seed e2e data by restoring a backup from Settings (`e2e/seed.ts`), not by writing IndexedDB.
+- `browser.tabs.sendMessage` goes to every frame: content-script handlers must not answer (return false) unless their frame holds the form, or a frameless top page answers first.
