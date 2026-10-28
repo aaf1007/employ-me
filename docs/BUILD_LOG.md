@@ -97,3 +97,23 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - eslint-plugin-react-hooks 7 includes the React Compiler rules (`refs`, `purity`, `set-state-in-effect`, …). Load data in effects with the `setState` inside the promise callback, and call `new Date()` / `crypto.randomUUID()` only in event handlers.
 - fake-indexeddb 6.2.6 (dev dependency) backs the data layer's unit tests. Real Chrome storage is covered by e2e (Blob round trip in the backup spec).
 - In e2e, wait for the list after a delete before clicking the next row: it reloads from the broadcast, and a stale count races it.
+
+## 2026-10-28 · Helper uses the model picked in Settings (packages/helper)
+
+**Landed**
+- A task runs on `request.model`, else `models.<provider>` in config.json, else the default (Sonnet for Claude, the account's default for Codex). `src/providers/model.ts` (`resolveModel`) does the choosing for both Providers, inside `createCliProvider`; `dispatch` hands `request.model` to the Provider as a third argument (`HelperProvider` only: core's `Provider` is unchanged).
+- Claude gets it as `--model`. Codex gets it in `thread/start`. `model/list` is now kept (`AppServer.models`); a name the catalog doesn't offer runs on the account's default instead (the d49a707 ChatGPT-login fix), and the helper log gets `provider.modelFallback` (no name in it).
+- A model name becomes CLI input, so it is checked with core's `modelIdSchema` (starts with a letter or digit, no spaces or shell characters, 100 max) wherever it comes from. `dispatch` already refuses a bad `request.model` at the schema (`invalidRequest`, with a fix that points at Settings); `resolveModel` checks again and also covers config.json (`providerFailed`, with a fix that points at config.json). Nothing is spawned, and the name is never echoed.
+- `.claude/worktrees/` is git-ignored.
+
+**Decisions the docs didn't cover**
+- A bad config.json model only fails requests that use it: a valid `request.model` never reads it. I left `helperConfigSchema` loose (`z.string()`), since a strict one would make the whole config "invalid" and every Provider report `providerNotFound`.
+- Codex's fallback is silent to the user (it is the AI choosing a model, not a failure); only the log notes it. If the catalog can't be read there is no list to check, so the account default is null and Codex picks, as before.
+
+**Left**
+- A Claude model that `claude` itself rejects (a well-formed name that doesn't exist) comes back as the generic `providerFailed`. Telling the user which model was wrong needs the CLI's error text matched, like `NOT_LOGGED_IN` in `claude/output.ts`.
+- `model/list` is read as one page. The real one returned 6 models and `nextCursor: null` on codex 0.158.0; follow the cursor if that changes.
+- Nothing yet shows the user, in Settings, which models Codex offers.
+
+**Gotchas**
+- `STUB_*` knobs are unchanged: the Codex stub's catalog already offers `stub-big` and `stub-default` (default), which is what the new tests use.

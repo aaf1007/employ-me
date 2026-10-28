@@ -2,7 +2,8 @@ import { toProviderField, type MapFieldsInput } from '@employ-me/core/protocol';
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { STUB_CODEX, scratch, type Scratch } from '../../../test/stub-cli';
-import { silentLogger } from '../../log/logger';
+import { UNSAFE_MODEL_NAMES } from '../../../test/unsafe-models';
+import { silentLogger, type LogEntry } from '../../log/logger';
 import type { HelperProvider } from '../task';
 import { createCodexProvider } from './provider';
 
@@ -63,7 +64,7 @@ afterEach(async () => {
 
 function provider(
   knobs: Record<string, string>,
-  timeoutMs?: number,
+  extra: { timeoutMs?: number; model?: string; logs?: LogEntry[] } = {},
 ): { codex: HelperProvider; tmp: Scratch } {
   const tmp = scratch();
   const codex = createCodexProvider({
@@ -71,8 +72,9 @@ function provider(
     cliPath: STUB_CODEX,
     cwd: tmp.dir,
     env: tmp.env({ OPENAI_API_KEY: 'sk-test-not-real', ...knobs }),
-    logger: silentLogger,
-    ...(timeoutMs === undefined ? {} : { timeoutMs }),
+    logger: extra.logs === undefined ? silentLogger : { log: (entry) => extra.logs?.push(entry) },
+    ...(extra.timeoutMs === undefined ? {} : { timeoutMs: extra.timeoutMs }),
+    ...(extra.model === undefined ? {} : { model: extra.model }),
   });
   open.push(codex);
   return { codex, tmp };
@@ -158,6 +160,58 @@ describe('Codex Provider', () => {
     expect(messages(tmp, 'thread/start')[0]?.params).toMatchObject({ model: 'stub-default' });
   });
 
+  describe('model', () => {
+    // The stub's catalog offers stub-big and stub-default, and marks stub-default the default.
+    const run = async (config: string | undefined, requested: string | undefined) => {
+      const logs: LogEntry[] = [];
+      const { codex, tmp } = provider(
+        { STUB_OUTPUT: ANSWER },
+        { logs, ...(config === undefined ? {} : { model: config }) },
+      );
+      const result = await codex.mapFields(input(), signal, requested);
+      return { result, tmp, logs, model: messages(tmp, 'thread/start')[0]?.params };
+    };
+
+    it('is the request, then config.json, then the account default', async () => {
+      expect((await run('stub-default', 'stub-big')).model).toMatchObject({ model: 'stub-big' });
+      expect((await run(undefined, 'stub-big')).model).toMatchObject({ model: 'stub-big' });
+      expect((await run('stub-big', undefined)).model).toMatchObject({ model: 'stub-big' });
+      expect((await run(undefined, undefined)).model).toMatchObject({ model: 'stub-default' });
+    });
+
+    it("falls back to the account default when the catalog doesn't offer the request's model", async () => {
+      const { result, model, logs } = await run('stub-big', 'stub-missing');
+      expect(result.ok).toBe(true);
+      expect(model).toMatchObject({ model: 'stub-default' });
+      expect(logs).toContainEqual({ event: 'provider.modelFallback', provider: 'codex' });
+    });
+
+    it("falls back to the account default when the catalog doesn't offer config.json's model", async () => {
+      const { result, model, logs } = await run('stub-missing', undefined);
+      expect(result.ok).toBe(true);
+      expect(model).toMatchObject({ model: 'stub-default' });
+      expect(logs.map((entry) => entry.event)).toContain('provider.modelFallback');
+    });
+
+    it('does not log a fallback when the model is offered', async () => {
+      expect((await run(undefined, 'stub-big')).logs.map((entry) => entry.event)).not.toContain(
+        'provider.modelFallback',
+      );
+    });
+
+    it.each(UNSAFE_MODEL_NAMES)('refuses the requested model %j before starting Codex', async (name) => {
+      const { result, tmp } = await run('stub-big', name);
+      expect(result).toMatchObject({ ok: false, error: { reason: 'invalidRequest' } });
+      expect(tmp.records()).toEqual([]);
+    });
+
+    it.each(UNSAFE_MODEL_NAMES)('refuses the config.json model %j before starting Codex', async (name) => {
+      const { result, tmp } = await run(name, undefined);
+      expect(result).toMatchObject({ ok: false, error: { reason: 'providerFailed' } });
+      expect(tmp.records()).toEqual([]);
+    });
+  });
+
   it('says so when the model is not available on the plan', async () => {
     const result = await provider({ STUB_MODE: 'modelNotFound' }).codex.mapFields(input(), signal);
     expect(result).toMatchObject({ ok: false, error: { reason: 'providerFailed' } });
@@ -180,7 +234,7 @@ describe('Codex Provider', () => {
   });
 
   it('interrupts a turn that takes too long', async () => {
-    const { codex, tmp } = provider({ STUB_MODE: 'hang' }, 300);
+    const { codex, tmp } = provider({ STUB_MODE: 'hang' }, { timeoutMs: 300 });
     expect(await codex.mapFields(input(), signal)).toMatchObject({
       ok: false,
       error: { reason: 'providerTimeout' },

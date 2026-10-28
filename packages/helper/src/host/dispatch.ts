@@ -12,6 +12,7 @@ import {
 import type { z } from 'zod';
 import type { Logger } from '../log/logger';
 import { providerError } from '../providers/errors';
+import { invalidModelName } from '../providers/model';
 import type { ProviderRegistry } from '../providers/select';
 
 export interface DispatchDeps {
@@ -79,21 +80,21 @@ async function run(request: HelperRequest, deps: DispatchDeps, signal: AbortSign
     result.ok ? ok(result.value) : failed(result.error);
   switch (request.type) {
     case 'mapFields':
-      return respond(await provider.mapFields(request.input, signal), (result) => ({
+      return respond(await provider.mapFields(request.input, signal, request.model), (result) => ({
         ...base,
         ok: true,
         type: 'mapFields',
         result,
       }));
     case 'draftAnswer':
-      return respond(await provider.draftAnswer(request.input, signal), (result) => ({
+      return respond(await provider.draftAnswer(request.input, signal, request.model), (result) => ({
         ...base,
         ok: true,
         type: 'draftAnswer',
         result,
       }));
     case 'parseResume':
-      return respond(await provider.parseResume(request.input, signal), (result) => ({
+      return respond(await provider.parseResume(request.input, signal, request.model), (result) => ({
         ...base,
         ok: true,
         type: 'parseResume',
@@ -113,6 +114,7 @@ function invalid(raw: unknown, error: z.ZodError): HelperError {
       `The extension speaks another protocol version; this helper speaks ${PROTOCOL_VERSION}`,
     );
   }
+  if (error.issues.some((issue) => issue.path[0] === 'model')) return invalidModelName();
   const paths = error.issues.map((issue) => issue.path.map(String).join('.') || '(root)');
   const smuggled = error.issues.some(
     (issue) => issue.code === 'unrecognized_keys' && issue.path[0] === 'input',

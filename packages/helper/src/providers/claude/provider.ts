@@ -15,6 +15,7 @@ export interface ClaudeProviderOptions {
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
   readonly logger: Logger;
+  /** config.json's model; a request's model wins over it. Unset: Sonnet. */
   readonly model?: string;
   /** Overrides each task's own timeout. For tests. */
   readonly timeoutMs?: number;
@@ -26,15 +27,15 @@ export interface ClaudeProviderOptions {
  * Swappable for an API-key Provider without touching anything else.
  */
 export function createClaudeProvider(options: ClaudeProviderOptions): HelperProvider {
-  const model = options.model ?? DEFAULT_CLAUDE_MODEL;
   return createCliProvider('claude', {
+    ...(options.model === undefined ? {} : { configuredModel: options.model }),
     status: () => claudeStatus(options),
-    async run(task, signal) {
+    async run(task, signal, model) {
       options.logger.log({ event: 'provider.spawn', provider: 'claude', type: task.type });
       const outcome = await runProcess({
         platform: options.platform,
         command: options.cliPath,
-        args: claudeArgs(task, model),
+        args: claudeArgs(task, model ?? DEFAULT_CLAUDE_MODEL),
         input: task.prompt,
         env: claudeEnv(options.env),
         cwd: options.cwd,

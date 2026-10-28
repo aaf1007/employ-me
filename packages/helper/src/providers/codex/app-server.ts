@@ -26,6 +26,8 @@ export interface AppServer {
   readonly exited: Promise<void>;
   /** The account's default model from `model/list`, or null if unknown. */
   readonly defaultModel: string | null;
+  /** Every model `model/list` offers this account. Empty if the catalog couldn't be read. */
+  readonly models: readonly string[];
   stop(): void;
 }
 
@@ -93,21 +95,25 @@ export async function startAppServer(options: AppServerOptions): Promise<Result<
     return err(providerError('codex', 'providerFailed', "codex app-server didn't start"));
   }
   rpc.notify('initialized');
-  return ok({ rpc, exited, stop, defaultModel: await accountDefaultModel(rpc) });
+  return ok({ rpc, exited, stop, ...(await accountModels(rpc)) });
 }
 
 const modelListSchema = z.object({ data: z.array(z.object({ model: z.string(), isDefault: z.boolean() })) });
 
 /**
- * The model Codex's catalog marks default for this account. The model in
- * the user's config.toml may be one their plan can't use with a ChatGPT
- * login (seen: "model_not_found"), and design.md asks for "the default
- * model". Null if the catalog can't be read: then Codex picks.
+ * The models Codex's catalog offers this account, and the one it marks
+ * default. The model in the user's config.toml may be one their plan can't
+ * use with a ChatGPT login (seen: "model_not_found"), and design.md asks
+ * for "the default model". With no catalog, the default is null and Codex
+ * picks.
  */
-async function accountDefaultModel(rpc: RpcClient): Promise<string | null> {
+async function accountModels(rpc: RpcClient): Promise<Pick<AppServer, 'defaultModel' | 'models'>> {
   const listed = await rpc.request('model/list', {}, STARTUP_TIMEOUT_MS);
-  const models = listed.ok ? modelListSchema.safeParse(listed.value).data?.data : undefined;
-  return models?.find((model) => model.isDefault)?.model ?? null;
+  const entries = (listed.ok ? modelListSchema.safeParse(listed.value).data?.data : undefined) ?? [];
+  return {
+    defaultModel: entries.find((entry) => entry.isDefault)?.model ?? null,
+    models: entries.map((entry) => entry.model),
+  };
 }
 
 /** Names of the user's enabled MCP servers, to switch off. Fails closed. */

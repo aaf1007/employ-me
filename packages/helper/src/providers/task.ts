@@ -1,4 +1,15 @@
-import type { HelperError, Provider, ProviderStatus, Result } from '@employ-me/core/protocol';
+import type {
+  DraftAnswerOutput,
+  DraftContext,
+  HelperError,
+  MapFieldsInput,
+  MapFieldsOutput,
+  ParseResumeInput,
+  ParseResumeOutput,
+  Provider,
+  ProviderStatus,
+  Result,
+} from '@employ-me/core/protocol';
 
 export type JsonSchema = Readonly<Record<string, unknown>>;
 
@@ -18,15 +29,43 @@ export interface TaskSpec {
   readonly timeoutMs: number;
 }
 
-/** Runs a task and returns the CLI's structured output, unparsed. */
-export type TaskRunner = (task: TaskSpec, signal: AbortSignal) => Promise<Result<unknown, HelperError>>;
+/**
+ * Runs a task and returns the CLI's structured output, unparsed. `model` is
+ * already checked (model.ts); null means the engine's own default.
+ */
+export type TaskRunner = (
+  task: TaskSpec,
+  signal: AbortSignal,
+  model: string | null,
+) => Promise<Result<unknown, HelperError>>;
 
-/** A Provider the host owns for its lifetime. `close` stops anything it keeps warm. */
+/**
+ * A Provider the host owns for its lifetime. `close` stops anything it keeps
+ * warm. Each call may name a model (the request's, from Settings); it wins
+ * over config.json's, which wins over the default.
+ */
 export interface HelperProvider extends Provider {
+  mapFields(
+    input: MapFieldsInput,
+    signal: AbortSignal,
+    model?: string,
+  ): Promise<Result<MapFieldsOutput, HelperError>>;
+  draftAnswer(
+    input: DraftContext,
+    signal: AbortSignal,
+    model?: string,
+  ): Promise<Result<DraftAnswerOutput, HelperError>>;
+  parseResume(
+    input: ParseResumeInput,
+    signal: AbortSignal,
+    model?: string,
+  ): Promise<Result<ParseResumeOutput, HelperError>>;
   close(): Promise<void>;
 }
 
 export interface ProviderEngine {
+  /** config.json's model for this engine; a request's model wins over it. */
+  readonly configuredModel?: string;
   readonly status: () => Promise<ProviderStatus>;
   readonly run: TaskRunner;
   readonly close?: () => Promise<void>;

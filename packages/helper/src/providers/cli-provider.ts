@@ -11,16 +11,23 @@ import {
 import type { z } from 'zod';
 import { draftAnswerPrompt, mapFieldsPrompt, parseResumePrompt, type Prompt } from '../prompts';
 import { extractResumeText } from '../resume/extract';
+import { resolveModel } from './model';
 import type { HelperProvider, ProviderEngine } from './task';
 
 /**
  * A Provider backed by a CLI engine (Claude or Codex). The prompts, the
- * Resume text extraction and the output parsing are the same for both; the
- * engine only runs a task and returns structured output.
+ * Resume text extraction, the model choice and the output parsing are the
+ * same for both; the engine only runs a task and returns structured output.
  */
 export function createCliProvider(id: ProviderId, engine: ProviderEngine): HelperProvider {
-  const execute = async <T>(prompt: Prompt<T>, signal: AbortSignal): Promise<Result<T, HelperError>> => {
-    const raw = await engine.run(prompt.task, signal);
+  const execute = async <T>(
+    prompt: Prompt<T>,
+    signal: AbortSignal,
+    requestedModel: string | undefined,
+  ): Promise<Result<T, HelperError>> => {
+    const model = resolveModel(id, requestedModel, engine.configuredModel);
+    if (!model.ok) return model;
+    const raw = await engine.run(prompt.task, signal, model.value);
     return raw.ok ? prompt.finish(raw.value) : raw;
   };
   return {
@@ -28,14 +35,14 @@ export function createCliProvider(id: ProviderId, engine: ProviderEngine): Helpe
     isFake: false,
     status: engine.status,
     close: engine.close ?? (() => Promise.resolve()),
-    mapFields: (input, signal) =>
-      revalidate(mapFieldsInputSchema, input, (valid) => execute(mapFieldsPrompt(valid), signal)),
-    draftAnswer: (input, signal) =>
-      revalidate(draftContextSchema, input, (valid) => execute(draftAnswerPrompt(valid), signal)),
-    parseResume: (input, signal) =>
+    mapFields: (input, signal, model) =>
+      revalidate(mapFieldsInputSchema, input, (valid) => execute(mapFieldsPrompt(valid), signal, model)),
+    draftAnswer: (input, signal, model) =>
+      revalidate(draftContextSchema, input, (valid) => execute(draftAnswerPrompt(valid), signal, model)),
+    parseResume: (input, signal, model) =>
       revalidate(parseResumeInputSchema, input, async (valid) => {
         const text = await extractResumeText(valid);
-        return text.ok ? execute(parseResumePrompt(text.value), signal) : text;
+        return text.ok ? execute(parseResumePrompt(text.value), signal, model) : text;
       }),
   };
 }

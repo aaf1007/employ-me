@@ -15,7 +15,9 @@ export interface LogEntry {
     | 'request.done'
     | 'request.failed'
     | 'provider.spawn'
-    | 'provider.exit';
+    | 'provider.exit'
+    /** The model asked for wasn't offered, so the account default ran. The name is never logged. */
+    | 'provider.modelFallback';
   readonly requestId?: string;
   readonly type?: HelperRequestType;
   readonly provider?: ProviderId;

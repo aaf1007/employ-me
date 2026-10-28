@@ -2,6 +2,7 @@ import { toProviderField, type MapFieldsInput } from '@employ-me/core/protocol';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { STUB_CLAUDE, scratch } from '../../../test/stub-cli';
+import { UNSAFE_MODEL_NAMES } from '../../../test/unsafe-models';
 import { silentLogger } from '../../log/logger';
 import { createClaudeProvider } from './provider';
 
@@ -30,7 +31,10 @@ const ANSWER = {
   ],
 };
 
-function provider(knobs: Record<string, string>, extra: { cliPath?: string; timeoutMs?: number } = {}) {
+function provider(
+  knobs: Record<string, string>,
+  extra: { cliPath?: string; timeoutMs?: number; model?: string } = {},
+) {
   const tmp = scratch();
   const claude = createClaudeProvider({
     platform: 'darwin',
@@ -39,12 +43,17 @@ function provider(knobs: Record<string, string>, extra: { cliPath?: string; time
     env: tmp.env({ ANTHROPIC_API_KEY: 'sk-ant-test-not-real', ...knobs }),
     logger: silentLogger,
     ...(extra.timeoutMs === undefined ? {} : { timeoutMs: extra.timeoutMs }),
+    ...(extra.model === undefined ? {} : { model: extra.model }),
   });
   return { claude, tmp };
 }
 
 const recordSchema = z.object({ argv: z.array(z.string()), stdin: z.string(), hasApiKey: z.boolean() });
 const firstRecord = (tmp: ReturnType<typeof scratch>) => recordSchema.parse(tmp.records()[0]);
+const modelOf = (tmp: ReturnType<typeof scratch>) => {
+  const argv = firstRecord(tmp).argv;
+  return argv[argv.indexOf('--model') + 1];
+};
 
 describe('Claude Provider', () => {
   it('maps fields through `claude -p` and returns core output', async () => {
@@ -75,6 +84,45 @@ describe('Claude Provider', () => {
     expect(argv[argv.indexOf('--tools') + 1]).toBe('');
     expect(argv[argv.indexOf('--setting-sources') + 1]).toBe('');
     expect(argv[argv.indexOf('--model') + 1]).toBe('sonnet');
+  });
+
+  describe('model', () => {
+    const run = (config: string | undefined, requested: string | undefined) => {
+      const { claude, tmp } = provider(
+        { STUB_OUTPUT: JSON.stringify(ANSWER) },
+        config === undefined ? {} : { model: config },
+      );
+      return claude.mapFields(input(), signal, requested).then((result) => ({ result, tmp }));
+    };
+
+    it('is the request, then config.json, then Sonnet', async () => {
+      expect(modelOf((await run('claude-opus-4-5', 'haiku')).tmp)).toBe('haiku');
+      expect(modelOf((await run(undefined, 'haiku')).tmp)).toBe('haiku');
+      expect(modelOf((await run('claude-opus-4-5', undefined)).tmp)).toBe('claude-opus-4-5');
+      expect(modelOf((await run(undefined, undefined)).tmp)).toBe('sonnet');
+    });
+
+    it.each(UNSAFE_MODEL_NAMES)('refuses the requested model %j before running the CLI', async (name) => {
+      const { result, tmp } = await run('haiku', name);
+      expect(result).toMatchObject({ ok: false, error: { reason: 'invalidRequest' } });
+      expect(tmp.records()).toEqual([]);
+    });
+
+    it.each(UNSAFE_MODEL_NAMES)('refuses the config.json model %j before running the CLI', async (name) => {
+      const { result, tmp } = await run(name, undefined);
+      expect(result).toMatchObject({ ok: false, error: { reason: 'providerFailed' } });
+      expect(tmp.records()).toEqual([]);
+    });
+
+    it('is checked for Resume parsing too', async () => {
+      const { claude, tmp } = provider({});
+      await claude.parseResume(
+        { fileName: 'resume.txt', mimeType: 'text/plain', dataBase64: 'U2FtIExlZQ==' },
+        signal,
+        '--tools',
+      );
+      expect(tmp.records()).toEqual([]);
+    });
   });
 
   it('strips ANTHROPIC_API_KEY so the plan is used, and sends the request on stdin, not argv', async () => {

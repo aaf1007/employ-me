@@ -9,3 +9,5 @@ test-results/
 *.log
 # The extension's private key. Not needed for unpacked installs; never commit it.
 .keys/
+# Agent worktrees
+.claude/worktrees/

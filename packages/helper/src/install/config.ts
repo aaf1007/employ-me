@@ -14,7 +14,7 @@ export const helperConfigSchema = z.object({
   nodePath: z.string().optional(),
   /** Absolute CLI paths found at setup. Chrome launched from the Dock has no shell PATH (ADR-0001). */
   cli: z.object({ claude: z.string().optional(), codex: z.string().optional() }).default({}),
-  /** Model overrides. Unset means Sonnet for Claude and your default model for Codex (design.md "Default models"). */
+  /** Model overrides, used when a request (the model picked in Settings) names none. Unset means Sonnet for Claude and your default model for Codex (design.md "Default models"). */
   models: z.object({ claude: z.string().optional(), codex: z.string().optional() }).default({}),
   /** An empty folder the CLIs run in. */
   workDir: z.string(),

@@ -16,7 +16,7 @@ export interface CodexProviderOptions {
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
   readonly logger: Logger;
-  /** Unset: the account's default model in Codex's catalog (`model/list`). */
+  /** config.json's model; a request's model wins over it. Unset: the account's default in Codex's catalog. */
   readonly model?: string;
   /** Overrides each task's own timeout. For tests. */
   readonly timeoutMs?: number;
@@ -44,6 +44,7 @@ export function createCodexProvider(options: CodexProviderOptions): HelperProvid
   };
 
   return createCliProvider('codex', {
+    ...(options.model === undefined ? {} : { configuredModel: options.model }),
     async status(): Promise<ProviderStatus> {
       const base = { id: 'codex' as const, path: options.cliPath };
       const version = await runProcess({
@@ -62,11 +63,11 @@ export function createCodexProvider(options: CodexProviderOptions): HelperProvid
       }
       return { ...withVersion, ...(await codexLogin(started.value)) };
     },
-    async run(task, signal) {
+    async run(task, signal, requested) {
       const started = await connect();
       if (!started.ok) return started;
       const timed = options.timeoutMs === undefined ? task : { ...task, timeoutMs: options.timeoutMs };
-      const model = options.model ?? started.value.defaultModel;
+      const model = chooseModel(started.value, requested, options.logger);
       return runCodexTurn(started.value, timed, { cwd: options.cwd, model }, signal);
     },
     async close() {
@@ -79,6 +80,19 @@ export function createCodexProvider(options: CodexProviderOptions): HelperProvid
       }
     },
   });
+}
+
+/**
+ * The model for a turn: the one asked for if the account's catalog offers
+ * it, else the account's default. A name the plan can't use would end as
+ * "model_not_found", and the AI never blocks a Fill (design.md "AI"), so the
+ * fallback is logged, not an error.
+ */
+function chooseModel(server: AppServer, requested: string | null, logger: Logger): string | null {
+  if (requested === null) return server.defaultModel;
+  if (server.models.includes(requested)) return requested;
+  logger.log({ event: 'provider.modelFallback', provider: 'codex' });
+  return server.defaultModel;
 }
 
 function versionOf(stdout: string): { version?: string } {
