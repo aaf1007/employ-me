@@ -224,11 +224,19 @@ export const fieldMatchSchema = z.discriminatedUnion('kind', [
 export type FieldMatch = z.infer<typeof fieldMatchSchema>;
 
 export const mapFieldsOutputSchema = z.object({
-  mappings: z.array(z.object({ fieldId: z.string(), match: fieldMatchSchema })),
+  mappings: z.array(
+    z.object({
+      fieldId: z.string(),
+      match: fieldMatchSchema,
+      /** How sure the Provider is, 0 to 1. The fill engine can send low-confidence matches to review. */
+      confidence: z.number().min(0).max(1),
+    }),
+  ),
 });
 export type MapFieldsOutput = z.infer<typeof mapFieldsOutputSchema>;
 
-export const CLAIM_SUPPORT = ['profile', 'savedAnswer', 'posting', 'unsupported'] as const;
+/** Where a claim in a Draft came from. `userDraft` is your own text, in polish mode. */
+export const CLAIM_SUPPORT = ['profile', 'savedAnswer', 'posting', 'userDraft', 'unsupported'] as const;
 
 export const draftSchema = z.object({
   text: z.string(),

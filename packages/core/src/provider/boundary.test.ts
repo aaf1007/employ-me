@@ -4,12 +4,15 @@ import { profileSchema } from '../profile/profile';
 import { helperRequestSchema } from '../protocol/messages';
 import { FIELD_TYPE_IDS, sensitivityOf } from '../taxonomy';
 import {
+  draftSchema,
   mapFieldsInputSchema,
+  mapFieldsOutputSchema,
   toDraftContext,
   toProviderField,
   type MapFieldsInput,
   type ProviderField,
 } from './boundary';
+import { providerStatusSchema } from './provider';
 
 const field: FieldDescriptor = {
   fieldId: 'question_123',
@@ -123,5 +126,40 @@ describe('helperRequestSchema', () => {
     const smuggled = { ...context.value, facts: { ...context.value.facts, selfId: profile.selfId } };
     const request = { v: 1, id: 'r1', type: 'draftAnswer', provider: 'claude', input: smuggled };
     expect(helperRequestSchema.safeParse(request).success).toBe(false);
+  });
+});
+
+describe('Provider outputs', () => {
+  const mapping = { fieldId: 'q1', match: { kind: 'needsDraft' } };
+
+  it('carries a confidence between 0 and 1 for every mapping', () => {
+    expect(mapFieldsOutputSchema.safeParse({ mappings: [{ ...mapping, confidence: 0.7 }] }).success).toBe(
+      true,
+    );
+    expect(mapFieldsOutputSchema.safeParse({ mappings: [mapping] }).success).toBe(false);
+    expect(mapFieldsOutputSchema.safeParse({ mappings: [{ ...mapping, confidence: 1.5 }] }).success).toBe(
+      false,
+    );
+  });
+
+  it("marks claims taken from the user's own draft in polish mode", () => {
+    const draft = {
+      text: 'I led the move.',
+      language: 'en',
+      claims: [{ text: 'I led', support: 'userDraft' }],
+    };
+    expect(draftSchema.safeParse(draft).success).toBe(true);
+  });
+
+  it('reports remaining plan usage when the CLI has it', () => {
+    const status = {
+      id: 'codex',
+      state: 'ready',
+      quota: [{ remainingPercent: 88, windowMinutes: 300, resetsAt: '2026-10-28T03:00:00Z' }],
+    };
+    expect(providerStatusSchema.parse(status).quota?.[0]?.remainingPercent).toBe(88);
+    expect(providerStatusSchema.safeParse({ ...status, quota: [{ remainingPercent: 120 }] }).success).toBe(
+      false,
+    );
   });
 });

@@ -38,8 +38,8 @@ describe('fake provider', () => {
       ok: true,
       value: {
         mappings: [
-          { fieldId: 'q1', match: { kind: 'needsDraft' } },
-          { fieldId: 'q2', match: { kind: 'unknown' } },
+          { fieldId: 'q1', match: { kind: 'needsDraft' }, confidence: 1 },
+          { fieldId: 'q2', match: { kind: 'unknown' }, confidence: 0 },
         ],
       },
     });

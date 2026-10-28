@@ -21,6 +21,7 @@ export const HELPER_ERROR_REASONS = [
   'providerTimeout',
   'providerFailed',
   'invalidProviderOutput',
+  'resumeUnreadable',
   'notImplemented',
   'internal',
 ] as const;
@@ -52,6 +53,8 @@ export const HELPER_ERROR_FIXES: Readonly<Record<HelperErrorReason, string>> = {
   providerTimeout: 'The AI took too long to answer. Click Retry.',
   providerFailed: 'The AI CLI exited with an error. Run `npx employ-me doctor` for details.',
   invalidProviderOutput: "The AI's answer wasn't usable. Click Retry.",
+  resumeUnreadable:
+    "employ-me couldn't read any text in this Resume. Save it as a PDF or DOCX with selectable text (not a scan or a .doc file), then add it again.",
   notImplemented: "This isn't built yet.",
   internal: 'Something went wrong in the helper. Run `npx employ-me doctor`; it prints where the log is.',
 };

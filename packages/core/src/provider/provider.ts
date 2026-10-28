@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isoDateTimeSchema } from '../common';
 import { helperErrorSchema, type HelperError } from '../errors';
 import type { Result } from '../result';
 import type {
@@ -15,12 +16,24 @@ export const PROVIDER_IDS = ['claude', 'codex'] as const;
 export const providerIdSchema = z.enum(PROVIDER_IDS);
 export type ProviderId = z.infer<typeof providerIdSchema>;
 
+/** One usage window of the user's plan, when the CLI reports it (Codex's `account/rateLimits/read`). */
+export const providerQuotaSchema = z.object({
+  /** Share of this window's allowance still unused, 0 to 100. */
+  remainingPercent: z.number().min(0).max(100),
+  /** Window length: 300 is the 5-hour window, 10080 the weekly one. */
+  windowMinutes: z.int().positive().optional(),
+  resetsAt: isoDateTimeSchema.optional(),
+});
+export type ProviderQuota = z.infer<typeof providerQuotaSchema>;
+
 export const providerStatusSchema = z.object({
   id: providerIdSchema,
   state: z.enum(['ready', 'notFound', 'notLoggedIn', 'unknown']),
   /** Absolute path recorded at setup (Chrome launched from the Dock has no shell PATH). */
   path: z.string().optional(),
   version: z.string().optional(),
+  /** Remaining plan usage, when the CLI reports it. */
+  quota: z.array(providerQuotaSchema).optional(),
   problem: helperErrorSchema.optional(),
 });
 export type ProviderStatus = z.infer<typeof providerStatusSchema>;
