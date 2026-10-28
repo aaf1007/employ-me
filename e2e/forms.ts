@@ -137,6 +137,23 @@ export const FORMS: readonly FormFixture[] = [
     typing: [{ selector: 'input[role="combobox"]', text: 'Canada' }],
   },
   {
+    name: 'ashby/1password-2026-10-28',
+    ats: 'ashby',
+    url: 'https://jobs.ashbyhq.com/1password/6f78b170-9600-4b2d-9682-feead160100d/application',
+    covers:
+      'Remote US or Canada (country unclear): a background-check acknowledgement, select-all-that-apply checkboxes',
+    hosts: ASHBY_HOSTS,
+    typing: [{ selector: 'input[role="combobox"]', text: 'Toronto' }],
+  },
+  {
+    name: 'ashby/ramp-2026-10-28',
+    ats: 'ashby',
+    url: 'https://jobs.ashbyhq.com/ramp/4e64ab86-4e30-403b-b1b9-41dc052570ce/application',
+    covers:
+      'US form: SMS and WhatsApp consent radios, a question that mentions email, short-answer questions',
+    hosts: ASHBY_HOSTS,
+  },
+  {
     name: 'generic/helsing-2026-10-28',
     ats: 'generic',
     url: 'https://helsing.ai/jobs/4927641101?gh_jid=4927641101',

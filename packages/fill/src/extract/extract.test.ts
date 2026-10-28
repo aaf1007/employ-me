@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import onePassword from '../../../../fixtures/ashby/1password-2026-10-28.html?raw';
 import ashby from '../../../../fixtures/ashby/openai-2026-10-28.html?raw';
+import ramp from '../../../../fixtures/ashby/ramp-2026-10-28.html?raw';
 import helsing from '../../../../fixtures/generic/helsing-2026-10-28.html?raw';
 import greenhouse from '../../../../fixtures/greenhouse/anthropic-2026-10-28.html?raw';
 import lever from '../../../../fixtures/lever/eqbank-2026-10-28.html?raw';
@@ -81,6 +83,35 @@ describe('extract on recorded forms', () => {
       options: ['Male', 'Female', 'Decline to self-identify'],
     });
     expect(fields.filter((f) => f.widget === 'file').map((f) => f.fieldId)).toEqual(['_systemfield_resume']);
+  });
+
+  // Live, 1Password, 2026-10-28: each checkbox was its own field, named after its option.
+  it('Ashby: a select-all-that-apply question is one field, keyed by its question', () => {
+    loadPage(onePassword);
+    const fields = fieldsOf(
+      'https://jobs.ashbyhq.com/1password/6f78b170-9600-4b2d-9682-feead160100d/application',
+    );
+    const race = fields.filter((f) => f.label === 'How do you identify your racial or ethnic background?');
+    expect(race).toHaveLength(1);
+    expect(race[0]).toMatchObject({
+      fieldId: 'aabdaff4-8bad-45e1-8121-b589277688c7',
+      widget: 'checkboxes',
+      control: 'checkboxGroup',
+    });
+    expect(race[0]?.options).toContain('Prefer not to say');
+    expect(fields.some((f) => f.fieldId === 'Black' || f.fieldId === 'Prefer not to say')).toBe(false);
+  });
+
+  // Live, Ramp, 2026-10-28: both consent radios were listed as "Phone".
+  it('Ashby: the SMS and WhatsApp consent radios are named for what they ask', () => {
+    loadPage(ramp);
+    const fields = fieldsOf('https://jobs.ashbyhq.com/ramp/4e64ab86-4e30-403b-b1b9-41dc052570ce/application');
+    expect(fields.find((f) => f.fieldId === 'smsConsent')?.label).toBe(
+      'SMS messages about your application: do you consent?',
+    );
+    expect(fields.find((f) => f.fieldId === 'whatsAppConsent')?.label).toBe(
+      'WhatsApp messages about your application: do you consent?',
+    );
   });
 
   it('generic: labels from nearby text when the markup has none', () => {

@@ -46,6 +46,11 @@ export interface ProviderFeedback {
   }[];
   /** Field ids whose Draft is waiting in the side panel. */
   readonly draftsReady?: readonly string[];
+  /**
+   * Field ids whose Draft the Provider couldn't write. Until a required
+   * question's Draft is ready or listed here, the plan keeps waiting for it.
+   */
+  readonly draftsFailed?: readonly string[];
   /** Answers the user accepted: Drafts (edited or not) and similar Saved Answers. */
   readonly accepted?: readonly { readonly fieldId: string; readonly text: string }[];
 }

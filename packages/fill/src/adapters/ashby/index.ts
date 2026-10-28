@@ -1,4 +1,6 @@
 import type { FieldType } from '@employ-me/core';
+import { readableText } from '../../dom';
+import type { Candidate, FieldOverrides } from '../../extract';
 import { postingKeyFromUrl } from '../../posting';
 import type { ExtractedField } from '../../types';
 import { adapter } from '../base';
@@ -19,6 +21,8 @@ const SYSTEM_FIELDS: Readonly<Record<string, FieldType>> = {
   _systemfield_eeoc_disability_status: 'selfId.us.disability',
   _systemfield_recording_consent: 'attestation.consent',
 };
+
+const CHECKBOX_GROUP = '.ashby-application-form-input-checkbox-group';
 
 function classify(field: ExtractedField): FieldType | null {
   const path = field.element.closest('[data-field-path]')?.getAttribute('data-field-path') ?? field.fieldId;
@@ -41,5 +45,22 @@ export const ashbyAdapter = adapter({
       ) !== null,
     headings:
       '.ashby-application-form-section-header-description strong, .ashby-application-form-section-header-title',
+    // A select-all-that-apply question names each checkbox after its option: it is one field.
+    checkboxGroup: (checkbox) => checkbox.closest(CHECKBOX_GROUP),
+    describe,
   },
 });
+
+function describe(candidate: Candidate): FieldOverrides | null {
+  if (candidate.widget === 'checkboxes' && candidate.element.matches(CHECKBOX_GROUP)) {
+    const path = candidate.element.closest('[data-field-path]')?.getAttribute('data-field-path');
+    return path === null || path === undefined || path === '' ? null : { fieldId: path };
+  }
+  // The SMS and WhatsApp consent radios sit inside the Phone field: name them by their own heading.
+  const consent = candidate.element.closest('[class*="consentRadioGroupItem"]');
+  if (candidate.widget === 'radios' && consent !== null) {
+    const channel = readableText(consent.querySelector('[class*="consentRadioGroupItemLabel"]'));
+    return { label: `${channel === '' ? 'Text' : channel} messages about your application: do you consent?` };
+  }
+  return null;
+}

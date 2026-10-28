@@ -1,5 +1,5 @@
 import { normalizeLabel, type FieldType } from '@employ-me/core';
-import { CALLING_CODES } from '../posting';
+import { CALLING_CODES, countriesNamedIn } from '../posting';
 import type { ExtractedField } from '../types';
 import { backgroundAnswer } from './background';
 import { cityTarget, countryName, countryTarget, regionTarget } from './places';
@@ -64,8 +64,15 @@ function identityAnswer(fieldType: FieldType, field: ExtractedField, ctx: Answer
       if (field.widget === 'checkbox') return yesNo(preferred !== undefined);
       const first = preferred?.first ?? legal?.first;
       if (first === undefined) return missing('your preferred name');
-      const wantsFull = !/\bfirst\b/.test(normalizeLabel(field.label)) && preferred?.last !== undefined;
-      return text(wantsFull ? `${first} ${preferred.last ?? ''}`.trim() : first);
+      const label = normalizeLabel(field.label);
+      // "Preferred first and last name" asks for both, even when only the first differs from your legal name.
+      const asksLast = /\b(last|family|sur) ?name\b|\bfull name\b/.test(label);
+      const last = asksLast
+        ? (preferred?.last ?? legal?.last)
+        : /\bfirst\b/.test(label)
+          ? undefined
+          : preferred?.last;
+      return text(last === undefined ? first : `${first} ${last}`);
     }
     case 'identity.over18':
       return profile.identity?.over18 === undefined
@@ -125,6 +132,11 @@ function identityAnswer(fieldType: FieldType, field: ExtractedField, ctx: Answer
           );
     case 'address.location': {
       if (address === undefined) return missing('your address');
+      // "Are you currently located in the US?" with Yes and No.
+      const [named, ...others] = countriesNamedIn(field.label);
+      if (isChoice(field) && named !== undefined && others.length === 0 && offersYesNo(field)) {
+        return yesNo(named === address.country);
+      }
       if (isChoice(field)) return option(cityTarget(address.city, address.country, address.region));
       return text([address.city, address.region, countryName(address.country)].filter(Boolean).join(', '));
     }
@@ -141,4 +153,9 @@ function identityAnswer(fieldType: FieldType, field: ExtractedField, ctx: Answer
     case 'link.other':
       return profile.links.portfolio === undefined ? missing('a website URL') : text(profile.links.portfolio);
   }
+}
+
+function offersYesNo(field: ExtractedField): boolean {
+  const options = field.options.map(normalizeLabel);
+  return options.some((o) => /^yes\b/.test(o)) && options.some((o) => /^no\b/.test(o));
 }

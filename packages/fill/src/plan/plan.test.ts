@@ -95,6 +95,167 @@ describe('plan', () => {
     });
   });
 
+  // Live, 2026-10-28: Zoox (Lever) got "Sam" alone, Wave (Lever) got "No" typed as a referrer's name.
+  it('a preferred name asked as first and last gets both, and a referrer’s name is never "No"', () => {
+    form(`
+      <label for="p">What is your preferred first name and last name? If your legal first and last name is your preferred name, you do not need to respond.</label>
+      <textarea id="p" name="cards[a][field0]"></textarea>
+      <label for="r">If you were referred by a Wave employee, please provide the name of the person who referred you here.</label>
+      <input id="r" name="cards[a][field1]">
+      <label for="w">Were you referred by a current employee?</label>
+      <select id="w" name="w"><option value="">Select...</option><option>Yes</option><option>No</option></select>
+      <label for="t">Have you been referred to us by someone that currently works at Acme? If so, who?</label>
+      <input id="t" name="cards[a][field2]">`);
+    const notReferred = { ...profile, screening: { ...profile.screening, referred: false } };
+    const [preferred, referrer, referred, ifSoWho] = plan(document, notReferred, [], { url: URL_US }).fields;
+    expect(preferred).toMatchObject({
+      fieldType: 'name.preferred',
+      step: { kind: 'write', write: { kind: 'text', text: 'Sam Lee' } },
+    });
+    expect(referrer?.step).toMatchObject({ kind: 'skip', reason: 'notInProfile' });
+    expect(referred).toMatchObject({
+      fieldType: 'screening.referred',
+      step: { kind: 'write', write: { kind: 'select', labels: ['No'] } },
+    });
+    expect(ifSoWho?.step).toMatchObject({ kind: 'write', write: { kind: 'text', text: 'No' } });
+  });
+
+  // Live, 2026-10-28: Discord (Greenhouse) found no option for a city; Wave (Lever) asked the AI.
+  it('"Are you located in <country>?" is answered yes or no from your address', () => {
+    form(`
+      <label for="us">Are you currently located in the US?</label>
+      <select id="us" name="us"><option value="">Select...</option><option>Yes</option><option>No</option></select>
+      <fieldset><legend>Are you located in Canada?</legend>
+        <label><input type="radio" name="ca" value="Yes"> Yes</label>
+        <label><input type="radio" name="ca" value="No"> No</label>
+      </fieldset>`);
+    const inToronto = {
+      ...profile,
+      address: { line1: '1 Example St', city: 'Toronto', region: 'ON', country: 'CA' },
+    };
+    const [us, ca] = plan(document, inToronto, [], { url: URL_US }).fields;
+    expect(us).toMatchObject({
+      fieldType: 'address.location',
+      step: { kind: 'write', write: { kind: 'select', labels: ['No'] } },
+    });
+    expect(ca).toMatchObject({
+      fieldType: 'address.location',
+      step: { kind: 'write', write: { kind: 'choose', labels: ['Yes'] } },
+    });
+  });
+
+  // Live, Cohere (Ashby, Toronto), 2026-10-28: a typo hid the question from the rules, the AI
+  // matched it, and it went to review as if the Posting's country were unclear.
+  it('a Work Authorization question the AI matched follows the Posting country too', () => {
+    form(`
+      <div class="posting-categories"><div class="location">Toronto, ON</div></div>
+      <label for="s">Do you, now or in the future, require sponorship to work here?</label>
+      <select id="s" name="s"><option value="">Select...</option><option>Yes</option><option>No</option></select>`);
+    const planned = plan(document, profile, [], {
+      url: URL_US,
+      provider: {
+        state: 'answered',
+        mappings: [
+          {
+            fieldId: 's',
+            match: { kind: 'fieldType', fieldType: 'workAuth.sponsorship', options: [] },
+            confidence: 0.95,
+          },
+        ],
+      },
+    });
+    expect(planned.country).toEqual({ kind: 'known', country: 'CA' });
+    expect(planned.fields[0]).toMatchObject({
+      fieldType: 'workAuth.sponsorship',
+      step: { kind: 'write', source: 'provider', write: { kind: 'select', labels: ['No'] } },
+    });
+  });
+
+  // design.md "Drafts": required free-text questions are drafted during the Fill. Live, Ramp (Ashby),
+  // 2026-10-28: questions only the AI recognised as free text ended as "Couldn't fill", with no Draft button.
+  it('a required question the AI says needs a Draft is drafted in the next round', () => {
+    form(`
+      <label for="q">Do you have proficiency in JavaScript and React? Please describe. *</label>
+      <input id="q" name="q" required>`);
+    const answered = (feedback: { draftsReady?: string[]; draftsFailed?: string[] } = {}) =>
+      plan(document, profile, [], {
+        url: URL_US,
+        provider: {
+          state: 'answered',
+          mappings: [{ fieldId: 'q', match: { kind: 'needsDraft' }, confidence: 0.9 }],
+          ...feedback,
+        },
+      });
+    const next = answered();
+    expect(next.fields[0]).toMatchObject({
+      fieldType: 'freeText.question',
+      step: { kind: 'awaitProvider', need: 'draft' },
+    });
+    expect(next.draftRequests.map((d) => d.fieldId)).toEqual(['q']);
+    expect(answered({ draftsReady: ['q'] }).fields[0]?.step).toMatchObject({ kind: 'review' });
+    // A Draft the Provider couldn't write stops the wait: the field says so, with the fix.
+    expect(answered({ draftsFailed: ['q'] }).fields[0]?.step).toMatchObject({
+      kind: 'skip',
+      reason: 'providerUnavailable',
+    });
+  });
+
+  // Live, 2026-10-28: Wave (Lever) asked for "a number" and 1Password (Ashby) for each end of a range
+  // "with no commas"; both got "150,000 - 175,000 CAD per year".
+  it('a salary box gets the part and the format it asks for', () => {
+    form(`
+      <div class="posting-categories"><div class="location">Toronto, ON</div></div>
+      <label for="n">What is your desired salary? (Please write down a number)</label><textarea id="n" name="n"></textarea>
+      <label for="b">What is the beginning of your desired annual base salary range? (please format with no commas, i.e. $50000, £50000)</label><input id="b" name="b">
+      <label for="e">What is the end of your desired annual base salary range? (please format with no commas, i.e. $70000, £70000)</label><input id="e" name="e">
+      <label for="w">What are your salary expectations?</label><input id="w" name="w">`);
+    const withSalary = profileSchema.parse({
+      ...profile,
+      preferences: {
+        ...profile.preferences,
+        salary: { CA: { currency: 'CAD', min: 150000, max: 175000, period: 'year' } },
+      },
+    });
+    const texts = plan(document, withSalary, [], { url: URL_US }).fields.map((f) =>
+      f.step.kind === 'write' && f.step.write.kind === 'text' ? f.step.write.text : f.step.kind,
+    );
+    expect(texts).toEqual(['150000', '150000', '175000', '150,000 - 175,000 CAD per year']);
+  });
+
+  // Live, Notion (Ashby), 2026-10-28: the AI matched it, and "offices" (plural) found no answer.
+  it('"work from our offices … days a week" is a yes for someone open to hybrid', () => {
+    form(`
+      <fieldset><legend>We work from our offices on Mondays, Tuesdays, and Thursdays. Can you work from our offices three days a week?</legend>
+        <label><input type="radio" name="o" value="Yes"> Yes</label>
+        <label><input type="radio" name="o" value="No"> No</label>
+      </fieldset>`);
+    const hybrid = profileSchema.parse({
+      ...profile,
+      preferences: { ...profile.preferences, workModels: ['hybrid', 'remote'] },
+    });
+    expect(plan(document, hybrid, [], { url: URL_US }).fields[0]).toMatchObject({
+      fieldType: 'pref.workModel',
+      step: { kind: 'write', write: { kind: 'choose', labels: ['Yes'] } },
+    });
+  });
+
+  it('when the whole Provider is unavailable, a failed Draft shows the helper’s own fix', () => {
+    form(`<label for="q">Why Acme?</label><textarea id="q" name="q" required></textarea>`);
+    const step = plan(document, profile, [], {
+      url: URL_US,
+      provider: {
+        state: 'unavailable',
+        unavailableFix: 'Your usage limit resets at 5pm.',
+        draftsFailed: ['q'],
+      },
+    }).fields[0]?.step;
+    expect(step).toEqual({
+      kind: 'skip',
+      reason: 'providerUnavailable',
+      fix: 'Your usage limit resets at 5pm.',
+    });
+  });
+
   it('"Ask me each time" sponsorship goes to review', () => {
     form(`
       <label for="s">Will you now or in the future require sponsorship to work in the United States?</label>

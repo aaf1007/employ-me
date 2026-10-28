@@ -111,6 +111,14 @@ export async function readValues(frame: Frame, fieldIds: readonly string[]): Pro
       if (entry !== null && entry.querySelector('[aria-pressed]') !== null) {
         return [...entry.querySelectorAll('[aria-pressed="true"]')].map(text).join(' | ');
       }
+      // Ashby: a select-all-that-apply question, whose checkboxes are named after their options.
+      const boxes = entry === null ? [] : [...entry.querySelectorAll('input[type="checkbox"]')];
+      if (named.length === 0 && boxes.length > 1) {
+        return boxes
+          .filter((el) => el instanceof HTMLInputElement && el.checked)
+          .map(labelOf)
+          .join(' | ');
+      }
       const ticks = named.filter(
         (el) => el instanceof HTMLInputElement && (el.type === 'radio' || el.type === 'checkbox'),
       );

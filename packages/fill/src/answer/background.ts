@@ -169,6 +169,11 @@ export function backgroundAnswer(
         ? missing('how you usually hear about jobs')
         : option(howHeardTarget(profile.screening.howHeard));
     case 'screening.referred':
+      // "Please provide the name of the person who referred you": the Profile keeps no names.
+      // "Have you been referred? If so, who?" is still a yes/no question.
+      if (!isChoice(field) && asksForReferrer(normalizeLabel(field.label))) {
+        return skip('notInProfile', 'If someone referred you, type their name. Otherwise leave it empty.');
+      }
       return profile.screening.referred === undefined
         ? missing('whether you were referred')
         : yesNo(profile.screening.referred);
@@ -258,7 +263,7 @@ function workModelAnswer(field: ExtractedField, ctx: AnswerContext): Answer {
   if (models.length === 0) return missing('the work models you prefer');
   const label = normalizeLabel(field.label);
   const asksRemote = /\bremote\b/.test(label);
-  const asksOffice = /\b(hybrid|on ?site|onsite|in office|in person|office)\b/.test(label);
+  const asksOffice = /\b(hybrid|on ?site|onsite|in office|in person|offices?)\b/.test(label);
   if (asksRemote || asksOffice) {
     const yes = asksOffice
       ? models.includes('hybrid') || models.includes('onsite')
@@ -272,4 +277,12 @@ function workModelAnswer(field: ExtractedField, ctx: AnswerContext): Answer {
   };
   const targets = models.map((m) => names[m]).filter((t): t is OptionTarget => t !== undefined);
   return isChoice(field) ? options(targets) : text(targets.map((t) => t.text).join(', '));
+}
+
+/** A box for the referrer's name, as opposed to "Were you referred? If so, who?". */
+function asksForReferrer(label: string): boolean {
+  return (
+    /\b(name of|provide (their|the|his|her) name|referr?er s? name|who referred you)\b/.test(label) &&
+    !/\b(have|were|are) you (been )?referred\b/.test(label)
+  );
 }

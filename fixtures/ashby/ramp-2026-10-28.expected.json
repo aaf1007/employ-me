@@ -1,0 +1,132 @@
+{
+  "fixture": "ashby/ramp-2026-10-28",
+  "ats": "ashby",
+  "posting": {
+    "title": "Software Engineer, Frontend",
+    "company": "Ramp",
+    "location": "New York City, NY, USA",
+    "country": "US"
+  },
+  "fields": [
+    {
+      "fieldId": "_systemfield_name",
+      "label": "Legal Name",
+      "fieldType": "name.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam Lee"
+    },
+    {
+      "fieldId": "_systemfield_email",
+      "label": "Email",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "a58ce2a4-c4a9-4e34-ba2c-39299192982d",
+      "label": "Phone",
+      "fieldType": "phone.full",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "+1 416 555 0123"
+    },
+    {
+      "fieldId": "smsConsent",
+      "label": "SMS messages about your application: do you consent?",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "whatsAppConsent",
+      "label": "WhatsApp messages about your application: do you consent?",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "_systemfield_resume",
+      "label": "Resume",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "question_22812575002",
+      "label": "LinkedIn Profile",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "question_22838854002",
+      "label": "Github / Website",
+      "fieldType": "link.github",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://github.com/sam-lee-example"
+    },
+    {
+      "fieldId": "cover_letter",
+      "label": "Cover Letter",
+      "fieldType": "file.coverLetter",
+      "outcome": "couldNotFill",
+      "reason": "coverLetter",
+      "value": ""
+    },
+    {
+      "fieldId": "05186312-a133-4c6b-9859-5a359975a53b",
+      "label": "Do you have proficiency in JavaScript and React? Please describe.",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "2143a185-34d7-46b3-97cd-eb849e81a0a2",
+      "label": "We believe exceptional performance in one area is a good indication of performance in other areas. Do you have any examples of exceptional performance you want to highlight?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "9c5b0358-1bae-4437-b3e6-e3541fdcf473",
+      "label": "Are you currently based in the U.S., Canada, LATAM, and/or currently authorized to work in one of these locations?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "needsReview",
+      "reason": "countryUnclear",
+      "value": ""
+    },
+    {
+      "fieldId": "307c94b5-e8a1-491d-b89a-2c7c8e5b1c7d",
+      "label": "Have you built and deployed production-level applications using React, TypeScript (or JavaScript), and other modern front-end technologies?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "bd294cea-24ad-4d51-b626-a0ceed8541f9",
+      "label": "Do you have at least 1 year of professional frontend engineering experience in the U.S., Canada, or LATAM?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "dc1720d1-f410-411c-83a5-9040cb1f059e",
+      "label": "Are you comfortable completing a frontend take-home assessment? You’ll receive an email from CodeSignal with the challenge details.",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    }
+  ]
+}

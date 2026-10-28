@@ -15,6 +15,11 @@ export interface ExtractHooks {
   readonly describe?: (candidate: Candidate) => FieldOverrides | null;
   /** Extra section headings, e.g. Greenhouse's "Education" header. */
   readonly headings?: string;
+  /**
+   * The container of a select-all-that-apply question, for ATSs that give
+   * each checkbox in it a name of its own (Ashby names them by their option).
+   */
+  readonly checkboxGroup?: (checkbox: Element) => Element | null;
 }
 
 export interface FieldOverrides {
@@ -43,7 +48,7 @@ export function extractFields(root: ParentNode, hooks: ExtractHooks = {}): Extra
   const sections = indexSections(root, hooks.headings, isIgnored);
   const ids = new Map<string, number>();
   const fields: ExtractedField[] = [];
-  for (const candidate of findCandidates(root, isIgnored)) {
+  for (const candidate of findCandidates(root, isIgnored, hooks.checkboxGroup)) {
     const overrides = hooks.describe?.(candidate) ?? {};
     const widget = overrides.widget ?? candidate.widget;
     const rawLabel = overrides.label ?? rawLabelOf(candidate);

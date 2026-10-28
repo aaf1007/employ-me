@@ -35,6 +35,8 @@ export interface ProviderInputs {
   readonly accepted: ReadonlyMap<string, string>;
   /** Fields whose Draft is waiting in the side panel. */
   readonly draftsReady: ReadonlySet<string>;
+  /** Fields whose Draft the Provider couldn't write: they stop waiting for one. */
+  readonly draftsFailed: ReadonlySet<string>;
   /** `pending` until integration has asked the Provider; `unavailable` when it can't. */
   readonly state: 'pending' | 'unavailable' | 'answered';
   /** The helper's fix, shown when the Provider is unavailable. */
@@ -155,7 +157,8 @@ function fromMapping(
       return { fieldType: ruleType, answer: { kind: 'review', reason: 'similarSavedAnswer', suggestion } };
     }
     case 'needsDraft':
-      return { fieldType: ruleType, answer: draftAnswer(field, provider) };
+      // The AI says it's free text: a Draft answers it, and its Draft button works.
+      return { fieldType: 'freeText.question', answer: draftAnswer(field, provider) };
     case 'unknown':
       return {
         fieldType: ruleType,
@@ -176,6 +179,13 @@ function draftAnswer(field: ExtractedField, provider: ProviderInputs): Answer {
       'Optional question with no Saved Answer. Click Draft, or write your own answer.',
     );
   }
+  // When the whole Provider is unavailable, its own reason and fix say more.
+  if (provider.state !== 'unavailable' && provider.draftsFailed.has(field.fieldId)) {
+    return skip(
+      'providerUnavailable',
+      'The AI did not write a Draft for this question. Click Draft to try again, or write your own.',
+    );
+  }
   return providerNeeded('draft', provider);
 }
 
@@ -186,16 +196,12 @@ function providerNeeded(need: 'mapping' | 'draft', provider: ProviderInputs): An
       provider.unavailableFix ?? 'The AI is unavailable. Answer this one yourself, or click Retry.',
     );
   }
-  if (provider.state === 'answered') {
-    return need === 'draft'
-      ? skip(
-          'providerUnavailable',
-          'The AI did not write a Draft for this question. Click Draft to try again, or write your own.',
-        )
-      : skip(
-          'unrecognizedField',
-          'Neither the rules nor the AI recognised this question. Answer it yourself.',
-        );
+  // A Draft is still awaited after field mapping: a question the AI found is drafted in the next round.
+  if (provider.state === 'answered' && need === 'mapping') {
+    return skip(
+      'unrecognizedField',
+      'Neither the rules nor the AI recognised this question. Answer it yourself.',
+    );
   }
   return { kind: 'provider', need };
 }

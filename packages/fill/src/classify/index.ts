@@ -32,7 +32,7 @@ export interface ClassifyContext extends FillContext {
 
 /** A classification plus the country its answer belongs to, for country-specific types. */
 export interface CountryClassification extends Classification {
-  /** Set for Work Authorization and Self-ID types. */
+  /** Set for Work Authorization, salary and Self-ID types, and for fields left to the Provider. */
   readonly country?: CountryChoice;
 }
 
@@ -84,7 +84,11 @@ export function classifyField(field: ExtractedField, context: ClassifyContext): 
   }
 
   const leftover: FieldType = isLongAnswer(field) ? 'freeText.question' : 'unknown';
-  return withSavedAnswer({ fieldType: leftover, source: 'rules' }, field, context);
+  // The Provider may map it to a Work Authorization or salary type: its answer follows the same country.
+  return {
+    ...withSavedAnswer({ fieldType: leftover, source: 'rules' }, field, context),
+    country: countryFor(field, context),
+  };
 }
 
 /** Exact Saved Answer match (design.md "Who fills what"), for questions the rules don't answer from the Profile. */

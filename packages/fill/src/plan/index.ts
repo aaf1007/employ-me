@@ -99,6 +99,7 @@ function providerInputs(options: PlanOptions): ProviderInputs {
     ),
     accepted: new Map((feedback.accepted ?? []).map((a) => [a.fieldId, a.text])),
     draftsReady: new Set(feedback.draftsReady ?? []),
+    draftsFailed: new Set(feedback.draftsFailed ?? []),
   };
 }
 

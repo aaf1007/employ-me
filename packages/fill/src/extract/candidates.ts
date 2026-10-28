@@ -27,12 +27,35 @@ const CONTROLS = 'input, textarea, select, [role="combobox"], button[aria-haspop
 const SKIPPED_INPUT_TYPES = new Set(['hidden', 'submit', 'button', 'image', 'reset']);
 const ANSWER_BUTTON = 'button[aria-pressed], [role="button"][aria-pressed], [role="radio"]';
 
-export function findCandidates(root: ParentNode, isIgnored: (el: Element) => boolean): Candidate[] {
+export function findCandidates(
+  root: ParentNode,
+  isIgnored: (el: Element) => boolean,
+  /** The container of a select-all-that-apply question whose checkboxes each have their own name. */
+  checkboxGroupOf: (checkbox: Element) => Element | null = () => null,
+): Candidate[] {
   const consumed = new Set<Element>();
   const found: Candidate[] = [];
 
   for (const el of deepQueryAll(root, `${CONTROLS}, ${ANSWER_BUTTON}`)) {
     if (consumed.has(el) || isIgnored(el) || skipped(el)) continue;
+
+    const container = isInput(el) && inputType(el) === 'checkbox' ? checkboxGroupOf(el) : null;
+    const grouped =
+      container === null
+        ? []
+        : [...container.querySelectorAll('input[type="checkbox"]')].filter(
+            (m) => !isIgnored(m) && !skipped(m),
+          );
+    if (container !== null && grouped.length > 1) {
+      grouped.forEach((m) => consumed.add(m));
+      found.push({
+        element: container,
+        widget: 'checkboxes',
+        members: grouped,
+        choices: grouped.map((m) => ({ label: optionLabel(m), element: m })),
+      });
+      continue;
+    }
 
     if (el.matches(ANSWER_BUTTON)) {
       const group = buttonGroup(el);

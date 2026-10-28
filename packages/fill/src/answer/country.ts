@@ -1,5 +1,6 @@
 import {
   FIELD_TYPES,
+  normalizeLabel,
   type CountryCode,
   type FieldType,
   type SalaryExpectation,
@@ -131,7 +132,22 @@ function salaryAnswer(field: ExtractedField, country: CountryCode, ctx: AnswerCo
   const range =
     salary.max === undefined ? amount(salary.min) : `${amount(salary.min)} - ${amount(salary.max)}`;
   const words = `${range} ${salary.currency} per ${salary.period}`;
-  return isChoice(field) ? option(salaryTarget(words, salary.min)) : text(words);
+  if (isChoice(field)) return option(salaryTarget(words, salary.min));
+  // A box for one end of the range, or for "a number", gets just that number.
+  const label = normalizeLabel(field.label);
+  const end =
+    /\b(end|maximum|max|upper|top)\b/.test(label) &&
+    !/\b(beginning|start|minimum|min|lower|bottom)\b/.test(label);
+  const one =
+    end ||
+    field.control === 'number' ||
+    /\b(beginning|start|minimum|min|lower|bottom)\b|\ba number\b|\bnumbers? only\b|\bnumeric\b/.test(label);
+  if (!one) return text(words);
+  const value = end ? (salary.max ?? salary.min) : salary.min;
+  const plain =
+    field.control === 'number' ||
+    /\b(no|without) commas?\b|\ba number\b|\bnumbers? only\b|\bnumeric\b/.test(label);
+  return text(plain ? String(value) : `${amount(value)} ${salary.currency}`);
 }
 
 /** A salary-range option ("€60,000 - €70,000", "60k-70k") that contains the minimum. */

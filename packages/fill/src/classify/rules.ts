@@ -47,7 +47,13 @@ const RULES: readonly Rule[] = [
     not: /pronunc/,
   },
 
-  { fieldType: 'contact.email', test: /\be ?mail\b/, not: /\b(newsletter|updates|alerts|marketing)\b/ },
+  {
+    fieldType: 'contact.email',
+    test: /\be ?mail\b/,
+    // A question that mentions email in passing ("you'll receive an email from…") isn't asking for yours.
+    controls: ['text', 'email', 'combobox'],
+    not: /\b(newsletter|updates|alerts|marketing)\b|\b(receive|get|send|sent)\b.*\be ?mail\b|\b(via|by) e ?mail\b/,
+  },
   { fieldType: 'phone.type', test: /\bphone (number )?type\b/ },
   { fieldType: 'phone.countryCode', test: /\b(country|dial(ling)?|calling) code\b/ },
   { fieldType: 'phone.full', test: /\b(phone|mobile|cell|telephone)( number)?\b/ },
@@ -76,7 +82,7 @@ const RULES: readonly Rule[] = [
   { fieldType: 'address.country', test: /\bcountry of residence\b|^(what is )?(your )?(current )?country$/ },
   {
     fieldType: 'address.location',
-    test: /\blocation\b|\bwhere are you (currently )?(located|based)\b|\bcurrently located\b|\bcity (?:(?:and|&) )?(state|country|province)\b|\bwhere do you (currently )?live\b|\bpermanently reside\b/,
+    test: /\blocation\b|\bwhere are you (currently )?(located|based)\b|\bcurrently located\b|\bare you (currently )?(located|based|living|residing) in\b|\bcity (?:(?:and|&) )?(state|country|province)\b|\bwhere do you (currently )?live\b|\bpermanently reside\b/,
     not: /\b(office|relocat\w*)\b/,
   },
   { fieldType: 'address.line2', test: /\b(address line 2|address 2|apartment|apt|suite|unit)\b/ },
@@ -99,7 +105,7 @@ const RULES: readonly Rule[] = [
   },
   {
     fieldType: 'pref.workModel',
-    test: /\b(remote|hybrid|on ?site|in office|in person|onsite)\b|\bwork (model|arrangement|location preference)\b|\b(days|times) (a|per) week\b.*\boffice\b|\boffice\b.*\b(days|times) (a|per) week\b/,
+    test: /\b(remote|hybrid|on ?site|in office|in person|onsite)\b|\bwork (model|arrangement|location preference)\b|\b(days|times) (a|per) week\b.*\boffices?\b|\boffices?\b.*\b(days|times) (a|per) week\b/,
   },
   {
     fieldType: 'pref.noticePeriod',
@@ -137,7 +143,8 @@ const RULES: readonly Rule[] = [
   {
     fieldType: 'edu.school',
     test: /\b(school|university|college|institution)\b/,
-    not: /\bhigh school diploma\b/,
+    // "Years of post-college work experience" asks about work, not a school.
+    not: /\bhigh school diploma\b|\b(years?|experience)\b/,
   },
 
   { fieldType: 'screening.backgroundCheck', test: /\bbackground (check|screening|investigation)\b/ },

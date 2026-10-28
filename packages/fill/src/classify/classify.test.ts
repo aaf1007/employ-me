@@ -87,6 +87,25 @@ describe('the taxonomy rules', () => {
     expect(typeOf('', { autocomplete: 'family-name' })).toBe('name.last');
   });
 
+  // Live, 2026-10-28: Ramp (Ashby) and Palantir (Lever). A word in passing isn't what the question asks.
+  it('a question that mentions email or college is not an email or school field', () => {
+    const radios = { widget: 'radios', control: 'radioGroup' } as const;
+    expect(
+      typeOf(
+        'Are you comfortable completing a frontend take-home assessment? You’ll receive an email from CodeSignal with the challenge details.',
+        radios,
+      ),
+    ).toBe('unknown');
+    expect(
+      typeOf('How many years of relevant, post college work experience do you have?', {
+        widget: 'select',
+        control: 'select',
+      }),
+    ).toBe('unknown');
+    expect(typeOf('Email address', { control: 'email' })).toBe('contact.email');
+    expect(typeOf('Which college or university did you attend?')).toBe('edu.school');
+  });
+
   it('reads a "Location" that asks for a country as a country', () => {
     expect(typeOf('Location', { description: "Country you're currently residing in" })).toBe(
       'address.country',
@@ -119,6 +138,18 @@ describe('Attestations and never-stored fields are found deterministically', () 
 
   it('treats willingness as a fact, not an Attestation', () => {
     expect(typeOf('Do you consent to a background check?')).toBe('screening.backgroundCheck');
+  });
+
+  // Live, 1Password (Ashby), 2026-10-28: the box was ticked from the Profile's background-check answer.
+  it('an "I understand…" statement about a background check is an Attestation, never ticked', () => {
+    const box = { widget: 'checkbox', control: 'checkbox' } as const;
+    expect(
+      typeOf(
+        'I understand that 1Password offers of employment are conditional on satisfactory completion of a background check.',
+        box,
+      ),
+    ).toBe('attestation.other');
+    expect(typeOf('I consent to a background check', box)).toBe('attestation.consent');
   });
 
   it('a talent pool mentioned in passing is not consent', () => {
