@@ -1,4 +1,5 @@
 import type { Application, PostingKey, Profile, ResumeMeta, SavedAnswer } from '@employ-me/core';
+import * as applicationImport from './application-import';
 import * as applications from './application-store';
 import * as backup from './backup';
 import { broadcastChanges } from './changes';
@@ -44,7 +45,9 @@ export interface DataStore {
   getApplication(id: string): Promise<DataResult<Application>>;
   findApplicationsByPosting(key: PostingKey): Promise<DataResult<ApplicationSummary[]>>;
   createApplication(application: NewApplication): Promise<DataResult<Application>>;
-  importApplications(rows: readonly ImportedApplication[]): Promise<DataResult<applications.ImportOutcome>>;
+  importApplications(
+    rows: readonly ImportedApplication[],
+  ): Promise<DataResult<applicationImport.ImportOutcome>>;
   updateApplication(
     id: string,
     changes: applications.ApplicationChanges,
@@ -84,7 +87,7 @@ export function createDataStore(db: IDBDatabase, deps: StoreDeps): DataStore {
     getApplication: (id) => applications.getApplication(ctx, id),
     findApplicationsByPosting: (key) => applications.findApplicationsByPosting(ctx, key),
     createApplication: (application) => applications.createApplication(ctx, application),
-    importApplications: (rows) => applications.importApplications(ctx, rows),
+    importApplications: (rows) => applicationImport.importApplications(ctx, rows),
     updateApplication: (id, changes) => applications.updateApplication(ctx, id, changes),
     deleteApplication: (id) => applications.deleteApplication(ctx, id),
 

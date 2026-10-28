@@ -1,4 +1,5 @@
-export type { ApplicationChanges, ImportOutcome } from './application-store';
+export type { ApplicationChanges } from './application-store';
+export type { ImportOutcome } from './application-import';
 export { BACKUP_FORMAT, backupFileName, type Backup, type BackupCounts } from './backup';
 export { base64ToBlob, blobToBase64 } from './base64';
 export { onDataChanged } from './changes';

@@ -8,7 +8,7 @@ import {
   type Application,
 } from '@employ-me/core';
 import { z } from 'zod';
-import { putApplication } from './application-store';
+import { putApplication } from './application-record';
 import { base64ToBlob, blobToBase64 } from './base64';
 import {
   guarded,

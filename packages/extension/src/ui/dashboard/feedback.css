@@ -1,0 +1,153 @@
+/* Notices, the setup stepper, the save bar, dialogs and toasts. */
+
+/* --------------------------------------------------------------- notices */
+
+.notice {
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.notice-error {
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.notice-info {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.notice-warn {
+  background: var(--warn-soft);
+  border-color: transparent;
+}
+
+.notice-ok {
+  background: var(--ok-soft);
+  border-color: transparent;
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.notice p {
+  margin: 2px 0;
+}
+
+.notice code {
+  background: rgb(127 127 127 / 15%);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------- stepper */
+
+.stepper {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap;
+}
+
+.stepper li {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.stepper li[aria-current='step'] {
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.stepper li[data-done='true'] {
+  color: var(--filled);
+}
+
+/* ------------------------------------------------------- save bar, modal */
+
+.save-bar {
+  position: fixed;
+  bottom: 0;
+  left: 220px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 8px rgb(16 16 24 / 6%);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(10 10 20 / 45%);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 25%);
+}
+
+.modal h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.toasts {
+  position: fixed;
+  bottom: 72px;
+  right: 24px;
+  display: grid;
+  gap: 8px;
+  z-index: 30;
+}
+
+.toast {
+  background: var(--fg);
+  color: var(--bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  max-width: 380px;
+}
+
+@media (max-width: 900px) {
+  .save-bar {
+    left: 0;
+  }
+}

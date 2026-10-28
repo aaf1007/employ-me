@@ -1,6 +1,4 @@
 import {
-  INITIAL_STATUS,
-  applicationSchema,
   ok,
   postingKeyId,
   snapshotSchema,
@@ -8,26 +6,15 @@ import {
   type PostingKey,
   type Status,
 } from '@employ-me/core';
-import { guarded, isoNow, parseAllStored, parseStored, type DataResult, type StoreContext } from './context';
+import { build, fromStored, newestFirst, putApplication } from './application-record';
+import { guarded, parseAllStored, parseStored, type DataResult, type StoreContext } from './context';
 import { dataError, issuesFrom } from './errors';
 import { BY_POSTING, inTransaction, readValue, readValues, requestValue, STORES } from './idb';
-import {
-  storedApplicationSchema,
-  type ApplicationSummary,
-  type ImportedApplication,
-  type NewApplication,
-  type StoredApplication,
-} from './schemas';
+import { storedApplicationSchema, type ApplicationSummary, type NewApplication } from './schemas';
 
 export interface ApplicationChanges {
   readonly status?: Status;
   readonly notes?: string;
-}
-
-export interface ImportOutcome {
-  readonly added: number;
-  /** Positions in the input that were skipped because the Tracker already has that Posting. */
-  readonly duplicates: readonly number[];
 }
 
 /** Every Application, newest first, without Snapshots. */
@@ -97,50 +84,6 @@ export function createApplication(
   });
 }
 
-/** Adds imported Applications in one go, skipping Postings the Tracker already has. */
-export function importApplications(
-  ctx: StoreContext,
-  inputs: readonly ImportedApplication[],
-): Promise<DataResult<ImportOutcome>> {
-  return guarded(async () => {
-    const built: Application[] = [];
-    for (const [index, input] of inputs.entries()) {
-      const one = build(ctx, input);
-      if (!one.ok) {
-        return dataError(
-          'invalidInput',
-          `Row ${String(index + 1)} is invalid`,
-          (one.error.issues ?? []).map((issue) => ({ ...issue, path: `${String(index)}.${issue.path}` })),
-        );
-      }
-      built.push(one.value);
-    }
-    const outcome = await inTransaction(
-      ctx.db,
-      [STORES.applications, STORES.snapshots],
-      'readwrite',
-      async (t) => {
-        const index = t.objectStore(STORES.applications).index(BY_POSTING);
-        const seen = new Set<string>();
-        const duplicates: number[] = [];
-        for (const [position, application] of built.entries()) {
-          const key = postingKeyId(application.posting.key);
-          const existing = await requestValue(index.getKey(key));
-          if (existing !== undefined || seen.has(key)) {
-            duplicates.push(position);
-            continue;
-          }
-          seen.add(key);
-          await putApplication(t, application);
-        }
-        return { added: built.length - duplicates.length, duplicates };
-      },
-    );
-    if (outcome.added > 0) ctx.notify(['applications']);
-    return ok(outcome);
-  });
-}
-
 /** Your changes to an Application: its Status and notes. Only you change the Status. */
 export function updateApplication(
   ctx: StoreContext,
@@ -184,52 +127,4 @@ export function deleteApplication(ctx: StoreContext, id: string): Promise<DataRe
     ctx.notify(['applications']);
     return ok(null);
   });
-}
-
-/** Writes an Application (already validated) and its Snapshot inside `t`. */
-export async function putApplication(t: IDBTransaction, application: Application): Promise<void> {
-  const { snapshot, ...rest } = application;
-  const stored: StoredApplication = {
-    ...rest,
-    hasSnapshot: snapshot !== undefined,
-    postingKeyId: postingKeyId(application.posting.key),
-  };
-  await requestValue(t.objectStore(STORES.applications).put(stored));
-  if (snapshot !== undefined)
-    await requestValue(t.objectStore(STORES.snapshots).put(snapshot, application.id));
-}
-
-function build(ctx: StoreContext, input: NewApplication): DataResult<Application> {
-  const base = {
-    id: ctx.newId(),
-    posting: input.posting,
-    appliedAt: input.appliedAt ?? isoNow(ctx),
-    source: input.source,
-  };
-  const parsed = applicationSchema.safeParse(withStatus(base, input));
-  return parsed.success
-    ? ok(parsed.data)
-    : dataError('invalidInput', 'The Application is invalid', issuesFrom(parsed.error));
-}
-
-/** A submission you confirmed starts at Applied with its Snapshot; one you add yourself takes your Status. */
-function withStatus<B extends object>(base: B, input: NewApplication) {
-  switch (input.source) {
-    case 'confirmation':
-    case 'didYouApply':
-      return { ...base, status: INITIAL_STATUS, notes: '', snapshot: input.snapshot };
-    case 'manual':
-    case 'import':
-      return { ...base, status: input.status ?? INITIAL_STATUS, notes: input.notes ?? '' };
-  }
-}
-
-function fromStored(stored: StoredApplication): ApplicationSummary {
-  const { postingKeyId: _key, ...summary } = stored;
-  return summary;
-}
-
-// appliedAt may carry any offset, so compare instants, not strings.
-function newestFirst(a: ApplicationSummary, b: ApplicationSummary): number {
-  return Date.parse(b.appliedAt) - Date.parse(a.appliedAt);
 }
