@@ -16,6 +16,9 @@ export default defineConfig(
     'fixtures/',
     // The fill engine bundled for e2e (e2e/fill-bundle/build.ts): generated.
     'e2e/.build/',
+    // Agent worktrees (.claude/worktrees/) are whole other checkouts, and
+    // .claude/ holds local Claude Code settings.
+    '.claude/',
   ]),
   {
     linterOptions: {

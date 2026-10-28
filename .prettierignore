@@ -7,5 +7,7 @@ test-results/
 # Saved ATS forms are kept byte-for-byte as captured.
 fixtures/
 e2e/.build/
+# Agent worktrees and local Claude Code settings.
+.claude/
 # Prose is written by hand; Prettier would re-wrap tables and lists.
 *.md
