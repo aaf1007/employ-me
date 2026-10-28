@@ -38,7 +38,8 @@ Concrete rules a reviewer can check. Lint and types enforce many of them; the re
 - No code builds elements or HTML (`createElement`, `innerHTML`, `insertAdjacentHTML`), and nothing in core, fill or the extension loads code at run time (`import()`). The extension's pages render through React.
 - Check element kinds with `localName` and attributes, not `instanceof`: elements from iframes belong to another realm.
 - Walk open shadow roots when extracting.
-- Nothing is injected into job sites' pages: no overlays, no styles, no attributes. The side panel is the UI.
+- Nothing is injected into job sites' pages: no overlays, no elements, no stylesheets, no classes, no attributes. The side panel is the UI.
+- The one exception is the Fill's matching outlines (design.md "What you see"). `act.outlineField` sets only the field's own inline `outline` and `outline-offset`, saves what the page had first, and `act.clearOutlines` puts it back when the Fill ends. Style writes elsewhere in fill and in the content script fail lint.
 
 ## Adapters
 

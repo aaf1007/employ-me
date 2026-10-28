@@ -60,6 +60,18 @@ const cases: Array<{ name: string; file: string; code: string; expect: RegExp | 
     expect: /prototype value-setter/,
   },
   {
+    name: 'style.setProperty in fill outside act',
+    file: 'packages/fill/src/outline/x.ts',
+    code: "export const f = (el: HTMLElement) => { el.style.setProperty('outline', '2px solid red'); };",
+    expect: /changes the page/,
+  },
+  {
+    name: 'style.setProperty inside act (the outlines)',
+    file: 'packages/fill/src/act/x.ts',
+    code: "export const f = (el: HTMLElement) => { el.style.setProperty('outline', '2px solid red'); };",
+    expect: null,
+  },
+  {
     name: 'click inside act',
     file: 'packages/fill/src/act/x.ts',
     code: 'export const f = (el: HTMLElement) => { el.click(); };',
