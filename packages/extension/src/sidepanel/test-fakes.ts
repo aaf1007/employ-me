@@ -20,6 +20,7 @@ import type {
   SessionEvent,
 } from '../messaging/content';
 import type { BackgroundCall, PanelDeps } from './deps';
+import { NO_ACCESS } from './site-access';
 import type { TabLink } from './tab-link';
 
 // Test-only fakes for the side panel's controller: a tab whose content
@@ -103,17 +104,50 @@ export function providerRequest(descriptors: readonly FieldDescriptor[]): MapFie
   };
 }
 
+/** The same form on a company's own site, once its content script runs there (the generic fallback). */
+export const COMPANY_SITE_URL = 'https://careers.example.org/jobs/42/apply?utm_source=board';
+export const COMPANY_SITE_DETECTED: Detected = {
+  type: 'detected',
+  ats: 'generic',
+  url: COMPANY_SITE_URL,
+  topFrame: true,
+  fieldCount: 3,
+  posting: {
+    key: { ats: 'generic', employer: 'careers.example.org', jobId: '/jobs/42' },
+    url: 'https://careers.example.org/jobs/42/apply',
+    title: 'Engineer',
+  },
+  confirmed: false,
+  pageText: 'Engineer. Build the tools our robots run on.',
+};
+
+/** A site employ-me has no content script for, until reach() runs it there. */
+export interface UnknownSite {
+  /** What tabs.get says; null without the toolbar click's activeTab. */
+  readonly url: string | null;
+  /** False when Chrome won't let employ-me read the page. */
+  readonly readable?: boolean;
+  /** Sites of frames it can't read until you allow them. */
+  readonly unreachable?: readonly string[];
+  /** What the page shows once the content script runs there. */
+  readonly detected?: Detected | null;
+}
+
 /**
  * A content script for a form with a name (rules fill it), an unknown field
  * (the Provider maps it) and a required "Why Acme?" (a Draft). Each answer
- * follows the feedback the panel sends, as plan() would.
+ * follows the feedback the panel sends, as plan() would. With `unknownSite`,
+ * no content script answers until the panel reaches the site.
  */
-export function fakeTab(options: { readonly aiPolicy?: boolean } = {}) {
-  const sent: Array<{ type: string; provider?: ProviderFeedbackMessage }> = [];
+export function fakeTab(options: { readonly aiPolicy?: boolean; readonly unknownSite?: UnknownSite } = {}) {
+  const sent: Array<{ type: string; provider?: ProviderFeedbackMessage; origins?: readonly string[] }> = [];
   let onEvent: (event: SessionEvent) => void = () => undefined;
   let onGone: () => void = () => undefined;
   let watched: { onLoaded: () => void; onClosed: () => void } | null = null;
-  let detected: Detected | null = DETECTED;
+  const site = options.unknownSite;
+  let scripted = site === undefined;
+  let unreachable = site?.unreachable ?? [];
+  let detected: Detected | null = site === undefined ? DETECTED : null;
   const view = (feedback: ProviderFeedbackMessage): FillView => {
     const accepted = feedback.accepted?.find((a) => a.fieldId === 'why');
     const mapped = feedback.mappings?.some((m) => m.fieldId === 'u') ?? false;
@@ -178,7 +212,7 @@ export function fakeTab(options: { readonly aiPolicy?: boolean } = {}) {
     };
   };
   const tab: TabLink = {
-    detect: () => Promise.resolve(detected),
+    detect: () => Promise.resolve(scripted ? detected : null),
     fill: (request) => {
       sent.push({ type: request.type });
       return Promise.resolve(ok(view({})));
@@ -201,6 +235,23 @@ export function fakeTab(options: { readonly aiPolicy?: boolean } = {}) {
       return () => {
         watched = null;
       };
+    },
+    url: () => Promise.resolve(site === undefined ? DETECTED.url : site.url),
+    hasContentScript: () => Promise.resolve(scripted),
+    reach: () => {
+      sent.push({ type: 'reach' });
+      if (site?.readable === false) return Promise.resolve(err(NO_ACCESS));
+      // The first reach finds the page's form; later ones (pages you navigate to) keep what navigate() set.
+      if (site !== undefined && !scripted)
+        detected = site.detected === undefined ? COMPANY_SITE_DETECTED : site.detected;
+      scripted = true;
+      return Promise.resolve(ok({ frameIds: [0], unreachable }));
+    },
+    allow: (origins) => {
+      sent.push({ type: 'allow', origins });
+      unreachable = unreachable.filter((origin) => !origins.includes(origin));
+      if (site !== undefined) detected = COMPANY_SITE_DETECTED;
+      return Promise.resolve(true);
     },
   };
   return {

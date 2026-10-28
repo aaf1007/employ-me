@@ -84,6 +84,12 @@ export const detectedSchema = z.strictObject({
   posting: postingSchema.nullable(),
   /** The ATS shows its confirmation screen: you submitted. */
   confirmed: z.boolean(),
+  /**
+   * A company site's own text about the job, when it has no public API and
+   * no description in JSON-LD: kept in the Snapshot only, never sent to a
+   * Provider (fill's postingPageText).
+   */
+  pageText: z.string().max(100_000).optional(),
 });
 export type Detected = z.infer<typeof detectedSchema>;
 
@@ -141,7 +147,8 @@ export const fillViewSchema = z.strictObject({
 });
 export type FillView = z.infer<typeof fillViewSchema>;
 
-export const CONTENT_ERROR_REASONS = ['noForm', 'noSession', 'dataUnavailable'] as const;
+/** `noAccess`: employ-me may not read the page (the generic fallback, before the toolbar click). */
+export const CONTENT_ERROR_REASONS = ['noForm', 'noSession', 'dataUnavailable', 'noAccess'] as const;
 export const contentErrorSchema = z.strictObject({
   reason: z.enum(CONTENT_ERROR_REASONS),
   message: z.string(),

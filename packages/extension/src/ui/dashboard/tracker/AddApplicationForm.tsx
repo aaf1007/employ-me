@@ -38,7 +38,7 @@ export function AddApplicationForm({ onDone }: { readonly onDone: (id: string | 
     if (link === null || applied === null || Object.keys(found).length > 0) return;
 
     const posting = {
-      key: postingKeyFor(link, company.trim()),
+      key: postingKeyFor(link),
       url: link.href,
       company: company.trim(),
       ...(title.trim() === '' ? {} : { title: title.trim() }),

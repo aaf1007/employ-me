@@ -160,7 +160,7 @@ function readRow(read: (field: ImportFieldId) => string, now: Date): RowResult {
   const key =
     given.success && read('employer') !== '' && read('jobId') !== ''
       ? { ats: given.data, employer: read('employer').toLowerCase(), jobId: read('jobId') }
-      : postingKeyFor(url, company);
+      : postingKeyFor(url);
   const title = read('title');
   const location = read('location');
   const candidate: Posting = {

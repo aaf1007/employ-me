@@ -1,8 +1,7 @@
 import type { AtsId } from '@employ-me/core';
 import type { PanelController } from '../../sidepanel/controller';
 import type { PanelState } from '../../sidepanel/state';
-import { STATUS_LABELS } from '../../tracker';
-import { formatDate } from '../dashboard/format';
+import { AppliedWarning } from './AppliedWarning';
 
 const ATS_NAMES = {
   greenhouse: 'Greenhouse',
@@ -28,16 +27,7 @@ export function PostingHeader({
       <p className="muted small">
         {[posting?.company, posting?.location, ATS_NAMES[detected.ats]].filter(Boolean).join(' · ')}
       </p>
-      {applied.length === 0 ? null : (
-        <div className="warning" role="status" data-testid="already-applied" style={{ marginTop: 8 }}>
-          <strong>You already applied to this Posting.</strong>
-          {applied.map((application) => (
-            <p key={application.id} className="small">
-              {formatDate(application.appliedAt)} · {STATUS_LABELS[application.status]}
-            </p>
-          ))}
-        </div>
-      )}
+      <AppliedWarning applied={applied} />
       {resumes.length === 0 ? (
         <p className="small muted" style={{ marginTop: 8 }} data-testid="no-resume">
           No Resume yet. Add one in the dashboard to attach it.

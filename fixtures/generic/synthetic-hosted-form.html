@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- Synthetic (hand-built for e2e, not recorded): an Application Form hosted by a site employ-me doesn't
+     know, shown in synthetic-company-page.html's iframe. Plain HTML, no JavaScript. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Apply: Platform Engineer</title>
+  </head>
+  <body>
+    <main>
+      <h1>Platform Engineer at Example Robotics</h1>
+      <p>Build the tools our warehouse robots run on, from the build system to the fleet dashboard.</p>
+      <form id="apply" action="/apply/42/submit" method="post">
+        <div>
+          <label for="first_name">First name *</label>
+          <input id="first_name" name="first_name" type="text" required />
+        </div>
+        <div>
+          <label for="last_name">Last name *</label>
+          <input id="last_name" name="last_name" type="text" required />
+        </div>
+        <div>
+          <label for="email">Email *</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" />
+        </div>
+        <div>
+          <label for="resume">Resume *</label>
+          <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" required />
+        </div>
+        <div>
+          <label for="shirt">T-shirt size for the welcome pack</label>
+          <select id="shirt" name="shirt">
+            <option value="">Select…</option>
+            <option>S</option>
+            <option>M</option>
+            <option>L</option>
+          </select>
+        </div>
+        <div>
+          <label for="why">Why do you want to work on robots? *</label>
+          <textarea id="why" name="why" required></textarea>
+        </div>
+        <div>
+          <input id="consent" name="consent" type="checkbox" required />
+          <label for="consent">I certify that the information in this application is true and complete.</label>
+        </div>
+        <button type="submit" id="submit">Submit application</button>
+      </form>
+    </main>
+  </body>
+</html>

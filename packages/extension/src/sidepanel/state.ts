@@ -45,8 +45,13 @@ export type SubmissionState =
   | { readonly state: 'declined' };
 
 export interface PanelState {
-  readonly phase: 'detecting' | 'noForm' | 'ready';
+  /** `unknownSite`: no content script on this page; Fill runs the generic fallback (design.md "Job sites"). */
+  readonly phase: 'detecting' | 'noForm' | 'unknownSite' | 'ready';
   readonly detected: Detected | null;
+  /** The tab's address on an unknown site, when Chrome lets employ-me know it. */
+  readonly pageUrl: string | null;
+  /** Sites of frames on the page that employ-me can't read until you allow them. */
+  readonly unreachable: readonly string[];
   /** The Posting, with what its public job API adds. */
   readonly posting: Posting | null;
   /** Applications for this Posting: the already-applied warning. */
@@ -67,6 +72,8 @@ export interface PanelState {
 export const INITIAL_STATE: PanelState = {
   phase: 'detecting',
   detected: null,
+  pageUrl: null,
+  unreachable: [],
   posting: null,
   applied: [],
   resumes: [],

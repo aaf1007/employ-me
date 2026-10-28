@@ -1,5 +1,5 @@
 export { parseCsv, toCsv, type CsvError } from './csv';
-export { postingKeyFor, postingUrl, slug } from './posting-key';
+export { postingKeyFor, postingUrl } from './posting-key';
 export { STATUS_LABELS, statusFrom } from './status';
 export {
   EMPTY_MAPPING,

@@ -6,7 +6,7 @@ export function DoneStep() {
         <p className="card-intro">You can change any of it later on the Profile page.</p>
       </div>
       <ol className="stack" style={{ gap: 6, margin: 0, paddingLeft: 20 }}>
-        <li>Open a job application on Greenhouse, Lever or Ashby.</li>
+        <li>Open a job application on Greenhouse, Lever, Ashby, Workday or a company’s own site.</li>
         <li>Click the employ-me icon in Chrome’s toolbar, then click Fill.</li>
         <li>Check what was filled, finish anything under “Needs your review”, and submit it yourself.</li>
       </ol>

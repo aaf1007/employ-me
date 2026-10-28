@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '@employ-me/core';
-import { adapterFor, isConfirmation, readPosting } from '@employ-me/fill';
+import { adapterFor, isConfirmation, postingPageText, readPosting } from '@employ-me/fill';
 import { browser, type Browser } from 'wxt/browser';
 import {
   contentRequestSchema,
@@ -16,6 +16,8 @@ import { FillSession } from './session';
  * The ATS content script: does nothing until the side panel asks. Every
  * frame on an ATS host runs it; only the frame holding the Application Form
  * answers `detect`, `fill` and `feedback`, so the panel needn't know frame ids.
+ * On any other site the side panel runs it, frame by frame, only when you
+ * click Fill there (the generic fallback, sidepanel/site-access.ts).
  */
 export function startContentScript(): void {
   let session: FillSession | null = null;
@@ -107,14 +109,19 @@ function detect(): Detected | null {
   const fieldCount = form === null ? 0 : adapter.extract(form).length;
   const confirmed = adapter.ats !== 'generic' && isConfirmation(document, url, adapter.ats) !== null;
   if (fieldCount === 0 && !confirmed) return null;
+  const posting = readPosting(document, url);
+  // A company site has no public job API: without JSON-LD, its own text is the Snapshot's description.
+  const pageText =
+    adapter.ats === 'generic' && posting?.description === undefined ? postingPageText(document, form) : '';
   return {
     type: 'detected',
     ats: adapter.ats,
     url: url.href,
     topFrame: isTopFrame(),
     fieldCount,
-    posting: readPosting(document, url),
+    posting,
     confirmed,
+    ...(pageText === '' ? {} : { pageText }),
   };
 }
 

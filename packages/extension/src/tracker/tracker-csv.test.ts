@@ -126,15 +126,13 @@ describe('Tracker CSV', () => {
 
 describe('postingKeyFor', () => {
   it('reads the board and job id from known ATS URLs', () => {
-    expect(
-      postingKeyFor(new URL('https://job-boards.greenhouse.io/Acme/jobs/4567?gh_src=x'), 'Acme'),
-    ).toEqual({
+    expect(postingKeyFor(new URL('https://job-boards.greenhouse.io/Acme/jobs/4567?gh_src=x'))).toEqual({
       ats: 'greenhouse',
       employer: 'acme',
       jobId: '4567',
     });
     expect(
-      postingKeyFor(new URL('https://jobs.lever.co/acme/0B2C9A3E-1111-4222-8333-444455556666/apply'), 'Acme'),
+      postingKeyFor(new URL('https://jobs.lever.co/acme/0B2C9A3E-1111-4222-8333-444455556666/apply')),
     ).toEqual({ ats: 'lever', employer: 'acme', jobId: '0b2c9a3e-1111-4222-8333-444455556666' });
   });
 
@@ -152,14 +150,14 @@ describe('postingKeyFor', () => {
       { ats: 'workday', employer: 'osu', jobId: 'R123456' },
     ],
   ])('keys Workday Postings as the fill engine does: %s', (url, key) => {
-    expect(postingKeyFor(new URL(url), 'Acme')).toEqual(key);
+    expect(postingKeyFor(new URL(url))).toEqual(key);
   });
 
-  it('keys anything else by company and URL', () => {
-    expect(postingKeyFor(new URL('https://Careers.Example.com/jobs/9/'), 'Café Société')).toEqual({
+  it('keys a company’s own site as a Fill there keys it, so the already-applied warning finds it', () => {
+    expect(postingKeyFor(new URL('https://www.Careers.Example.com/jobs/9/apply?utm_source=x'))).toEqual({
       ats: 'generic',
-      employer: 'cafe-societe',
-      jobId: 'careers.example.com/jobs/9',
+      employer: 'careers.example.com',
+      jobId: '/jobs/9',
     });
   });
 });

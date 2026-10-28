@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Synthetic (hand-built for e2e, not recorded): a company's careers page, on a site employ-me doesn't know,
+     that shows its Application Form in an iframe from another site it doesn't know either. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Platform Engineer · Example Robotics careers</title>
+  </head>
+  <body>
+    <header>
+      <nav><a href="/">Example Robotics</a> · <a href="/careers">Careers</a></nav>
+      <input type="search" aria-label="Search jobs" />
+    </header>
+    <main>
+      <h1>Platform Engineer</h1>
+      <p>Toronto, ON · Full time</p>
+      <iframe
+        id="application"
+        title="Application"
+        src="https://forms.example.net/apply/42"
+        style="width: 100%; height: 900px; border: 0"
+      ></iframe>
+    </main>
+  </body>
+</html>

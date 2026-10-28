@@ -1,5 +1,31 @@
-import type { Posting, ResumeMeta, Snapshot, SubmittedAnswer } from '@employ-me/core';
-import type { PublicPostingDetails } from '@employ-me/fill';
+import {
+  atsForFormHost,
+  type Posting,
+  type ResumeMeta,
+  type Snapshot,
+  type SubmittedAnswer,
+} from '@employ-me/core';
+import { canonicalPostingUrl, genericPostingKey, type PublicPostingDetails } from '@employ-me/fill';
+
+/**
+ * The Posting a company site's address names, before anything reads the
+ * page: enough for the already-applied warning (design.md "Tracking"). The
+ * Fill keys it the same way (fill's genericPostingKey). Null for a known job
+ * site's host, whose content script reads the Posting itself.
+ */
+export function companySitePosting(href: string): Posting | null {
+  if (!/^https?:\/\//.test(href)) return null;
+  const url = new URL(href);
+  if (atsForFormHost(url.hostname) !== null) return null;
+  return { key: genericPostingKey(url), url: canonicalPostingUrl(url).href };
+}
+
+/** A company site's own text is the Snapshot's description when nothing better has one. */
+export function withPageText(posting: Posting, pageText: string | undefined): Posting {
+  return posting.description === undefined && pageText !== undefined
+    ? { ...posting, description: pageText }
+    : posting;
+}
 
 /** The page's Posting, completed from its public job API. The API's description wins: it is the full text. */
 export function withPublicDetails(posting: Posting, details: PublicPostingDetails | null): Posting {

@@ -51,15 +51,25 @@ test('content script runs inside an embedded Greenhouse iframe, and not on the c
     .toEqual([{ type: 'pong', ats: 'greenhouse', url: embedUrl, topFrame: false }]);
 });
 
-test('the toolbar icon opens the side panel', async ({ extension }) => {
-  // Playwright can't click Chrome's toolbar; this is what Chrome does on that click (design.md "Starting a Fill").
-  const behavior = await extension.serviceWorker.evaluate(async () => {
+test('the toolbar icon opens the side panel from its own click, which grants activeTab', async ({
+  extension,
+}) => {
+  // Playwright can't click Chrome's toolbar (design.md "Starting a Fill"). The click reaches
+  // action.onClicked, which opens the panel: with openPanelOnActionClick Chrome would open it
+  // itself and grant no activeTab (packages/extension/src/background/action.ts).
+  const wiring = await extension.serviceWorker.evaluate(async () => {
     const { chrome } = globalThis as unknown as {
-      chrome: { sidePanel: { getPanelBehavior(): Promise<{ openPanelOnActionClick?: boolean }> } };
+      chrome: {
+        sidePanel: { getPanelBehavior(): Promise<{ openPanelOnActionClick?: boolean }> };
+        action: { onClicked: { hasListeners(): boolean } };
+      };
     };
-    return chrome.sidePanel.getPanelBehavior();
+    return {
+      behavior: await chrome.sidePanel.getPanelBehavior(),
+      onClicked: chrome.action.onClicked.hasListeners(),
+    };
   });
-  expect(behavior).toEqual({ openPanelOnActionClick: true });
+  expect(wiring).toEqual({ behavior: { openPanelOnActionClick: false }, onClicked: true });
 });
 
 test('side panel and dashboard open without errors', async ({ page, sites, extension }) => {

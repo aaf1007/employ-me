@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PanelController } from './controller';
 import { DETECTED, deps, fakeBackground, fakeTab, POSTING, PROFILE, settle } from './test-fakes';
 
@@ -190,8 +190,10 @@ describe('PanelController', () => {
     const { controller, tab, bg, state } = await started();
     await controller.fill();
     tab.navigate(null);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(state().submission.state).toBe('askDidYouApply');
+    // The panel looks for the form on the new page a few times first.
+    await vi.waitFor(() => {
+      expect(state().submission.state).toBe('askDidYouApply');
+    });
 
     await controller.answerDidYouApply(true);
     expect(bg.calls.find((c) => c.type === 'applications.recordSubmission')?.payload).toMatchObject({
@@ -203,7 +205,9 @@ describe('PanelController', () => {
     const { controller, tab, bg, state } = await started();
     await controller.fill();
     tab.navigate(null);
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await vi.waitFor(() => {
+      expect(state().submission.state).toBe('askDidYouApply');
+    });
     await controller.answerDidYouApply(false);
     expect(state().submission.state).toBe('declined');
     expect(bg.calls.some((c) => c.type === 'applications.recordSubmission')).toBe(false);

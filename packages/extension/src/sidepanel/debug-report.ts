@@ -30,7 +30,8 @@ export function buildDebugReport(state: PanelState, profile: Profile | null, ver
       posting === null
         ? null
         : {
-            key: posting.key,
+            // A company site's key can hold its URL's query: left out, like the page's.
+            key: { ...posting.key, jobId: posting.key.jobId.split('?')[0] ?? '' },
             country: posting.country ?? null,
             hasDescription: (posting.description ?? '') !== '',
           },

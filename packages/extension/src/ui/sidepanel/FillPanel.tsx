@@ -5,9 +5,11 @@ import { fetchPublicPosting } from '../../net/ats-public-api';
 import { PanelController } from '../../sidepanel/controller';
 import { tabLink } from '../../sidepanel/tab-link';
 import { DebugReportButton } from './DebugReportButton';
+import { FrameAccessCard } from './FrameAccessCard';
 import { OutcomeGroups } from './OutcomeGroups';
 import { PostingHeader } from './PostingHeader';
 import { SubmissionNotice } from './SubmissionNotice';
+import { UnknownSiteCard } from './UnknownSiteCard';
 
 const openDashboard = (route: string) => {
   void browser.tabs.create({ url: browser.runtime.getURL(`/dashboard.html#${route}`) });
@@ -41,12 +43,11 @@ export function FillPanel({ tabId }: { readonly tabId: number }) {
           Looking for an Application Form…
         </p>
       ) : null}
+      {phase === 'unknownSite' ? <UnknownSiteCard state={state} controller={controller} /> : null}
       {phase === 'noForm' ? (
         <div className="card" data-testid="no-form">
           <p>There’s no Application Form on this page.</p>
-          <p className="small muted">
-            Open a job’s application page on Greenhouse, Lever or Ashby, then look again.
-          </p>
+          <p className="small muted">Open the job’s application page, then look again.</p>
           <div className="row">
             <button type="button" onClick={() => void controller.detect()}>
               Look again
@@ -55,6 +56,7 @@ export function FillPanel({ tabId }: { readonly tabId: number }) {
         </div>
       ) : null}
       {phase === 'ready' ? <PostingHeader state={state} controller={controller} /> : null}
+      {phase === 'noForm' ? <FrameAccessCard state={state} controller={controller} /> : null}
       <SubmissionNotice
         submission={state.submission}
         controller={controller}
