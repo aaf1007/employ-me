@@ -236,3 +236,56 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - Playwright can't grant clipboard permissions to an extension origin; the debug-report spec stubs `navigator.clipboard`.
 - Seed e2e data by restoring a backup from Settings (`e2e/seed.ts`), not by writing IndexedDB.
 - `browser.tabs.sendMessage` goes to every frame: content-script handlers must not answer (return false) unless their frame holds the form, or a frameless top page answers first.
+
+## 2026-10-28 · Workday adapter (Milestone 2): synthetic forms, unverified until a live pass
+
+**Landed**
+- core: `workday` in `ATS_IDS`. `ATS_HOSTS` takes `*.example.com` hosts (`*.myworkdayjobs.com`, `*.myworkdaysite.com`) and an optional `publicApiPath`. Workday's CXS API shares the form hosts, so the allowlist is now by URL (`isPublicApiUrl`: host and path), and the match patterns and CSP carry `/wday/cxs/`. Tests in `core/src/ats.test.ts`.
+- fill `adapters/workday/`:
+  - `findForm` picks the visible `applyFlow*Page` step (My Information, My Experience, Primary/Secondary/Supplementary Questions, Voluntary Disclosures, Self Identify, Review) or the `signInContent` panel.
+  - Field ids come from Workday's names in both schemes: current path ids (`name--legalName--firstName`, `workExperience-23--jobTitle`) and classic `data-automation-id`s (`legalNameSection_firstName`, `phone-device-type`). Entries are keyed by position, not Workday's global counter (`workExperience--startDate-month--0`).
+  - An adapter map covers both schemes. Self-ID is left to the country rules, except CC-305, whose name and date are `attestation.signature`.
+  - "Select One" buttons and prompts are comboboxes. The button's mirror input and the page footer are ignored. Work Experience and Education entries are added from zero ("Add", then "Add Another").
+- fill `posting/workday.ts`:
+  - Keys on (tenant, requisition). The first `_` ends the title slug, and `-1`/`-2` copy numbers are dropped (research §7).
+  - `publicApiRequest` builds the CXS URL from the form's URL.
+  - `parsePublicPosting` reads `jobPostingInfo`. The country comes from the locations, else the requisition's `alpha2Code`; the company is shown without its entity code.
+  - `readPosting` reads the posting page's markup and its JSON-LD.
+- fill `detect-submission`: Workday's "Congratulations!" / "Your application has successfully been submitted." panel confirms. The footer's Submit is a plain button and Workday fires no submit event, so a click on it starts the "Did you apply?" wait.
+- Recorded (public, 2026-10-28): the NVIDIA (US) and RBC (Toronto) posting pages and their CXS answers, with the pre-login token and geo-IP country removed.
+- Synthetic (hand-built, and named and marked as such):
+  - `synthetic-us-apply.html`: current naming, all six steps.
+  - `synthetic-ca-apply.html`: classic naming, Canadian questions and employment-equity Self-ID, with the Posting from the CXS answer.
+  - `synthetic-sign-in.html`.
+  - `synthetic-workday.js`, which stands in for Workday's widgets.
+  - Markup sources: Workday's public `candidate-experience-jobs` and `candidate-experience-apply-flow` bundles (2026.43.25), and research §4.
+- e2e `workday.spec.ts`:
+  - Each flow, step by step. The test clicks Save and Continue and Submit itself, after checking the Fill pressed neither.
+  - Self-ID Answers left at their default fill declines in Workday's own wording.
+  - The sign-in page: email only, and no account.
+  - The recorded Posting page and its API answer.
+  - The real side panel carries one Fill across all six steps, to a recorded Application with its Snapshot.
+- Fill rate: 72% (79 of 110 fields). The README marks it unverified.
+
+**Shared fill changes** (outside the adapter; every other e2e expectation is unchanged)
+- New adapter seams `AtsAdapter.typeToSearch` and `comboboxChoices` (off and empty by default), and `ComboboxRequest.searchIfNeeded` and `shown`. When a list shows nothing until searched, act/ types the answer. If that still lists nothing (Workday prompts that search only on Enter, which act/ never presses), the new `ActError` `searchShowedNothing` becomes "Couldn't fill" with that fix.
+- plan: "Add another" also works from zero entries.
+- Dates: one part per ARIA spinbutton (Workday's `dateSection*-input`). A month without a day reads "April 2025", or "04/2025" in date-picker boxes.
+- answer: `work.location`, `work.current`, `work.startDate`, `work.endDate` and `work.description`; month dates in text boxes; "I have a preferred name" boxes.
+- execute's report drops a field that appeared and left during the same execute with nothing written to it ("To", when "I currently work here" is ticked). Earlier steps' fields stay.
+- extension: the panel names Workday, and the tracker keys hand-added Workday URLs with fill's `postingKeyFromUrl`.
+
+**What only a live pass can confirm**
+- Everything about the forms behind sign-in: nesting and label wiring, the prompt input's role (the fixtures give it `role="combobox"`, and without it act/'s guard refuses), how entry containers are numbered, question ids, option lists, whether the spinbuttons take a typed value, and the Congratulations panel's container.
+- Which prompts search as you type (the school prompt has an `isSearchTypeAheadEnabled` switch) and which need Enter. In the fixtures, skills and field of study need Enter, so they are "Couldn't fill".
+
+**Left**
+- Enter-only prompts can't be searched, because `fireKey` refuses Enter by design. Either add a guarded "search this prompt" act/ operation, scoped to Workday's `searchBox` outside any `<form>`, or keep the "Couldn't fill".
+- Hierarchical prompts ("How did you hear?" → Job Board → LinkedIn): a category isn't a leaf, so picking it doesn't stick.
+- Websites and Languages panels aren't added.
+- The guard reads a "Select One" button's text, its current value, as its name. A value containing a forbidden stem would refuse the field.
+- "Autofill with Resume" (`applyFlowAutoFillPage`) parses the Resume on Workday's side. `parsesResume` is off, because Apply Manually doesn't parse.
+
+**Gotchas**
+- Workday's public bundles are the best source for its markup. The jobs bundle holds the sign-in components; `candidate-experience-apply-flow` holds the step pages, field paths and widgets.
+- `extension/wxt.config.ts` built CSP origins with `pattern.replace('/*', '')`, which breaks on `https://*.…`. It now strips only the trailing `*`.
