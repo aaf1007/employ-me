@@ -2,7 +2,7 @@ import { access, chmod, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { FAKE_PROVIDER_ENV, err, ok, type HelperErrorReason, type Result } from '@employ-me/core/protocol';
 import { manifestPathIn } from './browsers';
-import { writeHelperConfig } from './config';
+import { writeHelperConfig, type HelperConfig } from './config';
 import { CONFIG_ENV, LOG_FILE_ENV } from './layout';
 import { launcherScript } from './launcher';
 import { hostManifest } from './manifest';
@@ -17,6 +17,11 @@ export interface TestHostOptions {
   readonly nodePath: string;
   /** Makes every fake call fail with this reason (EMPLOY_ME_FAKE_FAIL). */
   readonly failWith?: HelperErrorReason;
+  /**
+   * Runs these real CLIs instead of the fake Provider. Spends the user's
+   * plan: only the opt-in live harness (`pnpm test:live`) passes it.
+   */
+  readonly realCli?: HelperConfig['cli'];
 }
 
 export interface TestHost {
@@ -29,7 +34,8 @@ export interface TestHost {
  * Installs the real helper, with the fake Provider forced on, into a
  * Chromium user-data-dir: Chromium on macOS and Linux also reads host
  * manifests from `<user-data-dir>/NativeMessagingHosts/`. Lets extension e2e
- * tests talk to the real host without spending anyone's plan. Nothing is
+ * tests talk to the real host without spending anyone's plan. With
+ * `realCli`, the host runs those CLIs instead (the live harness). Nothing is
  * written outside `userDataDir`. See CLAUDE.md "End-to-end tests".
  */
 export async function installTestHost(options: TestHostOptions): Promise<Result<TestHost, string>> {
@@ -54,7 +60,7 @@ export async function installTestHost(options: TestHostOptions): Promise<Result<
   await writeHelperConfig(configFile, {
     configVersion: 1,
     helperVersion: HELPER_VERSION,
-    cli: {},
+    cli: options.realCli ?? {},
     models: {},
     workDir: join(dir, 'work'),
     installed: { manifests: [], registryKeys: [] },
@@ -62,7 +68,7 @@ export async function installTestHost(options: TestHostOptions): Promise<Result<
   const env: Record<string, string> = {
     [CONFIG_ENV]: configFile,
     [LOG_FILE_ENV]: logFile,
-    [FAKE_PROVIDER_ENV]: 'fake',
+    ...(options.realCli === undefined ? { [FAKE_PROVIDER_ENV]: 'fake' } : {}),
     ...(options.failWith === undefined ? {} : { EMPLOY_ME_FAKE_FAIL: options.failWith }),
   };
   // macOS and Linux share the POSIX launcher.

@@ -107,6 +107,24 @@ describe('installTestHost', () => {
     );
   });
 
+  it('runs the real CLIs, without the fake Provider, for the live harness', async () => {
+    const userDataDir = tmp();
+    const dist = tmp();
+    writeFileSync(join(dist, 'host.mjs'), '');
+    const host = await installTestHost({
+      userDataDir,
+      helperDist: dist,
+      nodePath: '/usr/local/bin/node',
+      realCli: { claude: '/home/sam/.local/bin/claude' },
+    });
+    expect(host.ok).toBe(true);
+    const dir = join(userDataDir, 'employ-me-test-host');
+    expect(readFileSync(join(dir, 'launcher.sh'), 'utf8')).not.toContain('EMPLOY_ME_PROVIDER');
+    expect(JSON.parse(readFileSync(join(dir, 'config.json'), 'utf8'))).toMatchObject({
+      cli: { claude: '/home/sam/.local/bin/claude' },
+    });
+  });
+
   it('says to build the helper first when there is no build', async () => {
     const host = await installTestHost({ userDataDir: tmp(), helperDist: tmp(), nodePath: '/node' });
     expect(host).toMatchObject({
