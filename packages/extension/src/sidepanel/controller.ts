@@ -18,12 +18,16 @@ export class PanelController {
   private readonly flow: FillFlow;
   private profile: Profile | null = null;
   private details: Promise<PublicPostingDetails | null> = Promise.resolve(null);
+  /** Your Profile and the already-applied check for the form found last. */
+  private loading: Promise<unknown> = Promise.resolve();
   /** Answers from earlier pages of a form whose steps are separate pages. */
   private carried: readonly SubmittedAnswer[] = [];
   private closeSession: (() => void) | null = null;
   /** The form's document went away (a load, or the tab closed) while a Fill was open. */
   private documentGone = false;
   private continuing: Promise<void> | null = null;
+  /** The form showed new fields while a Fill was still running: it carries on once that Fill is done. */
+  private changedWhileFilling = false;
   private stopWatching: (() => void) | null = null;
   private generation = 0;
   /** You clicked Fill on a site employ-me has no content script for, and it now runs on this page. */
@@ -66,9 +70,11 @@ export class PanelController {
       this.store.set({ phase: 'noForm', detected });
       return;
     }
-    this.store.set({ phase: 'ready', detected, posting: detected.posting });
-    await Promise.all([this.loadProfile(), this.loadApplied(detected.posting)]);
+    // Started before the Fill button shows: a Fill clicked at once waits for them instead of going without.
     if (detected.posting !== null) this.details = this.fetchDetails(detected, detected.posting);
+    this.loading = Promise.all([this.loadProfile(), this.loadApplied(detected.posting)]);
+    this.store.set({ phase: 'ready', detected, posting: detected.posting });
+    await this.loading;
   }
 
   selectResume(resumeId: string): void {
@@ -112,6 +118,7 @@ export class PanelController {
     if (this.documentGone) this.flow.reset();
     this.documentGone = false;
     this.store.set({ fill: 'filling', notice: null, submission: { state: 'none' } });
+    await this.loading;
     const details = await this.details;
     const posting = detected.posting === null ? null : withPublicDetails(detected.posting, details);
     this.store.set({ posting });
@@ -126,6 +133,12 @@ export class PanelController {
       ...(details === null ? {} : { postingDetails: details }),
     });
     await this.flow.run(first);
+    // The form changed while this Fill ran (you clicked Next before the AI answered): carry on now.
+    if (this.changedWhileFilling) {
+      this.changedWhileFilling = false;
+      const { fill: now, submission } = this.store.get();
+      if (now === 'done' && submission.state === 'none') await this.fill();
+    }
   }
 
   readonly drafts = {
@@ -262,9 +275,13 @@ export class PanelController {
 
   /** The form's next step appeared (or follow-up questions): the same Fill carries on. */
   private async continueFill(): Promise<void> {
-    if (this.continuing !== null || this.store.get().submission.state !== 'none') return;
+    if (this.store.get().submission.state !== 'none') return;
     const { fill } = this.store.get();
-    if (fill !== 'done') return;
+    if (fill === 'filling' || fill === 'asking') {
+      this.changedWhileFilling = true;
+      return;
+    }
+    if (this.continuing !== null || fill !== 'done') return;
     this.continuing = this.fill().finally(() => {
       this.continuing = null;
     });

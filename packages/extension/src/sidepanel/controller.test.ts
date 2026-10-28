@@ -234,4 +234,41 @@ describe('PanelController', () => {
     await settle();
     expect(tab.sent.filter((s) => s.type === 'fill')).toHaveLength(2);
   });
+
+  it('a Fill clicked the moment the form shows waits for your Profile and the public job API', async () => {
+    const tab = fakeTab();
+    const bg = background();
+    const controller = new PanelController(deps(tab.tab, bg.call));
+    // The Fill button shows with phase "ready": click it then, before anything else answers.
+    const filled = new Promise<void>((resolve) => {
+      const stop = controller.store.subscribe(() => {
+        if (controller.store.get().phase !== 'ready') return;
+        stop();
+        resolve(controller.fill());
+      });
+    });
+    controller.start();
+    await filled;
+    await settle();
+    expect(controller.store.get().posting?.description).toBe('From the public API.');
+    expect(controller.store.get().drafts['why']).toMatchObject({ status: 'ready' });
+  });
+
+  it('carries the Fill on to a next step you moved to while it was still asking the AI', async () => {
+    const tab = fakeTab();
+    let nextClicked = false;
+    const bg = background({
+      'helper.mapFields': () => {
+        // You click Next on the page before the AI answers.
+        if (!nextClicked) tab.emit({ type: 'formChanged' });
+        nextClicked = true;
+        return { ok: true, value: { mappings: [] } };
+      },
+    });
+    const { controller, state } = await started(tab, bg);
+    await controller.fill();
+    await settle();
+    expect(tab.sent.filter((s) => s.type === 'fill')).toHaveLength(2);
+    expect(state().fill).toBe('done');
+  });
 });
