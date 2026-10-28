@@ -10,6 +10,7 @@ describe('fetchPublicJson', () => {
     'https://example.com/collect',
     'https://job-boards.greenhouse.io/acme/jobs/1',
     'http://boards-api.greenhouse.io/v1/boards/acme/jobs/1',
+    'https://rbc.wd3.myworkdayjobs.com/RBCGLOBAL1/job/Toronto/Developer_R-1',
   ])('refuses %s', async (url) => {
     expect(await fetchPublicJson(new URL(url))).toMatchObject({
       ok: false,

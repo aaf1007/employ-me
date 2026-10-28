@@ -27,7 +27,8 @@ export default defineConfig({
 });
 
 function extensionPagesCsp(): string {
-  const apiOrigins = publicApiMatchPatterns().map((pattern) => pattern.replace('/*', ''));
+  // A source ending in "/" allows every path under it: "https://*.myworkdayjobs.com/wday/cxs/".
+  const apiOrigins = publicApiMatchPatterns().map((pattern) => pattern.replace(/\*$/, ''));
   return [
     "default-src 'self'",
     "script-src 'self'",

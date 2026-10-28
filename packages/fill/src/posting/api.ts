@@ -1,7 +1,8 @@
-import { err, ok, type CountryCode, type PostingKey, type Result } from '@employ-me/core';
+import { atsForFormHost, err, ok, type CountryCode, type PostingKey, type Result } from '@employ-me/core';
 import { countriesIn } from './countries';
 import { isRecord, list, text } from '../json';
 import { soleCountry } from './read';
+import { workdayApiUrl, workdayCompany, workdayPosting } from './workday';
 
 // Public, unauthenticated job APIs (research §7). fill can't fetch: it only
 // builds the request and parses the answer. The extension's allowlisted
@@ -35,7 +36,9 @@ export type PublicApiParseError = {
  * (it falls back to the page's JSON-LD). Greenhouse
  * `/v1/boards/{board}/jobs/{id}?questions=true&pay_transparency=true`, Lever
  * `/v0/postings/{company}/{id}?mode=json`, Ashby
- * `/posting-api/job-board/{org}?includeCompensation=true`.
+ * `/posting-api/job-board/{org}?includeCompensation=true`, Workday
+ * `/wday/cxs/{tenant}/{site}/job/{path}` on the form's own host (which only
+ * `formUrl` names).
  */
 export function publicApiRequest(key: PostingKey, formUrl?: URL): PublicApiRequest | null {
   const enc = encodeURIComponent;
@@ -54,6 +57,13 @@ export function publicApiRequest(key: PostingKey, formUrl?: URL): PublicApiReque
         key,
         `https://api.ashbyhq.com/posting-api/job-board/${enc(key.employer)}?includeCompensation=true`,
       );
+    case 'workday': {
+      if (formUrl === undefined || atsForFormHost(formUrl.hostname) !== 'workday') return null;
+      const posting = workdayPosting(formUrl);
+      return posting === null || posting.jobId !== key.jobId
+        ? null
+        : request(key, workdayApiUrl(formUrl, posting));
+    }
     case 'generic':
       return null;
   }
@@ -82,6 +92,10 @@ export function parsePublicPosting(
         ? err({ reason: 'postingNotFound', detail: 'job id not on the board' })
         : ok(ashby(job));
     }
+    case 'workday':
+      return isRecord(json['jobPostingInfo'])
+        ? ok(workday(json['jobPostingInfo'], json['hiringOrganization']))
+        : err({ reason: 'postingNotFound', detail: 'no jobPostingInfo in the answer' });
     case 'generic':
       return err({ reason: 'unexpectedShape', detail: 'the generic fallback has no public API' });
   }
@@ -145,6 +159,27 @@ function ashby(job: Record<string, unknown>): PublicPostingDetails {
     location,
     country: countries.length === 1 ? countries[0] : soleCountry(location),
     description: text(job['descriptionPlain']),
+  });
+}
+
+/** CXS `job/…`: `{ jobPostingInfo, hiringOrganization }`. */
+function workday(info: Record<string, unknown>, org: unknown): PublicPostingDetails {
+  const additional = list(info['additionalLocations'])
+    .map(text)
+    .filter((l) => l !== undefined);
+  const location = [text(info['location']), ...additional].filter(Boolean).join('; ');
+  const requisition = isRecord(info['jobRequisitionLocation']) ? info['jobRequisitionLocation'] : {};
+  const declared = isRecord(requisition['country']) ? text(requisition['country']['alpha2Code']) : undefined;
+  const named = countriesIn(location);
+  // Several locations may span countries; the requisition's own country decides only when they name none.
+  const country =
+    named.length === 1 ? named[0] : named.length === 0 && additional.length === 0 ? declared : undefined;
+  return compact({
+    title: text(info['title']),
+    company: workdayCompany(isRecord(org) ? text(org['name']) : undefined),
+    location,
+    country,
+    description: decodeEntities(stripHtml(text(info['jobDescription']) ?? '')),
   });
 }
 

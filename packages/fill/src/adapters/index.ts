@@ -11,6 +11,8 @@ const ADAPTERS: Readonly<Record<AtsId, AtsAdapter>> = {
   greenhouse: greenhouseAdapter,
   lever: leverAdapter,
   ashby: ashbyAdapter,
+  // The Workday adapter lands in the next commit.
+  workday: genericAdapter,
   generic: genericAdapter,
 };
 

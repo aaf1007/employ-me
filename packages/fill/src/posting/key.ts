@@ -1,4 +1,5 @@
 import { atsForFormHost, type PostingKey } from '@employ-me/core';
+import { workdayPosting } from './workday';
 
 // Posting identity from URLs (research §7 "De-duplication"): key on
 // (ats, board, jobId), with tracking parameters stripped.
@@ -33,6 +34,11 @@ export function postingKeyFromUrl(url: URL): PostingKey | null {
     case 'ashby': {
       const [org, jobId] = parts;
       return org !== undefined && jobId !== undefined && isUuid(jobId) ? key('ashby', org, jobId) : null;
+    }
+    case 'workday': {
+      // Keyed on the tenant and the requisition, not the site or the copy number (research §7).
+      const posting = workdayPosting(url);
+      return posting === null ? null : key('workday', posting.tenant, posting.jobId);
     }
     case null:
       return null;

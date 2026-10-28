@@ -138,6 +138,23 @@ describe('postingKeyFor', () => {
     ).toEqual({ ats: 'lever', employer: 'acme', jobId: '0b2c9a3e-1111-4222-8333-444455556666' });
   });
 
+  it.each([
+    [
+      'https://rbc.wd3.myworkdayjobs.com/en-US/RBCGLOBAL1/job/TORONTO-Ontario-Canada/Lead-Software-Developer_R-0000187445-1',
+      { ats: 'workday', employer: 'rbc', jobId: 'R-0000187445' },
+    ],
+    [
+      'https://td.wd3.myworkdayjobs.com/TD_Bank_Careers/job/London-Ontario/Software-Engineer-I--Java-_R_1511543-1',
+      { ats: 'workday', employer: 'td', jobId: 'R_1511543' },
+    ],
+    [
+      'https://wd1.myworkdaysite.com/recruiting/osu/OSUCareers/details/Research-Engineer_R123456',
+      { ats: 'workday', employer: 'osu', jobId: 'R123456' },
+    ],
+  ])('keys Workday Postings as the fill engine does: %s', (url, key) => {
+    expect(postingKeyFor(new URL(url), 'Acme')).toEqual(key);
+  });
+
   it('keys anything else by company and URL', () => {
     expect(postingKeyFor(new URL('https://Careers.Example.com/jobs/9/'), 'Café Société')).toEqual({
       ats: 'generic',

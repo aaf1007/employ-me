@@ -1,3 +1,4 @@
+import type { AtsId } from '@employ-me/core';
 import type { PanelController } from '../../sidepanel/controller';
 import type { PanelState } from '../../sidepanel/state';
 import { STATUS_LABELS } from '../../tracker';
@@ -7,8 +8,9 @@ const ATS_NAMES = {
   greenhouse: 'Greenhouse',
   lever: 'Lever',
   ashby: 'Ashby',
+  workday: 'Workday',
   generic: 'Company site',
-} as const;
+} as const satisfies Readonly<Record<AtsId, string>>;
 
 /** The Posting, the already-applied warning, and the Resume for this Application. */
 export function PostingHeader({

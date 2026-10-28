@@ -1,4 +1,4 @@
-import { err, isPublicApiHost, ok, type PostingKey, type Result } from '@employ-me/core';
+import { err, isPublicApiUrl, ok, type PostingKey, type Result } from '@employ-me/core';
 import {
   parsePublicPosting,
   publicApiRequest,
@@ -23,8 +23,9 @@ export type PublicApiError =
  * The public job-API URL for a Posting (research §7): Greenhouse
  * boards-api `/v1/boards/{board}/jobs/{id}?questions=true&pay_transparency=true`,
  * Lever `/v0/postings/{co}/{id}?mode=json`, Ashby
- * `/posting-api/job-board/{org}?includeCompensation=true`. Null for the
- * generic fallback.
+ * `/posting-api/job-board/{org}?includeCompensation=true`, Workday
+ * `/wday/cxs/{tenant}/{site}/job/…` on the form's host. Null for the generic
+ * fallback.
  */
 export function publicApiUrl(key: PostingKey, formUrl?: URL): URL | null {
   const request = publicApiRequest(key, formUrl);
@@ -33,7 +34,9 @@ export function publicApiUrl(key: PostingKey, formUrl?: URL): URL | null {
 
 /** GETs JSON from an allowlisted public API host, without cookies or referrer. */
 export async function fetchPublicJson(url: URL): Promise<Result<unknown, PublicApiError>> {
-  if (url.protocol !== 'https:' || !isPublicApiHost(url.hostname)) {
+  // Hosts and paths from core's ATS_HOSTS: Workday's API shares the job site's
+  // host, so only its /wday/cxs/ paths are allowed there.
+  if (!isPublicApiUrl(url)) {
     return err({ reason: 'hostNotAllowed', detail: url.hostname });
   }
   let response: Response;

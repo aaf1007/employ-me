@@ -1,4 +1,5 @@
 import { atsForFormHost, type KnownAtsId, type PostingKey } from '@employ-me/core';
+import { postingKeyFromUrl } from '@employ-me/fill';
 
 // The Posting key for an Application you add by hand or import, so the
 // already-applied warning still recognizes the Posting later. Known ATS URLs
@@ -6,7 +7,7 @@ import { atsForFormHost, type KnownAtsId, type PostingKey } from '@employ-me/cor
 // The fill engine derives keys for the Postings it fills (fill's
 // postingKeyFromUrl); this covers only the hand-added ones.
 
-const PATHS: Readonly<Record<KnownAtsId, RegExp>> = {
+const PATHS: Readonly<Record<Exclude<KnownAtsId, 'workday'>, RegExp>> = {
   // job-boards.greenhouse.io/{board}/jobs/{id}
   greenhouse: /^\/([^/]+)\/jobs\/(\d+)/,
   // jobs.lever.co/{company}/{uuid}
@@ -17,7 +18,10 @@ const PATHS: Readonly<Record<KnownAtsId, RegExp>> = {
 
 export function postingKeyFor(url: URL, company: string): PostingKey {
   const ats = atsForFormHost(url.hostname);
-  if (ats !== null) {
+  // Workday's tenant is in the host and its id needs parsing: fill keys it, so both always agree.
+  const workday = ats === 'workday' ? postingKeyFromUrl(url) : null;
+  if (workday !== null) return workday;
+  if (ats !== null && ats !== 'workday') {
     const match = PATHS[ats].exec(url.pathname);
     const [, employer, jobId] = match ?? [];
     if (employer !== undefined && jobId !== undefined) {

@@ -3,6 +3,7 @@ import { collapse, readableText } from '../dom';
 import { countriesIn } from './countries';
 import { canonicalPostingUrl, genericPostingKey, postingKeyFromUrl } from './key';
 import { isRecord, parseJsonText, text } from '../json';
+import { workdayCompany, workdayPostingPage } from './workday';
 
 /** What the page says about its Posting; every part optional. */
 interface PageFacts {
@@ -22,9 +23,10 @@ export function readPosting(doc: Document, url: URL): Posting | null {
   const key = postingKeyFromUrl(url) ?? embeddedKey(doc) ?? genericPostingKey(url);
   const facts = { ...fromJsonLd(doc), ...defined(fromMarkup(doc, key)) };
   const country = facts.country ?? soleCountry(facts.location);
+  const page = key.ats === 'workday' ? workdayPostingPage(url) : url;
   return {
     key,
-    url: canonicalPostingUrl(url).href,
+    url: canonicalPostingUrl(page).href,
     ...(facts.title === undefined ? {} : { title: facts.title }),
     ...(facts.company === undefined ? {} : { company: facts.company }),
     ...(facts.location === undefined ? {} : { location: facts.location }),
@@ -77,6 +79,15 @@ function fromMarkup(doc: Document, key: PostingKey): PageFacts {
       return {
         title: /^(.+?) @ /.exec(collapse(doc.title))?.[1],
         company: /@ (.+)$/.exec(collapse(doc.title))?.[1],
+      };
+    case 'workday':
+      // The rendered posting page; the apply flow shows none of it, so the
+      // server-rendered JSON-LD (or the CXS API) is what's left there.
+      return {
+        title: textOf(doc, '[data-automation-id="jobPostingHeader"]'),
+        location: textOf(doc, '[data-automation-id="locations"] dd', '[data-automation-id="locations"]'),
+        company: workdayCompany(fromJsonLd(doc).company),
+        description: textOf(doc, '[data-automation-id="jobPostingDescription"]'),
       };
     case 'generic':
       return {};
