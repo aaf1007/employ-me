@@ -1,3 +1,11 @@
 .DS_Store
 node_modules/
 .env
+dist/
+.output/
+.wxt/
+playwright-report/
+test-results/
+*.log
+# The extension's private key. Not needed for unpacked installs; never commit it.
+.keys/

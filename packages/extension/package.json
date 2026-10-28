@@ -1,0 +1,26 @@
+{
+  "name": "@employ-me/extension",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Chrome MV3 extension: side panel, dashboard, background and ATS content scripts.",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@employ-me/core": "workspace:*",
+    "@employ-me/fill": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@wxt-dev/module-react": "1.2.2",
+    "wxt": "0.21.5"
+  }
+}

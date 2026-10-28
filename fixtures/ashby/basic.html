@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- Synthetic, trivial Ashby-shaped form for harness smoke tests. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Software Engineer @ Acme</title>
+  </head>
+  <body>
+    <h1>Software Engineer</h1>
+    <div class="ashby-application-form-container">
+      <div data-field-path="_systemfield_name">
+        <label for="_systemfield_name">Name</label>
+        <input id="_systemfield_name" type="text" />
+      </div>
+      <div data-field-path="_systemfield_email">
+        <label for="_systemfield_email">Email</label>
+        <input id="_systemfield_email" type="email" />
+      </div>
+      <div data-field-path="authorized">
+        <label>Are you legally authorized to work in the United States?</label>
+        <button type="button">Yes</button>
+        <button type="button">No</button>
+        <input type="checkbox" hidden />
+      </div>
+      <button type="button" class="ashby-application-form-submit-button">Submit Application</button>
+    </div>
+  </body>
+</html>

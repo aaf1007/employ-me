@@ -2,7 +2,7 @@
 
 An open-source Chrome extension that fills in job applications from your own profile and keeps track of what you've applied to. It uses your own Claude or Codex subscription.
 
-> **Status:** design phase. There's no code yet.
+> **Status:** early development. The foundation (packages, boundary lint rules, test harness) is in place, but nothing works end to end yet. Contributors and agents: start with [CLAUDE.md](CLAUDE.md).
 
 ## How it will work
 
@@ -17,6 +17,8 @@ An open-source Chrome extension that fills in job applications from your own pro
 - [Research](docs/research/2026-10-27-landscape.md)
 - [Glossary](GLOSSARY.md)
 - [Decisions](docs/adr/)
+- [Coding standards](CODING_STANDARDS.md)
+- [Build log](docs/BUILD_LOG.md)
 
 ## License
 

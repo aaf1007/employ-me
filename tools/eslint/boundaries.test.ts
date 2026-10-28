@@ -1,0 +1,218 @@
+import path from 'node:path';
+import { ESLint } from 'eslint';
+import tseslint from 'typescript-eslint';
+import { describe, expect, it } from 'vitest';
+
+// Proves the boundary rules in eslint.config.js fire where design.md says
+// they must, and stay quiet where they mustn't. Uses the real config with
+// type-aware rules switched off, so snippets need not exist on disk.
+
+const ROOT = path.resolve(import.meta.dirname, '../..');
+const eslint = new ESLint({
+  cwd: ROOT,
+  overrideConfig: [tseslint.configs.disableTypeChecked],
+});
+
+const BOUNDARY_RULES = new Set([
+  'no-restricted-syntax',
+  'no-restricted-globals',
+  'no-restricted-properties',
+  'no-restricted-imports',
+]);
+
+async function boundaryErrors(file: string, code: string): Promise<string[]> {
+  const [result] = await eslint.lintText(code, { filePath: path.join(ROOT, file) });
+  return (result?.messages ?? [])
+    .filter((m) => m.ruleId !== null && BOUNDARY_RULES.has(m.ruleId))
+    .map((m) => m.message);
+}
+
+const cases: Array<{ name: string; file: string; code: string; expect: RegExp | null }> = [
+  // DOM writes only in act/
+  {
+    name: 'raw click in classify',
+    file: 'packages/fill/src/classify/x.ts',
+    code: 'export const f = (el: HTMLElement) => { el.click(); };',
+    expect: /Raw \.click\(\) is banned/,
+  },
+  {
+    name: 'dispatchEvent in an adapter',
+    file: 'packages/fill/src/adapters/greenhouse/x.ts',
+    code: "export const f = (el: HTMLElement) => el.dispatchEvent(new Event('input'));",
+    expect: /dispatchEvent/,
+  },
+  {
+    name: 'value assignment in the extension',
+    file: 'packages/extension/src/ui/x.ts',
+    code: "export const f = (el: HTMLInputElement) => { el.value = 'x'; };",
+    expect: /DOM write/,
+  },
+  {
+    name: 'files assignment in fill',
+    file: 'packages/fill/src/extract/x.ts',
+    code: 'export const f = (el: HTMLInputElement, d: DataTransfer) => { el.files = d.files; };',
+    expect: /DOM write/,
+  },
+  {
+    name: 'prototype setter trick outside act',
+    file: 'packages/fill/src/x.ts',
+    code: "export const d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');",
+    expect: /prototype value-setter/,
+  },
+  {
+    name: 'click inside act',
+    file: 'packages/fill/src/act/x.ts',
+    code: 'export const f = (el: HTMLElement) => { el.click(); };',
+    expect: null,
+  },
+  {
+    name: 'click in a unit test (simulating the user)',
+    file: 'packages/fill/src/detect-submission/x.test.ts',
+    code: 'export const f = (el: HTMLElement) => { el.click(); };',
+    expect: null,
+  },
+  // Never submit
+  {
+    name: 'requestSubmit even inside act',
+    file: 'packages/fill/src/act/x.ts',
+    code: 'export const f = (form: HTMLFormElement) => { form.requestSubmit(); };',
+    expect: /never submits a form/,
+  },
+  // No network outside the allowlisted module
+  {
+    name: 'fetch in the side panel',
+    file: 'packages/extension/src/ui/x.ts',
+    code: "export const r = fetch('https://example.com/collect');",
+    expect: /Zero telemetry/,
+  },
+  {
+    name: 'sendBeacon in fill',
+    file: 'packages/fill/src/x.ts',
+    code: "export const r = navigator.sendBeacon('https://example.com', '');",
+    expect: /telemetry/,
+  },
+  {
+    name: 'http import in the helper',
+    file: 'packages/helper/src/x.ts',
+    code: "import { request } from 'node:https';\nexport { request };",
+    expect: /Network library/,
+  },
+  {
+    name: 'fetch in the allowlisted module',
+    file: 'packages/extension/src/net/ats-public-api.ts',
+    code: "export const r = fetch('https://boards-api.greenhouse.io/v1/boards/acme/jobs');",
+    expect: null,
+  },
+  // No chrome.* in core or fill
+  {
+    name: 'chrome global in core',
+    file: 'packages/core/src/x.ts',
+    code: 'export const id = chrome.runtime.id;',
+    expect: /No chrome\.\* here/,
+  },
+  {
+    name: 'wxt import in fill',
+    file: 'packages/fill/src/x.ts',
+    code: "import { browser } from 'wxt/browser';\nexport { browser };",
+    expect: /no chrome\.\* or WXT/,
+  },
+  {
+    name: 'chrome in the extension',
+    file: 'packages/extension/src/x.ts',
+    code: 'export const id = chrome.runtime.id;',
+    expect: null,
+  },
+  // The helper may not see Self-ID types
+  {
+    name: 'helper importing the full core',
+    file: 'packages/helper/src/x.ts',
+    code: "import type { SelfIdAnswers } from '@employ-me/core';\nexport type T = SelfIdAnswers;",
+    expect: /only '@employ-me\/core\/protocol'/,
+  },
+  {
+    name: 'helper deep-importing self-id',
+    file: 'packages/helper/src/x.ts',
+    code: "import type { SelfIdAnswers } from '../../core/src/profile/self-id';\nexport type T = SelfIdAnswers;",
+    expect: /No deep imports into core/,
+  },
+  {
+    name: 'helper importing the protocol',
+    file: 'packages/helper/src/x.ts',
+    code: "import type { HelperRequest } from '@employ-me/core/protocol';\nexport type T = HelperRequest;",
+    expect: null,
+  },
+  {
+    name: 'console in the helper',
+    file: 'packages/helper/src/host/x.ts',
+    code: "console.log('hello');",
+    expect: /Native Messaging channel/,
+  },
+  // The Provider boundary inside core
+  {
+    name: 'provider boundary importing self-id',
+    file: 'packages/core/src/provider/x.ts',
+    code: "export { selfIdAnswersSchema } from '../profile/self-id';",
+    expect: /whitelisted Profile pieces/,
+  },
+  {
+    name: 'protocol importing the whole Profile',
+    file: 'packages/core/src/protocol/x.ts',
+    code: "export { profileSchema } from '../profile';",
+    expect: /whitelisted Profile pieces/,
+  },
+  {
+    name: 'protocol importing Snapshots',
+    file: 'packages/core/src/protocol/x.ts',
+    code: "export { snapshotSchema } from '../tracking/snapshot';",
+    expect: /whitelisted Profile pieces/,
+  },
+  {
+    name: 'provider boundary importing a whitelisted piece',
+    file: 'packages/core/src/provider/x.ts',
+    code: "export { backgroundSchema } from '../profile/background';",
+    expect: null,
+  },
+  // No eval anywhere
+  {
+    name: 'eval in the extension',
+    file: 'packages/extension/src/x.ts',
+    code: "export const r: unknown = eval('1');",
+    expect: /No eval/,
+  },
+  {
+    name: 'new Function in the helper',
+    file: 'packages/helper/src/x.ts',
+    code: "export const f = new Function('return 1');",
+    expect: /No Function constructor/,
+  },
+];
+
+describe('boundary lint rules', () => {
+  it.each(cases)('$name', async ({ file, code, expect: expected }) => {
+    const errors = await boundaryErrors(file, code);
+    if (expected === null) {
+      expect(errors).toEqual([]);
+    } else {
+      expect(
+        errors.some((message) => expected.test(message)),
+        errors.join('\n'),
+      ).toBe(true);
+    }
+  });
+
+  it('cannot be switched off with an inline comment', async () => {
+    const errors = await boundaryErrors(
+      'packages/fill/src/x.ts',
+      '// eslint-disable-next-line no-restricted-syntax\nexport const f = (el: HTMLElement) => el.click();',
+    );
+    expect(errors.join('\n')).toMatch(/Raw \.click\(\) is banned/);
+  });
+
+  it('points every boundary message at the design', async () => {
+    const errors = await boundaryErrors(
+      'packages/fill/src/x.ts',
+      'export const f = (el: HTMLElement) => el.click();',
+    );
+    expect(errors.join('\n')).toMatch(/design\.md/);
+  });
+});

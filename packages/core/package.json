@@ -1,0 +1,17 @@
+{
+  "name": "@employ-me/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Domain types, field taxonomy, helper protocol and the Provider boundary. Pure TypeScript: no DOM, no chrome.*.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./protocol": "./src/protocol/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}
