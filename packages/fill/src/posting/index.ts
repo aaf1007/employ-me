@@ -13,5 +13,6 @@ export {
   countriesNamedIn,
   regionName,
 } from './countries';
+export { applicationFormUrl } from './form-url';
 export { canonicalPostingUrl, genericPostingKey, postingKeyFromUrl } from './key';
 export { readPosting, soleCountry } from './read';

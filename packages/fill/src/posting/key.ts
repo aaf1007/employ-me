@@ -86,6 +86,6 @@ function key(ats: PostingKey['ats'], employer: string, jobId: string): PostingKe
   return { ats, employer: employer.toLowerCase().slice(0, 200), jobId: jobId.slice(0, 200) };
 }
 
-function isUuid(value: string): boolean {
+export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
