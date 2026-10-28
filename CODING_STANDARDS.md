@@ -39,8 +39,8 @@ Concrete rules a reviewer can check. Lint and types enforce many of them; the re
 ## Adapters
 
 - **Every adapter ships with fixtures and e2e tests.** A change to an adapter without a fixture that exercises it, or a fixture without a spec, fails review.
-- Fixtures are real forms saved from the live site after they render (the DOM, not the page source), as `fixtures/<ats>/<employer>-<yyyy-mm-dd>.html`. Scrub anything personal before committing. External resources are blocked in e2e, so the fixture has to stand on its own.
-- Each adapter spec serves its fixtures at the real ATS URL, runs a Fill with the fake Provider, and asserts every field's outcome. Field counts per outcome feed the README's coverage table.
+- Fixtures are real, public forms recorded with `node tools/fixtures/record.ts <ats>/<employer>-<yyyy-mm-dd>` (listed in `e2e/forms.ts`): a Playwright HAR (`fixtures/<ats>/<name>.har`, bodies shared in `fixtures/<ats>/har/`) that replays the page with its own JavaScript, plus the rendered DOM (`<name>.html`) for unit tests. The recorder keeps only the ATS's own hosts, drops cookies, session headers, client keys, tokens and signed upload policies, and never clicks or submits anything. Check a new recording for anything personal before committing.
+- Each adapter spec replays its fixtures at the real URL (`sites.replay`), runs a Fill from the test Profile, and checks every field's outcome and the value the form shows against `<name>.expected.json`, that Attestations were left alone, and that nothing was submitted. `UPDATE_FILL_EXPECTED=1` rewrites the expected files; review that diff by hand. `pnpm fill-rate` turns them into the README's coverage table.
 
 ## Tests
 
