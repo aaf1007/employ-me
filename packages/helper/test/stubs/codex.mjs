@@ -3,7 +3,7 @@
 // the app-server's JSON-RPC lines as codex-cli 0.158.0 does (see
 // `codex app-server generate-ts`), with canned answers.
 //
-//   STUB_MODE    ok (default) | notLoggedIn | rateLimited | modelNotFound | hang | askApproval | crash
+//   STUB_MODE    ok (default) | notLoggedIn | rateLimited | modelNotFound | serviceFailed | hang | askApproval | crash
 //   STUB_OUTPUT  the final agent message text (default {})
 //   STUB_MCP     JSON printed by `mcp list --json` (default [])
 //   STUB_RECORD  file to append one JSON line per call and message to, for assertions
@@ -111,6 +111,12 @@ function finishTurn(threadId) {
         message:
           '{"type":"error","status":400,"error":{"type":"invalid_request_error","code":"model_not_found"}}',
         codexErrorInfo: 'other',
+      });
+    case 'serviceFailed':
+      // Seen live (codex-cli 0.158.0, 2026-10-28) on one of two concurrent turns.
+      return completed(threadId, 'failed', {
+        message: 'exceeded retry limit, last status: 500 Internal Server Error',
+        codexErrorInfo: { responseTooManyFailedAttempts: { httpStatusCode: 500 } },
       });
     case 'askApproval':
       awaitingApproval = threadId;

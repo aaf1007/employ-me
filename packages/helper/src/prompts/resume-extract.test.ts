@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { resumeWireSchema, type ResumeWire } from './parse-resume';
+import { DEGREE_ABBREVIATIONS } from './degree-level';
+import { PARSE_RESUME_SYSTEM, resumeWireSchema, type ResumeWire } from './parse-resume';
 import { toResumeExtract } from './resume-extract';
 
 const empty: ResumeWire = resumeWireSchema.parse({
@@ -52,5 +53,47 @@ describe('toResumeExtract', () => {
   it('drops a job with no start date rather than failing the whole Resume', () => {
     const extract = toResumeExtract({ ...empty, workHistory: [job(null)] });
     expect(extract?.background?.workHistory).toEqual([]);
+  });
+
+  // Live, Codex, 2026-10-28: "BASc" came back with degreeLevel null, though the prompt says the abbreviation makes it clear.
+  it('reads the level from a degree the model left without one, and keeps a level it gave', () => {
+    const school = (degree: string | null, degreeLevel: ResumeWire['education'][number]['degreeLevel']) => ({
+      school: 'University of Example',
+      degree,
+      degreeLevel,
+      discipline: null,
+      startDate: null,
+      endDate: null,
+      gpa: null,
+    });
+    const extract = toResumeExtract({
+      ...empty,
+      education: [
+        school('BASc', null),
+        school('B.A.Sc.', null),
+        school('M.Sc.', null),
+        school('Master of Engineering', null),
+        school('PhD', null),
+        school('Diploma', null),
+        school(null, null),
+        school('BASc', 'other'),
+      ],
+    });
+    expect(extract?.background?.education.map((e) => e.degreeLevel)).toEqual([
+      'bachelor',
+      'bachelor',
+      'master',
+      'master',
+      'doctorate',
+      undefined,
+      undefined,
+      'other',
+    ]);
+  });
+
+  it('knows exactly the abbreviations the prompt names', () => {
+    for (const [, names] of DEGREE_ABBREVIATIONS) {
+      for (const name of names) expect(PARSE_RESUME_SYSTEM).toContain(name);
+    }
   });
 });

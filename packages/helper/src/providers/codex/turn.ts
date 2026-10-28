@@ -157,10 +157,28 @@ function errorInfoName(info: string | Record<string, unknown>): string {
 
 /** codexErrorInfo values (v2/CodexErrorInfo.ts in `codex app-server generate-ts`) that mean the plan's limit. */
 const LIMIT_REACHED = new Set(['usageLimitExceeded', 'rateLimitExceeded', 'sessionBudgetExceeded']);
+/**
+ * Values that mean OpenAI's service failed, after Codex's own retries.
+ * responseTooManyFailedAttempts was seen live (2026-10-28) on one of two
+ * concurrent Drafts; the next request worked.
+ */
+const SERVICE_FAILED = new Set([
+  'responseTooManyFailedAttempts',
+  'responseStreamDisconnected',
+  'internalServerError',
+  'serverOverloaded',
+]);
 
 function turnError(status: string, errorInfo: string | null): HelperError {
   if (errorInfo !== null && LIMIT_REACHED.has(errorInfo)) {
     return providerError('codex', 'providerRateLimited', "Codex's usage limit was reached");
+  }
+  if (errorInfo !== null && SERVICE_FAILED.has(errorInfo)) {
+    return {
+      reason: 'providerFailed',
+      message: "OpenAI's service didn't answer Codex, even after Codex tried again",
+      fix: "This is on OpenAI's side, not your setup. Click Retry in a minute. If it keeps failing, switch to Claude in Settings.",
+    };
   }
   if (errorInfo === 'unauthorized')
     return providerError('codex', 'providerNotLoggedIn', "Codex isn't logged in");

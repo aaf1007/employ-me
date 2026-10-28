@@ -233,6 +233,16 @@ describe('Codex Provider', () => {
     expect(!result.ok && result.error.fix).toMatch(/switch to Claude/);
   });
 
+  // Live, Ramp, 2026-10-28: a Draft failed with only "The Codex turn ended as failed (responseTooManyFailedAttempts)".
+  it('says when Codex gave up on OpenAI’s side, and that Retry is the fix', async () => {
+    const result = await provider({ STUB_MODE: 'serviceFailed' }).codex.mapFields(input(), signal);
+    expect(result).toMatchObject({ ok: false, error: { reason: 'providerFailed' } });
+    if (result.ok) return;
+    expect(result.error.message).toMatch(/OpenAI/);
+    expect(result.error.message).not.toMatch(/responseTooManyFailedAttempts/);
+    expect(result.error.fix).toMatch(/not your setup.*Retry.*switch to Claude/);
+  });
+
   it('interrupts a turn that takes too long', async () => {
     const { codex, tmp } = provider({ STUB_MODE: 'hang' }, { timeoutMs: 300 });
     expect(await codex.mapFields(input(), signal)).toMatchObject({

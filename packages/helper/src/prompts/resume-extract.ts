@@ -1,4 +1,5 @@
 import { resumeExtractSchema, type ResumeExtract } from '@employ-me/core/protocol';
+import { degreeLevelOf } from './degree-level';
 import type { ResumeWire } from './parse-resume';
 
 type Json = Record<string, unknown>;
@@ -47,7 +48,11 @@ function candidateFrom(wire: ResumeWire): Json {
         id: `w${i + 1}`,
         endDate: entry.current ? null : entry.endDate,
       })),
-      education: wire.education.map((entry, i) => ({ ...entry, id: `e${i + 1}` })),
+      education: wire.education.map((entry, i) => ({
+        ...entry,
+        id: `e${i + 1}`,
+        degreeLevel: entry.degreeLevel ?? degreeLevelOf(entry.degree),
+      })),
       skills: wire.skills.map((name) => ({ name })),
       languages: wire.languages,
     },
