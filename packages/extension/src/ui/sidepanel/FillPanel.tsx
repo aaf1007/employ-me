@@ -5,6 +5,7 @@ import { fetchPublicPosting } from '../../net/ats-public-api';
 import { PanelController } from '../../sidepanel/controller';
 import { tabLink } from '../../sidepanel/tab-link';
 import { DebugReportButton } from './DebugReportButton';
+import { FillProgressBar } from './FillProgressBar';
 import { FrameAccessCard } from './FrameAccessCard';
 import { OutcomeGroups } from './OutcomeGroups';
 import { PostingHeader } from './PostingHeader';
@@ -100,6 +101,7 @@ export function FillPanel({ tabId }: { readonly tabId: number }) {
           </div>
         </div>
       ) : null}
+      {phase === 'ready' && state.view !== null ? <FillProgressBar fields={state.view.fields} /> : null}
       {phase === 'ready' ? <OutcomeGroups state={state} controller={controller} /> : null}
       {state.view === null ? null : <DebugReportButton controller={controller} />}
     </>

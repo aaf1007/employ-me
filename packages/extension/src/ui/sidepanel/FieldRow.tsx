@@ -23,6 +23,7 @@ export function FieldRow({
       data-testid="field"
       data-field-id={field.fieldId}
       data-outcome={outcome?.kind ?? 'awaiting'}
+      data-required={field.required}
     >
       <span className="field-label">
         {label}

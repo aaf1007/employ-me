@@ -175,3 +175,21 @@
   font: inherit;
   padding: 3px 6px;
 }
+
+.progress {
+  display: grid;
+  gap: 4px;
+}
+
+.progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress-value {
+  height: 100%;
+  background: var(--filled);
+  transition: width 0.2s ease-out;
+}
