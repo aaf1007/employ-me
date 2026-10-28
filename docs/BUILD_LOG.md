@@ -422,3 +422,36 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 **Gotchas**
 - `milestone-1` Lever polish still times out under heavy load: it failed while the machine's load average was ~60 and passed 24 of 24 (with side-panel, `--repeat-each 3`) once it settled. Not changed here; the e2e harness and its flaky specs belong to the agent fixing them.
 - The Palantir fixture's security-clearance questions are radios, so they stay "Not recognised"; the free-text change only reaches text boxes.
+
+## 2026-10-28 · e2e flakes under load: causes and fixes (e2e, Playwright config, lint; one side-panel commit)
+
+**Before** (main 4e71ad0, builds reused, on this 11-core Mac; "every core busy" = 6 `while :; do :; done` loops beside Playwright's 5 workers)
+- Plain: 54 of 54. Every core busy, `--repeat-each 2`: 1 of 108 failed (Lever polish). Oversubscribed (11 loops, 8 workers, `--repeat-each 3`): 53 of 162 failed. Lever and Ashby alone (9 loops, 6 workers, `--repeat-each 12`): 13 of 24.
+
+**Causes**
+- Specs acted while a re-plan was still in flight, and re-plans queue in the content script. A Draft card says `ready` when the Provider answers, before the re-plan that puts the field under review lands. Lever clicked Accept right then, so Accept's re-plan waited behind Polish's and both had to fit one 5 s assertion (about 2.5 s each under load). side-panel edited the page during the next step's AI round (main's 43ee233 fixed the lost edit), and Workday pressed Next during it.
+- Side panel, product: a `formChanged` that came while the Fill was filling or asking the AI was dropped, so a step you moved to before the AI answered was never filled.
+- Side panel, product: the Fill button showed before the public job API was requested and before the Profile had loaded. A Fill clicked then ran without the API's details and without a Draft source, so required questions were never drafted.
+- Fixed sleeps: fill.spec 1.5 s, fill-seam 1 s, `formFrame`'s 100 ms poll.
+- Found on the way: the harness passed `env` to the launch, and Playwright records launch options in trace.zip, so every trace held the whole environment, tokens included. CI uploads test-results/ on failure.
+
+**Landed**
+- `e2e/panel.ts`: `nextStep`, `draftReady` and `acceptDraft` wait for the state each panel action ends in, like `clickFill`. milestone-1, side-panel and workday use them.
+- `PanelController` (own commit, a unit test for each that failed first): the API request and the loads start before the Fill button shows, and `fill()` waits for them; a step that shows up mid-Fill is filled once the Fill is done.
+- The sleeps are gone (the load event and the form's first field are the state those specs need); `formFrame` waits for the embed's navigation. Lint bans `waitForTimeout` in `e2e/` (`e2e/live/` aside), with cases in `boundaries.test.ts`.
+- `playwright.config.ts` sets `EMPLOY_ME_PROVIDER=fake` for the workers; the launch no longer gets `env`.
+- CLAUDE.md "End-to-end tests": wait for state, never for time, and how to check a spec under load.
+
+**After** (rebased on ff7c4ca)
+- Plain, 5 runs in a row: 270 of 270. Every core busy, 2 runs: 108 of 108.
+- Oversubscribed Lever and Ashby (as above): 1 of 24 failed, down from 13: one Polish re-plan alone took over 5 s (see Left).
+
+**Left**
+- An oversubscribed machine still fails on throughput, not races: with loops on every core plus the workers, all the browsers share about one core. A Greenhouse geotab Fill (38 fields) took 35 to 60+ s, one re-plan over 5 s (three `plan()` passes of about 2 s each), and short dashboard tests' launch plus teardown went past their 30 s. Only longer timeouts or a cheaper `plan()` would pass that; no timeout was raised.
+- Lever's `waitForResumeParse` gives the "Reading your resume" banner 300 ms to show before it waits for it to go. On a slow machine it could return before the parse, which would then write over the Fill. Not seen failing; fill's.
+- CI still retries once (`playwright.config.ts`). Worth dropping once CI has been green for a while, so a new flake fails loudly.
+- `e2e/live/` keeps its fixed waits: it drives real sites.
+
+**Gotchas**
+- Playwright keeps no trace for a passing test. To see where a slow Fill spends its time, log from the content script and write the harness's `logs` to `testInfo.outputPath()` for every test (temporarily).
+- On macOS, busy loops starve Chromium far more than their count suggests: 11 loops gave load averages over 200 and the browsers about one core.
