@@ -11,17 +11,12 @@ import { answerFor, type ProfileView, type ProviderInputs } from '../answer';
 import { classifyField, type CountryChoice } from '../classify';
 import { countriesIn, readPosting } from '../posting';
 import type { ExtractedField } from '../types';
-import type {
-  DraftRequestRef,
-  FillPlan,
-  PlanOptions,
-  PlannedField,
-  ProviderRequest,
-  RepeatStep,
-} from './types';
+import { requiredDraftRequests } from './drafts';
+import type { FillPlan, PlanOptions, PlannedField, ProviderRequest, RepeatStep } from './types';
 import { stepFor } from './write';
 
 export type * from './types';
+export { draftFieldType, draftRequestFor } from './drafts';
 
 /**
  * Plans a Fill of the Application Form in `doc`: extracts every field,
@@ -71,7 +66,7 @@ export function plan(
     country,
     fields,
     providerRequest: providerRequest(adapter, fields, savedAnswers),
-    draftRequests: draftRequests(fields, aiPolicy, posting),
+    draftRequests: requiredDraftRequests(fields, aiPolicy, posting),
     aiPolicy,
     resumeFirst:
       adapter.parsesResume && fields.some((f) => f.step.kind === 'write' && f.step.write.kind === 'file'),
@@ -136,33 +131,6 @@ function providerRequest(
     if (result.ok) savedQuestions.push(result.value);
   }
   return { ats: adapter.ats, fields: providerFields, savedQuestions };
-}
-
-function draftRequests(
-  fields: readonly PlannedField[],
-  aiPolicy: boolean,
-  posting: Posting | null,
-): DraftRequestRef[] {
-  return fields
-    .filter((f) => f.step.kind === 'awaitProvider' && f.step.need === 'draft')
-    .map(({ field }) => ({
-      fieldId: field.fieldId,
-      fieldType: 'freeText.question' as const,
-      question: {
-        label: field.label === '' ? 'Question' : field.label,
-        required: field.required,
-        ...(field.description === undefined ? {} : { description: field.description }),
-        ...(field.maxLength === undefined ? {} : { maxLength: field.maxLength }),
-        language: 'en',
-      },
-      mode: aiPolicy ? 'polish' : 'write',
-      posting: {
-        ...(posting?.title === undefined ? {} : { title: posting.title }),
-        ...(posting?.company === undefined ? {} : { company: posting.company }),
-        ...(posting?.description === undefined ? {} : { description: posting.description.slice(0, 100_000) }),
-      },
-      ...(posting === null ? {} : { employer: posting.key.employer }),
-    }));
 }
 
 /** One "Add another" press per Profile entry the form has no room for yet. */

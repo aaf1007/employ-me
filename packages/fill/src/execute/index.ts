@@ -1,7 +1,9 @@
 import type { FieldDescriptor, FieldOutcome, FieldType } from '@employ-me/core';
 import * as act from '../act';
 import { plan as planForm, type FillPlan, type PlannedField } from '../plan';
-import { descriptorOf, writeOutcome } from './outcome';
+import { fieldFingerprint } from '../read';
+import { writeOutcome } from './outcome';
+import { buildReport, writeKey } from './report';
 import { performWrite, type WriteContext } from './write';
 
 /** A field the Fill can't finish until integration asks the Provider and plans again. */
@@ -20,6 +22,14 @@ export interface FillReport {
   readonly fields: readonly FieldDescriptor[];
   /** The plan as it stood at the end (after "Add another" and fields that appeared while filling). */
   readonly plan: FillPlan;
+  /** Every field this Fill has seen, including ones that have since left the page (an earlier step). */
+  readonly planned: readonly PlannedField[];
+  /** What each field showed when this execute finished (`fieldFingerprint`), to spot the user's edits later. */
+  readonly values: ReadonlyMap<string, string>;
+  /** The write each field was given (`writeKey`), so a re-plan writes only what it newly resolved. */
+  readonly writes: ReadonlyMap<string, string>;
+  /** Fields the user changed on the page after a Fill. No later execute writes them. */
+  readonly userEdited: ReadonlySet<string>;
 }
 
 const CONDITIONAL_ROUNDS = 2;
@@ -29,26 +39,48 @@ const CONDITIONAL_ROUNDS = 2;
  * adds section entries, writes every field through act/ (each write read
  * back), then fills fields that appeared because of earlier answers. Never
  * presses Submit or Next and never ticks an Attestation (act/'s guard
- * refuses both). Writes are idempotent, so executing a re-plan is safe.
+ * refuses both).
+ *
+ * Pass the last report as `previous` when executing a re-plan (Provider
+ * answers, an accepted Draft, the form's next step): only fields the new plan
+ * newly resolved, or resolved differently, are written, and a field the user
+ * changed on the page since the last execute is never written again.
  */
-export async function execute(plan: FillPlan): Promise<FillReport> {
+export async function execute(plan: FillPlan, previous?: FillReport): Promise<FillReport> {
   const { adapter, doc } = plan.context;
-  const ctx: WriteContext = { adapter, resume: plan.context.options.resume?.file ?? null };
+  const resume = plan.context.options.resume?.file ?? null;
+  const ctx: WriteContext = { adapter, resume };
   const outcomes = new Map<string, FieldOutcome>();
+  const writes = new Map(previous?.writes);
+  const userEdited = new Set(previous?.userEdited);
   let current = plan;
 
-  if (plan.resumeFirst) {
-    for (const planned of plan.fields) {
-      if (
-        planned.step.kind === 'write' &&
-        planned.step.write.kind === 'file' &&
-        planned.fieldType === 'file.resume'
-      ) {
-        outcomes.set(planned.field.fieldId, await run(planned, ctx));
-      }
+  const noteEdits = (fields: readonly PlannedField[]) => {
+    if (previous === undefined) return;
+    for (const { field } of fields) {
+      const before = previous.values.get(field.fieldId);
+      if (before !== undefined && fieldFingerprint(field) !== before) userEdited.add(field.fieldId);
     }
+  };
+  const due = (planned: PlannedField): boolean => {
+    const id = planned.field.fieldId;
+    if (planned.step.kind !== 'write' || userEdited.has(id) || outcomes.has(id)) return false;
+    return writes.get(id) !== writeKey(planned, resume);
+  };
+  const write = async (planned: PlannedField) => {
+    writes.set(planned.field.fieldId, writeKey(planned, resume));
+    outcomes.set(planned.field.fieldId, await run(planned, ctx));
+  };
+  noteEdits(plan.fields);
+
+  if (plan.resumeFirst) {
+    const files = plan.fields.filter(
+      (p) =>
+        p.fieldType === 'file.resume' && p.step.kind === 'write' && p.step.write.kind === 'file' && due(p),
+    );
+    for (const planned of files) await write(planned);
     const form = adapter.findForm(doc);
-    if (form !== null) await adapter.waitForResumeParse(form);
+    if (files.length > 0 && form !== null) await adapter.waitForResumeParse(form);
   }
 
   if (plan.repeats.length > 0) {
@@ -62,40 +94,36 @@ export async function execute(plan: FillPlan): Promise<FillReport> {
   }
 
   // Every field seen in any plan, in order of first appearance: a field that
-  // goes away after its write (Greenhouse swaps the file input for a chip)
-  // still gets its outcome.
+  // goes away after its write (Greenhouse swaps the file input for a chip),
+  // or with an earlier step of the form, still gets its outcome.
   const seen = new Map<string, PlannedField>();
+  for (const f of previous?.planned ?? []) seen.set(f.field.fieldId, f);
   const remember = (fields: readonly PlannedField[]) => {
-    for (const f of fields) seen.set(f.field.fieldId, f);
+    for (const f of fields) if (!outcomes.has(f.field.fieldId)) seen.set(f.field.fieldId, f);
   };
   for (const f of plan.fields) seen.set(f.field.fieldId, f);
   remember(current.fields);
 
-  const written = new Set(outcomes.keys());
-  await writeAll(current.fields, written, outcomes, ctx);
+  for (const planned of current.fields) if (due(planned)) await write(planned);
   for (let round = 0; round < CONDITIONAL_ROUNDS; round++) {
     await settle();
     const next = replan(current);
     const appeared = next.fields.filter((f) => !seen.has(f.field.fieldId));
     current = next;
-    remember(next.fields.filter((f) => !written.has(f.field.fieldId)));
+    remember(next.fields);
     if (appeared.length === 0) break;
-    await writeAll(appeared, written, outcomes, ctx);
+    noteEdits(appeared);
+    for (const planned of appeared) if (due(planned)) await write(planned);
   }
-  return report(current, [...seen.values()], outcomes);
-}
-
-async function writeAll(
-  fields: readonly PlannedField[],
-  written: Set<string>,
-  outcomes: Map<string, FieldOutcome>,
-  ctx: WriteContext,
-): Promise<void> {
-  for (const planned of fields) {
-    if (planned.step.kind !== 'write' || written.has(planned.field.fieldId)) continue;
-    written.add(planned.field.fieldId);
-    outcomes.set(planned.field.fieldId, await run(planned, ctx));
-  }
+  return buildReport({
+    final: current,
+    everyField: [...seen.values()],
+    outcomes,
+    writes,
+    userEdited,
+    previous,
+    resume,
+  });
 }
 
 async function run(planned: PlannedField, ctx: WriteContext): Promise<FieldOutcome> {
@@ -103,48 +131,6 @@ async function run(planned: PlannedField, ctx: WriteContext): Promise<FieldOutco
   if (step.kind !== 'write') throw new Error('run() needs a write step');
   const result = await performWrite(field, fieldType, step.write, ctx);
   return writeOutcome(planned, result);
-}
-
-function report(
-  final: FillPlan,
-  everyField: readonly PlannedField[],
-  outcomes: ReadonlyMap<string, FieldOutcome>,
-): FillReport {
-  const reported: FieldOutcome[] = [];
-  const awaiting: AwaitingField[] = [];
-  const fields: FieldDescriptor[] = [];
-  for (const planned of everyField) {
-    const { field, fieldType, step } = planned;
-    const fieldId = field.fieldId;
-    const done = outcomes.get(fieldId);
-    let outcome: FieldOutcome | null = done ?? null;
-    if (outcome === null) {
-      switch (step.kind) {
-        case 'review':
-          outcome = { kind: 'needsReview', fieldId, fieldType, reason: step.reason };
-          break;
-        case 'skip':
-          outcome = { kind: 'couldNotFill', fieldId, fieldType, reason: step.reason, fix: step.fix };
-          break;
-        case 'awaitProvider':
-          awaiting.push({ fieldId, fieldType, need: step.need });
-          break;
-        case 'write':
-          // Planned after the last write pass (it appeared on the final re-plan).
-          outcome = {
-            kind: 'couldNotFill',
-            fieldId,
-            fieldType,
-            reason: 'valueDidNotStick',
-            fix: 'This field appeared late. Click Fill again, or fill it in yourself.',
-          };
-          break;
-      }
-    }
-    if (outcome !== null) reported.push(outcome);
-    fields.push(descriptorOf(planned));
-  }
-  return { outcomes: reported, awaitingProvider: awaiting, fields, plan: final };
 }
 
 function replan(previous: FillPlan): FillPlan {

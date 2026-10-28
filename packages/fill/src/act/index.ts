@@ -18,6 +18,7 @@ export type { TextCheck } from './read-back';
 export { chooseComboboxOption, readComboboxOptions, type ComboboxRequest } from './combobox';
 export { chooseTypeaheadOption, type TypeaheadRequest } from './typeahead';
 export { comboboxShows, isChecked, isPressed, currentValue } from './read-back';
+export { clearOutlines, outlineField, type OutlineTone } from './outline';
 
 /** Types text into an input or textarea with the React-safe setter, then reads it back. */
 export function setText(

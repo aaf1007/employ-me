@@ -15,7 +15,11 @@ export { MIN_MAPPING_CONFIDENCE } from './answer';
 export { execute, type AwaitingField, type FillReport } from './execute';
 export { extractFields } from './extract';
 export type { OptionTarget } from './match';
+export { fieldFingerprint, keptInSnapshot, readFieldValue, submittedAnswers, type FieldValue } from './read';
+export { clearOutcomes, showOutcomes } from './outline';
 export {
+  draftFieldType,
+  draftRequestFor,
   plan,
   type DraftRequestRef,
   type FillPlan,

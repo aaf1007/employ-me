@@ -18,7 +18,9 @@ export type ActOperation =
   | 'choiceButton'
   | 'file'
   | 'addAnother'
-  | 'typeaheadOption';
+  | 'typeaheadOption'
+  /** The Fill's outline on a field: style only, never a value (outline.ts). */
+  | 'outline';
 
 export type Refusal =
   | { readonly reason: 'forbiddenControl'; readonly detail: string }
@@ -175,6 +177,8 @@ function kindMismatch(el: Element, operation: ActOperation): Refusal | null {
         el.closest(SUGGESTION_LIST) !== null && el.closest(CLICKABLE) === null && !isFormControl(el),
         'a suggestion in a dropdown list',
       );
+    case 'outline':
+      return null;
     case 'addAnother': {
       const control = el.closest(CLICKABLE);
       const name = control === null ? '' : primaryName(control);
