@@ -27,13 +27,60 @@ export type Refusal =
   | { readonly reason: 'disconnected'; readonly detail: string };
 
 /**
- * Words that mark a control as moving, submitting, signing in or destroying
- * work. English plus French, because a missed French "Suivant" is worse than
- * a refused button. Checked against every name-like attribute, so
- * `id="btn-submit"` and `class="...-submit-button"` are caught too.
+ * Word stems that mark a control as moving, submitting, signing in or
+ * destroying work. A stem matches at the start of a word with any ending, so
+ * "submit" also catches "submitting" and "suivant" catches "Page suivante".
+ * English plus French, because a missed French "Suivant" is worse than a
+ * refused button. Checked against every name-like attribute, after
+ * nameHaystack splits `btn_submit`, `nav-next`, `SUBMIT_BTN` and
+ * `pageFooterNextButton` into words.
  */
-const FORBIDDEN_WORDS =
-  /\b(submit|apply|next|continue|send|finish|review|confirm|done|proceed|save|sign\s?in|sign\s?up|log\s?in|register|create\s+account|autofill|cancel|withdraw|delete|remove|reset|soumettre|postuler|suivant|envoyer|continuer|terminer|confirmer|enregistrer)\b/i;
+const FORBIDDEN_STEMS = [
+  // English
+  'submi(t|ss)',
+  'appl(y|ie)',
+  'next',
+  'continu',
+  'proceed',
+  'send',
+  'finish',
+  'review',
+  'confirm',
+  'done',
+  'save',
+  'sign ?(in|up|on)',
+  'log ?(in|on)',
+  'regist',
+  'create (an? |your |new |my )?account',
+  'auto ?fill',
+  'cancel',
+  'withdr[ae]w',
+  'delet',
+  'remov',
+  'reset',
+  // French
+  'soum(et|is)',
+  'postul',
+  'candidat(er|ez)',
+  'suivant',
+  'envo[iy]',
+  'termin',
+  'valid',
+  'proc[ée]d',
+  'enregistr',
+  'sauvegard',
+  'connect',
+  'connexion',
+  's ?identifi',
+  'inscri',
+  'cr[ée]e[rz]? (un |mon |votre )?compte',
+  'annul',
+  'retir',
+  'supprim',
+  'effac',
+  'r[ée]initialis',
+];
+const FORBIDDEN_WORDS = new RegExp(`\\b(${FORBIDDEN_STEMS.join('|')})\\w*`, 'i');
 
 /** "Add another", "+ Add", "Add education", "Ajouter". */
 const ADD_ANOTHER = /^\s*(\+\s*)?(add|ajouter)\b/i;
@@ -143,11 +190,23 @@ function isFormControl(el: Element): boolean {
   return ['input', 'select', 'textarea', 'button'].includes(el.localName);
 }
 
+/**
+ * Every name the control goes by, split into words. `\b` treats `_` as part
+ * of a word, so `btn_submit` and `SUBMIT_BTN` would hide "submit" without
+ * this; camelCase and digits are split too ("pageFooterNextButton",
+ * "step2Next"), and apostrophes ("S'inscrire").
+ */
 function nameHaystack(el: Element): string {
   const parts = [primaryName(el)];
   for (const attribute of NAME_ATTRIBUTES) parts.push(el.getAttribute(attribute) ?? '');
-  // Split camelCase so "pageFooterNextButton" reads as "page Footer Next Button".
-  return parts.join(' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+  return parts
+    .join(' ')
+    .replace(/[_\-'’]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/([A-Za-z])(\d)/g, '$1 $2')
+    .replace(/(\d)([A-Za-z])/g, '$1 $2')
+    .replace(/\s+/g, ' ');
 }
 
 function primaryName(el: Element): string {

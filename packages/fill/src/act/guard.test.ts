@@ -34,6 +34,44 @@ describe('act/ refuses every way of moving the form on', () => {
     ['aria-label', '<button data-target type="button" aria-label="Submit your application">→</button>'],
     ['Add and continue', '<button data-target type="button">Add and continue</button>'],
     ['Autofill with resume', '<button data-target type="button">Autofill with MyGreenhouse</button>'],
+    // `_` is a word character to \b, so these used to get through.
+    ['submit by snake_case id', '<button data-target id="btn_submit" type="button">Go</button>'],
+    ['next by snake_case class', '<div data-target role="button" class="nav_next">→</div>'],
+    ['submit by upper snake_case', '<button data-target data-qa="SUBMIT_BTN" type="button">Go</button>'],
+    ['submit by kebab-case', '<a data-target data-testid="apply-now" href="#">Go</a>'],
+    ['acronym then word', '<button data-target type="button" data-testid="BTNSubmit">Go</button>'],
+    ['digits then word', '<button data-target type="button" id="step2Next">Go</button>'],
+    // Stems: any ending.
+    ['Submitting', '<button data-target type="button">Submitting…</button>'],
+    ['Continue to step 2', '<button data-target type="button">Continue to step 2</button>'],
+    ['Sign in', '<button data-target type="button">Sign in</button>'],
+    ['sign_up by id', '<button data-target type="button" id="sign_up">Go</button>'],
+    ['Log in', '<a data-target href="#">Log In</a>'],
+    ['Create an account', '<button data-target type="button">Create an account</button>'],
+    ['Register', '<button data-target type="button">Registration</button>'],
+    ['Review application', '<button data-target type="button">Review your application</button>'],
+    ['Withdraw', '<button data-target type="button">Withdraw</button>'],
+    // French
+    ['Page suivante', '<button data-target type="button">Page suivante</button>'],
+    ['Étape suivante', '<button data-target type="button">Étape suivante</button>'],
+    ['Postulez', '<button data-target type="button">Postulez</button>'],
+    ['Postuler maintenant', '<a data-target href="#">Postuler maintenant</a>'],
+    ['Valider', '<button data-target type="button">Valider</button>'],
+    ['Se connecter', '<button data-target type="button">Se connecter</button>'],
+    ['Connexion', '<a data-target href="#">Connexion</a>'],
+    ["S'identifier", '<button data-target type="button">S’identifier</button>'],
+    ['Créer un compte', '<button data-target type="button">Créer un compte</button>'],
+    ['CRÉER MON COMPTE', '<button data-target type="button">CRÉER MON COMPTE</button>'],
+    ["S'inscrire", '<button data-target type="button">S\'inscrire</button>'],
+    ['Soumettre', '<button data-target type="button">Soumettre</button>'],
+    ['Soumission', '<button data-target type="button">Soumission de la candidature</button>'],
+    ['Envoyer ma candidature', '<button data-target type="button">Envoyer ma candidature</button>'],
+    ['Continuer', '<button data-target type="button">Continuer</button>'],
+    ['Enregistrer', '<button data-target type="button">Enregistrer et continuer</button>'],
+    ['Terminer', '<button data-target type="button">Terminer</button>'],
+    ['Confirmer', '<button data-target type="button">Confirmer</button>'],
+    ['Annuler', '<button data-target type="button">Annuler</button>'],
+    ['Supprimer', '<button data-target type="button">Supprimer</button>'],
   ])('%s', async (_name, html) => {
     const el = render(html);
     for (const result of [
@@ -68,6 +106,19 @@ describe('act/ allows section and option controls', () => {
   it('accepts Yes/No answer buttons', () => {
     const el = render('<button data-target type="button">Yes</button>');
     expect(checkTarget(el, 'choiceButton', 'workAuth.authorized')).toBeNull();
+  });
+
+  it.each([
+    [
+      'Ashby yes/no option',
+      '<button data-target type="button" class="_container_pjyt6_1 _option_1svni_32 ashby-application-form-input-yesno-option" data-option="yes">Yes</button>',
+    ],
+    ['Oui', '<button data-target type="button">Oui</button>'],
+    ['Non', '<button data-target type="button">Non</button>'],
+    ['Decline to self-identify', '<button data-target type="button">Decline to self-identify</button>'],
+    ['Application question', '<button data-target type="button" class="application-question">No</button>'],
+  ])('accepts the answer button %s', (_name, html) => {
+    expect(checkTarget(render(html), 'choiceButton', 'screening.referred')).toBeNull();
   });
 
   it('accepts comboboxes', () => {
