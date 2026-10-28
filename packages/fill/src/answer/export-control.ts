@@ -38,7 +38,8 @@ export function exportControlAnswer(
   const options = isChoice(field) ? optionsOf(field).map(normalizeLabel) : [];
   const none = options.findIndex((o) => NONE.test(o));
   const listed = options.filter((_, i) => i !== none);
-  if (none >= 0 && listed.length > 0) {
+  // Yes, No and a "None" option is still a yes/no question.
+  if (none >= 0 && listed.length > 0 && !listed.some((o) => /^(yes|no)\b/.test(o))) {
     if (listed.some((o) => EXCEPT.test(o))) return skip('notInProfile', YOURS);
     if (listed.every((o) => NAMES_SANCTIONED.test(o))) return sanctions(listed, profile, noneOf(field, none));
     if (listed.every((o) => US_PERSON_KIND.test(o))) {

@@ -86,7 +86,7 @@ describe('export-control questions', () => {
   it('still answers "Are you a U.S. person?" yes or no', () => {
     form(`
       <label for="u">Are you a U.S. person under export control regulations?</label>
-      <select id="u" name="u"><option value="">Select...</option><option>Yes</option><option>No</option></select>`);
+      <select id="u" name="u"><option value="">Select...</option><option>Yes</option><option>No</option><option>Not applicable</option></select>`);
     expect(only()?.step).toMatchObject({ kind: 'write', write: { kind: 'select', labels: ['No'] } });
   });
 
