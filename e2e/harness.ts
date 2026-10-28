@@ -12,10 +12,25 @@ import { test as base, chromium, type BrowserContext, type Page, type Worker } f
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 export const EXTENSION_DIR = path.join(ROOT, 'packages/extension/.output/chrome-mv3');
+/** The test build (see global-setup.ts): its background talks to an in-memory helper. */
+export const TEST_EXTENSION_DIR = path.join(ROOT, 'packages/extension/.output/chrome-mv3-e2e');
 export const FIXTURES_DIR = path.join(ROOT, 'fixtures');
 const HELPER_CLI = path.join(ROOT, 'packages/helper/dist/cli.mjs');
 
-export type DashboardRoute = 'profile' | 'saved-answers' | 'tracker' | 'settings';
+export type DashboardRoute = 'setup' | 'profile' | 'resumes' | 'saved-answers' | 'tracker' | 'settings';
+
+/**
+ * What a test can change about the in-memory helper
+ * (packages/extension/src/helper/in-memory-transport.ts).
+ */
+export interface InMemoryHelperScript {
+  /** False behaves like a machine where `npx employ-me setup` was never run. */
+  readonly installed?: boolean;
+  /** A HelperErrorReason every Provider call fails with, or null. */
+  readonly failWith?: string | null;
+  /** What parseResume returns, as a core ResumeExtract. */
+  readonly resumeExtract?: unknown;
+}
 
 /** The content script's answer to a ping (packages/extension/src/messaging/content.ts). */
 export interface Pong {
@@ -49,6 +64,10 @@ export interface Extension {
   tabIdOf(page: Page): Promise<number>;
   /** Pings the content script in every tab and returns every answer. */
   pingContentScripts(): Promise<Pong[]>;
+  /** Scripts the in-memory helper the test build's background talks to. */
+  configureHelper(script: InMemoryHelperScript): Promise<void>;
+  /** Every request the in-memory helper received, oldest first. */
+  helperRequests(): Promise<Array<{ type: string; provider?: string; model?: string }>>;
   /** Console errors and uncaught exceptions from extension pages and the service worker. */
   readonly errors: readonly string[];
 }
@@ -66,8 +85,12 @@ interface Options {
    * Provider forced on, into this test's browser profile, so the extension
    * talks to it over Native Messaging. Any other HelperErrorReason makes
    * every fake Provider call fail with it. Off by default: no helper at all.
+   *
+   * `test.use({ helper: 'inMemory' })` loads the extension's test build
+   * instead, whose background talks to a scriptable in-memory helper:
+   * `extension.configureHelper()` and `extension.helperRequests()`.
    */
-  helper: 'none' | 'fake' | `fail:${string}`;
+  helper: 'none' | 'fake' | 'inMemory' | `fail:${string}`;
 }
 
 // Just enough of chrome.* for the harness. Used only inside evaluate()
@@ -79,14 +102,24 @@ interface ChromeForHarness {
   };
 }
 
+// What the test build's background puts on globalThis (src/background/index.ts).
+interface TestHooks {
+  employMeTest: {
+    helper: {
+      configure(script: InMemoryHelperScript): void;
+      requests: Array<{ type: string; provider?: string; model?: string }>;
+    };
+  };
+}
+
 export const test = base.extend<Fixtures & Options>({
   helper: ['none', { option: true }],
 
-  // A fresh profile per test. With a helper, its host manifest goes into
+  // A fresh profile per test. With a real helper, its host manifest goes into
   // `${userDataDir}/NativeMessagingHosts/` before the context starts.
   userDataDir: async ({ helper }, use) => {
     const dir = await mkdtemp(path.join(tmpdir(), 'employ-me-e2e-'));
-    if (helper !== 'none') {
+    if (helper !== 'none' && helper !== 'inMemory') {
       const fail = helper.startsWith('fail:') ? ['--fail', helper.slice('fail:'.length)] : [];
       await promisify(execFile)(process.execPath, [
         HELPER_CLI,
@@ -100,14 +133,15 @@ export const test = base.extend<Fixtures & Options>({
     await rm(dir, { recursive: true, force: true });
   },
 
-  context: async ({ userDataDir }, use, testInfo) => {
-    await access(path.join(EXTENSION_DIR, 'manifest.json')).catch(() => {
-      throw new Error(`No extension build at ${EXTENSION_DIR}. Run \`pnpm build\` or unset E2E_SKIP_BUILD.`);
+  context: async ({ userDataDir, helper }, use, testInfo) => {
+    const extensionDir = helper === 'inMemory' ? TEST_EXTENSION_DIR : EXTENSION_DIR;
+    await access(path.join(extensionDir, 'manifest.json')).catch(() => {
+      throw new Error(`No extension build at ${extensionDir}. Run \`pnpm build\` or unset E2E_SKIP_BUILD.`);
     });
     const context = await chromium.launchPersistentContext(userDataDir, {
       channel: 'chromium',
       headless: process.env['HEADED'] !== '1',
-      args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`],
+      args: [`--disable-extensions-except=${extensionDir}`, `--load-extension=${extensionDir}`],
       // Inherited by the Native Messaging host Chrome starts: e2e never spends the user's plan.
       env: { ...definedEnv(), EMPLOY_ME_PROVIDER: 'fake' },
     });
@@ -211,6 +245,20 @@ export const test = base.extend<Fixtures & Options>({
           );
           return answers.filter((answer) => answer !== null) as Pong[];
         }),
+      configureHelper: (script) =>
+        serviceWorker.evaluate((s) => {
+          (globalThis as unknown as TestHooks).employMeTest.helper.configure(s);
+        }, script),
+      helperRequests: () =>
+        serviceWorker.evaluate(() =>
+          (globalThis as unknown as TestHooks).employMeTest.helper.requests.map(
+            ({ type, provider, model }) => ({
+              type,
+              ...(provider === undefined ? {} : { provider }),
+              ...(model === undefined ? {} : { model }),
+            }),
+          ),
+        ),
     });
   },
 });
