@@ -51,13 +51,15 @@ Contracts shared across packages (domain types, protocol messages, the Provider 
 
 ## End-to-end tests
 
-The main feedback loop. `pnpm test:e2e` builds the extension (and the helper) and launches Playwright's Chromium with it loaded unpacked, one fresh profile per test.
+The main feedback loop. `pnpm test:e2e` builds the extension, its test build and the helper, and launches Playwright's Chromium with it loaded unpacked, one fresh profile per test.
 
 - Import `{ test, expect }` from `e2e/harness.ts`, not from `@playwright/test`.
 - `sites.serve(url, 'greenhouse/<file>.html')` answers a real ATS URL with a file from `fixtures/`, so content-script match patterns apply. Every other http(s) request is aborted and listed in `sites.blocked`.
 - `extension.openSidePanel({ forPage })` opens `sidepanel.html?tabId=<id>` in a tab: Playwright can't open Chrome's real side panel, so the page takes its target tab from the query. `extension.openDashboard('tracker')`, `extension.pingContentScripts()`, and `extension.errors` (console errors from extension pages and the service worker) cover the rest.
 - Chromium runs with `EMPLOY_ME_PROVIDER=fake`, which a helper started by Chrome inherits, so e2e never spends the user's plan.
 - **The real helper in e2e:** `test.use({ helper: 'fake' })` installs the built helper, with the fake Provider forced on, into that test's profile (`${userDataDir}/NativeMessagingHosts/`), so `browser.runtime.connectNative` / `sendNativeMessage` reach the real host. `test.use({ helper: 'fail:providerRateLimited' })` (any `HelperErrorReason`) makes every Provider call fail with that reason. Without it there is no helper: `helperNotInstalled`. Under the hood this runs `employ-me install-test-host --user-data-dir <dir> [--fail <reason>]` (also `installTestHost` in `packages/helper/src/install/test-host.ts`), which writes nothing outside the profile; its log is `${userDataDir}/employ-me-test-host/helper.log`. macOS and Linux only (Windows reads hosts from the registry). See `e2e/helper.spec.ts`.
+- **The in-memory helper:** `test.use({ helper: 'inMemory' })` loads the extension's test build (`wxt build --mode e2e`, `.output/chrome-mv3-e2e`) instead, whose background talks to a scriptable stand-in for the helper (`packages/extension/src/helper/in-memory-transport.ts`) rather than Native Messaging. `extension.configureHelper({ installed, failWith, resumeExtract, providers })` scripts it; `extension.helperRequests()` lists what it received. Use it when a spec needs a Resume extract or a Provider state the real fake Provider doesn't produce. Production builds don't contain it.
+- Background messages from a spec: `sendToBackground(page, type, payload)` in `e2e/dashboard.ts`, from any extension page (the side panel's and content script's API, `packages/extension/src/messaging/background.ts`).
 - Fast reruns: `E2E_SKIP_BUILD=1 pnpm exec playwright test e2e/<spec>.ts`. Watch it: `HEADED=1`.
 - On failure: `test-results/<test>/trace.zip` (`pnpm exec playwright show-trace <zip>`) and a `console.log` attachment.
 - Playwright is pinned to 1.63.0 because its Chromium (revision 1243) is cached on this Mac. Bumping it means `pnpm exec playwright install chromium`.

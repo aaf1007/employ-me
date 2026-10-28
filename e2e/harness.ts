@@ -30,6 +30,8 @@ export interface InMemoryHelperScript {
   readonly failWith?: string | null;
   /** What parseResume returns, as a core ResumeExtract. */
   readonly resumeExtract?: unknown;
+  /** What health reports for each Provider, as core ProviderStatus values. */
+  readonly providers?: readonly unknown[];
 }
 
 /** The content script's answer to a ping (packages/extension/src/messaging/content.ts). */
