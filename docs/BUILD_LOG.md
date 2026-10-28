@@ -336,3 +336,50 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - `scripting.executeScript({ func })` sends the function's source. `probeFrame` must use nothing from outside its own body.
 - With frames reached by `reach()`, `tabs.sendMessage` goes to one `frameId`. A frame without the form doesn't answer, and the call rejects ("message port closed"), which `send` turns into `undefined`.
 - The full e2e suite is flaky under load on main as well. Main at 653c53f failed the MongoDB embed spec once. This branch failed `side-panel.spec.ts` "one Fill carries on" ("Changed by you") twice and Lever polish once in full runs. Each passes alone, 8 of 8 with `--repeat-each 8 --workers 5`, and the third full run was 52 of 52 green. Unit tests that waited a fixed 10 ms for "Did you apply?" now use `vi.waitFor`.
+
+## 2026-10-28 · Live test: Milestone 1 on real Greenhouse, Lever and Ashby forms (e2e/live, fill, core, helper prompts)
+
+Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](live-test/2026-10-28.md). 12 live Postings (4 per ATS, one Greenhouse board embedded in databricks.com, 5 Canadian, 6 US, 1 either), with real Claude and Codex. 250 fields: 165 filled, 20 needs review, 65 couldn't fill. 4 were silently wrong in the first passes; all 4 are fixed and re-checked live, so 0 now. Real calls: Claude 13, Codex 9 (cap 15 each).
+
+**Landed**
+- **`pnpm test:live`** (`e2e/live/`, `playwright.live.config.ts`; `*.live.ts`, ignored by `playwright.config.ts`, never in CI).
+  - The real helper is installed into the user-data-dir (new `employ-me install-test-host --real`, which finds the CLIs the way setup does).
+  - Backstop: every non-GET/HEAD request is aborted on every host and recorded. Only Ashby's GraphQL queries pass, because its form renders from them.
+  - A call ledger skips a test that could pass 15 calls per CLI, and stops one that passes its own cap.
+  - `setup.live.ts`: dashboard setup with a synthetic Resume PDF, the parse scored. `fill.live.ts`: one Fill per Posting, written to `.live-runs/` (git-ignored). `LIVE_PROVIDER=none` gives a free rules-only pass. `LIVE_POLISH=1` adds polish mode.
+- **core** (own commit): a ticked first-person statement ("I understand that offers are conditional on a background check") is an Attestation; the willingness guard now applies to questions only. A "you can unsubscribe" sign-up is consent.
+- **fill** (one commit):
+  - Ashby select-all-that-apply questions are one `checkboxes` field (new extract hook `checkboxGroup`). Ashby's SMS and WhatsApp consent radios get their own labels.
+  - Email and school rules no longer fire on a word in passing.
+  - Preferred "first and last name" gets both. A referrer's-name box is never "No".
+  - "Are you located in <country>?" is answered Yes or No from the address.
+  - Salary boxes for one end of the range, or for "a number", get that number.
+  - "offices" counts for work-model questions.
+  - Fields left to the AI carry the Posting's country, so AI-matched Work Authorization questions aren't "country unclear".
+  - A required question the AI says needs a Draft becomes `freeText.question` and is drafted in the next round.
+  - Fixtures: `ashby/1password-2026-10-28`, `ashby/ramp-2026-10-28`.
+- **helper prompt:** a degree's abbreviation (BASc, MSc…) makes its level clear.
+
+**Interface changes outside my packages**
+- fill `ProviderFeedback.draftsFailed`. A required question now waits for its Draft until it's ready or listed there; before, "answered" plus "not ready" meant failed, so questions found in mapping were never drafted.
+- Extension: `providerFeedbackSchema` gains `draftsFailed`, and `FillFlow` sends the ids whose Draft failed (in `draftAll` and on the Draft button). Commit "side panel: report Drafts the Provider couldn't write". Background, manifest and injection are untouched.
+- e2e: `readValues` reads Ashby checkbox groups. `forms.ts` has the two new fixtures.
+
+**Left**
+- See the doc's "Left". In fill:
+  - Self-ID on an unclear country goes to review even when every answer is "decline".
+  - Export-control questions end as "No option matches".
+  - Years of experience has no field type.
+  - "Filled" for a Resume means it was attached. The upload can't be checked live, because the backstop aborts it.
+- Outside my area, reported:
+  - The debug report over-scrubs ("CAD", "Yes" replaced inside field ids).
+  - Panel wording for "worked here before" ("You asked to answer this one each time") and for a failed Draft ("The AI is unavailable").
+  - Codex: one concurrent Draft failed on Codex's side (`responseTooManyFailedAttempts`). The helper could retry once.
+- The prompt fix for degree levels wasn't re-run live (budget).
+
+**Gotchas**
+- Ashby needs its read queries (POST) to render; Greenhouse and Lever render on GETs alone.
+- Lever pages behind Cloudflare send challenge POSTs; aborting them didn't stop the form rendering.
+- Coinbase's board is behind a Cloudflare challenge ("Just a moment…"); it was skipped, since we never solve CAPTCHAs. Stripe's job-boards URL is a custom site with no `#first_name`.
+- In Playwright, a locator like `[data-status="yourDraft"]` re-resolves once the status changes. Pin a Draft card by its field id.
+- The debug report's field ids can't be joined back to the form while the over-scrub bug stands. `e2e/live/report.ts` joins by id and leaves the type empty when they differ.
