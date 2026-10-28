@@ -21,8 +21,8 @@
       "fieldId": "previousWorker--candidateIsPreviousWorker",
       "label": "Have you previously worked for NVIDIA as an employee or contractor?",
       "fieldType": "screening.workedHereBefore",
-      "outcome": "needsReview",
-      "reason": "askEachTime",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
       "value": ""
     },
     {
@@ -453,8 +453,8 @@
       "fieldId": "primaryQuestionnaire--0b1f7a2e01c210004",
       "label": "Have you ever been employed by NVIDIA as an employee, contractor or intern?",
       "fieldType": "screening.workedHereBefore",
-      "outcome": "needsReview",
-      "reason": "askEachTime",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
       "value": ""
     },
     {

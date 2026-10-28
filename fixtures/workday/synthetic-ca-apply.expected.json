@@ -16,8 +16,8 @@
       "fieldId": "previousWorker",
       "label": "Have you previously worked for RBC?",
       "fieldType": "screening.workedHereBefore",
-      "outcome": "needsReview",
-      "reason": "askEachTime",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
       "value": ""
     },
     {
