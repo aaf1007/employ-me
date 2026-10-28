@@ -38,8 +38,13 @@ const NEVER: ReadonlyArray<readonly [FieldType, RegExp]> = [
   ['never.reference', /\b(professional |personal )?references?\b(?! (number|id|code|no)\b)/],
 ];
 
-/** Willingness and fact questions that read like consent. Checked first. */
+/**
+ * Willingness and fact questions that read like consent. Checked first, but
+ * only on questions: a statement you tick ("I understand that offers are
+ * conditional on a background check") is still yours to affirm.
+ */
 const NOT_ATTESTATION = /\b(background (check|screening|investigation)|drug (test|screen)|reference check)\b/;
+const STATEMENT = /^(i|by (checking|clicking|selecting|ticking|submitting|signing))\b/;
 
 const ATTESTATIONS: ReadonlyArray<readonly [FieldType, RegExp]> = [
   [
@@ -56,7 +61,7 @@ const ATTESTATIONS: ReadonlyArray<readonly [FieldType, RegExp]> = [
   ],
   [
     'attestation.consent',
-    /\b(consent\w*|gdpr|privacy (policy|notice|statement|regime)|data (protection|processing|privacy|retention)|retain (my|your) (data|information|application|details)|processing (of )?(my|your) (personal )?(data|information)|future (job )?opportunit\w*|similar (jobs|roles|positions)|job alerts?|newsletter|marketing (emails?|messages|communications|purposes)|stay up to date|keep me (informed|updated|in mind)|join (our )?talent (community|pool|network)|sms|whatsapp|text messages?|be recorded|interview recording|recording (consent|of (the |your )?interviews?))\b/,
+    /\b(consent\w*|gdpr|privacy (policy|notice|statement|regime)|data (protection|processing|privacy|retention)|retain (my|your) (data|information|application|details)|processing (of )?(my|your) (personal )?(data|information)|future (job )?opportunit\w*|similar (jobs|roles|positions)|job alerts?|newsletter|marketing (emails?|messages|communications|purposes)|stay up to date|keep me (informed|updated|in mind)|join (our )?talent (community|pool|network)|unsubscribe|sms|whatsapp|text messages?|be recorded|interview recording|recording (consent|of (the |your )?interviews?))\b/,
   ],
   [
     'attestation.other',
@@ -98,7 +103,7 @@ export function detectSensitive(input: SensitiveInput): Sensitive | null {
   const topic = selfIdTopic(label);
   const inSelfIdSection = SELF_ID_SECTION.test(input.section) || SELF_ID_SECTION.test(label);
 
-  if (!NOT_ATTESTATION.test(label)) {
+  if (STATEMENT.test(label) || !NOT_ATTESTATION.test(label)) {
     for (const [fieldType, re] of ATTESTATIONS) {
       // An Attestation's statement may sit in its only option ("I agree") or description.
       if (
