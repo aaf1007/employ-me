@@ -1,5 +1,14 @@
 import { expect, test } from './harness';
-import { clickFill, countSubmits, fieldRow, servePublicApi, submits } from './panel';
+import {
+  acceptDraft,
+  clickFill,
+  countSubmits,
+  draftReady,
+  fieldRow,
+  nextStep,
+  servePublicApi,
+  submits,
+} from './panel';
 import { seedTestProfile } from './seed';
 
 // The side panel's own behaviour around a Fill (design.md "Filling" and
@@ -32,21 +41,18 @@ test.describe('with the fake helper', () => {
     await expect(fieldRow(panel, 'first_name')).toHaveAttribute('data-outcome', 'filled');
     await expect(page.locator('#first_name')).toHaveValue('Sam');
 
-    // You click Next yourself.
-    await page.locator('#next').click();
-
-    // Step 2 is filled by the same Fill, without clicking Fill again; step 1 keeps its outcomes.
-    await expect(fieldRow(panel, 'email')).toHaveAttribute('data-outcome', 'filled', { timeout: 15_000 });
+    // You click Next yourself. Step 2 is filled by the same Fill, without clicking Fill again; step 1
+    // keeps its outcomes.
+    const email = await nextStep(panel, () => page.locator('#next').click(), 'email');
+    await expect(email).toHaveAttribute('data-outcome', 'filled');
     await expect(page.locator('#email')).toHaveValue('sam.lee@example.com');
     await expect(fieldRow(panel, 'first_name')).toHaveAttribute('data-outcome', 'filled');
     // Its required question is drafted, like step 1's would have been.
-    const card = fieldRow(panel, 'question_2002').getByTestId('draft-card');
-    await expect(card).toHaveAttribute('data-status', 'ready', { timeout: 15_000 });
+    await draftReady(panel, 'question_2002');
 
     // You change a filled field; accepting the Draft plans again, and leaves your change alone.
     await page.locator('#email').fill('sam@work.example.com');
-    await card.getByRole('button', { name: 'Accept Draft' }).click();
-    await expect(fieldRow(panel, 'question_2002')).toHaveAttribute('data-outcome', 'filled');
+    await acceptDraft(panel, 'question_2002');
     await expect(page.locator('#question_2002')).toHaveValue(/^Fake draft for: What would you build first\?/);
     await expect(page.locator('#email')).toHaveValue('sam@work.example.com');
     await expect(fieldRow(panel, 'email')).toContainText('Changed by you');

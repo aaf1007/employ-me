@@ -2,7 +2,16 @@ import type { Page } from '@playwright/test';
 import { expect, test, type Extension } from './harness';
 import { formFrame } from './fill-page';
 import { formFixture, type FormFixture } from './forms';
-import { clickFill, countSubmits, fieldRow, outlineOf, servePublicApi, submits } from './panel';
+import {
+  acceptDraft,
+  clickFill,
+  countSubmits,
+  draftReady,
+  fieldRow,
+  outlineOf,
+  servePublicApi,
+  submits,
+} from './panel';
 import { seedTestProfile } from './seed';
 import { isSubmission, stubSideRequests } from './side-requests';
 
@@ -95,14 +104,12 @@ test('Greenhouse: a required question is drafted during the Fill; its confirmati
 
   // A required free-text question was drafted during the Fill; its made-up claim is flagged.
   const question = 'question_18658592008';
-  const card = fieldRow(panel, question).getByTestId('draft-card');
-  await expect(card).toHaveAttribute('data-status', 'ready');
+  const card = await draftReady(panel, question);
   await expect(card.getByTestId('draft-flagged')).toContainText('I once led a team of fifty.');
   await expect(frame.locator(`#${question}`)).toHaveValue('');
   const answer = 'Yes: three years of GCP at Northwind.';
   await card.getByTestId('draft-text').fill(answer);
-  await card.getByRole('button', { name: 'Accept Draft' }).click();
-  await expect(fieldRow(panel, question)).toHaveAttribute('data-outcome', 'filled');
+  await acceptDraft(panel, question);
   await expect(frame.locator(`#${question}`)).toHaveValue(answer);
 
   // Nothing was submitted by the Fill.
@@ -151,13 +158,12 @@ test('Lever: an AI-use policy switches Drafts to polish-my-draft; the /thanks pa
   await expect(card.getByTestId('polish-mode')).toBeVisible();
   await card.getByTestId('draft-text').fill('I want to build software that matters.');
   await card.getByRole('button', { name: 'Polish' }).click();
-  await expect(card).toHaveAttribute('data-status', 'ready');
+  await draftReady(panel, question);
   await expect(card.getByTestId('draft-text')).toHaveValue(
     'I want to build software that matters. (polished)',
   );
   await expect(card.getByTestId('draft-flagged')).toHaveCount(0);
-  await card.getByRole('button', { name: 'Accept Draft' }).click();
-  await expect(row).toHaveAttribute('data-outcome', 'filled');
+  await acceptDraft(panel, question);
   const answer = 'I want to build software that matters. (polished)';
   await expect(frame.locator(`textarea[name="${question}"]`)).toHaveValue(answer);
   expect(await submits(frame)).toBe(0);
@@ -204,14 +210,11 @@ test('Ashby: the Draft button on an optional question; the success screen is rec
   const row = fieldRow(panel, question);
   await expect(row).toHaveAttribute('data-outcome', 'couldNotFill');
   await row.getByRole('button', { name: 'Draft' }).click();
-  const card = row.getByTestId('draft-card');
-  await expect(card).toHaveAttribute('data-status', 'ready');
-  await expect(row).toHaveAttribute('data-outcome', 'needsReview');
+  const card = await draftReady(panel, question);
   await expect(card.getByTestId('draft-flagged')).toContainText('I once led a team of fifty.');
   const answer = 'I use Wealthsimple every week.';
   await card.getByTestId('draft-text').fill(answer);
-  await card.getByRole('button', { name: 'Accept Draft' }).click();
-  await expect(row).toHaveAttribute('data-outcome', 'filled');
+  await acceptDraft(panel, question);
   await expect(frame.locator(`textarea[name="${question}"]`)).toHaveValue(answer);
   expect(await submits(frame)).toBe(0);
   expect(sites.requests.filter((r) => isSubmission(form, r))).toEqual([]);

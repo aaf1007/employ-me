@@ -38,16 +38,16 @@ interface FillApi {
   }>;
 }
 
+/** The frame holding the form: the page itself, or its embed once that has navigated to the form. */
 export async function formFrame(page: Page, form: FormFixture): Promise<Frame> {
   const match = form.formFrame;
   if (match === undefined) return page.mainFrame();
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    const frame = page.frames().find((f) => f.url().includes(match));
-    if (frame !== undefined) return frame;
-    await page.waitForTimeout(100);
-  }
-  throw new Error(`no frame matching ${match}`);
+  const holds = (frame: Frame) => frame.url().includes(match);
+  // Nothing is awaited between the look and the listener, so a navigation can't slip between them.
+  return (
+    page.frames().find(holds) ??
+    (await page.waitForEvent('framenavigated', { predicate: holds, timeout: 20_000 }))
+  );
 }
 
 /** Puts the engine in the frame and counts any submit event the page sees. */

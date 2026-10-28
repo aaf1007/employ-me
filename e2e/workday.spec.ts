@@ -11,7 +11,7 @@ import {
 import { expect, FIXTURES_DIR, test } from './harness';
 import { expectedFileSchema, type ExpectedField } from './expected';
 import { prepare, submitCount } from './fill-page';
-import { clickFill, countSubmits, fieldRow, servePublicApi, submits } from './panel';
+import { clickFill, countSubmits, fieldRow, nextStep, servePublicApi, submits } from './panel';
 import { TEST_PROFILE, TEST_RESUME, TEST_SAVED_ANSWERS } from './profile';
 import { seedTestProfile } from './seed';
 
@@ -497,8 +497,8 @@ test.describe('in the side panel', () => {
     ];
     for (const [fieldId, outcome] of steps) {
       expect((await fixtureState(page)).submitted).toBe(false);
-      await userClicksNext(page);
-      await expect(fieldRow(panel, fieldId)).toHaveAttribute('data-outcome', outcome, { timeout: 60_000 });
+      const row = await nextStep(panel, () => userClicksNext(page), fieldId);
+      await expect(row).toHaveAttribute('data-outcome', outcome);
     }
     await expect(page.locator('[id^="workExperience-"][id$="--jobTitle"]').first()).toHaveValue(
       'Software Engineer',

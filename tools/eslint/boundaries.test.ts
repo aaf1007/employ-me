@@ -633,6 +633,25 @@ const cases: Array<{ name: string; file: string; code: string; expect: RegExp | 
     code: "export const f = new Function('return 1');",
     expect: /No Function constructor/,
   },
+  // e2e waits for state, never for time
+  {
+    name: 'a fixed wait in an e2e spec',
+    file: 'e2e/x.spec.ts',
+    code: "import type { Page } from '@playwright/test';\nexport const f = (page: Page) => page.waitForTimeout(1000);",
+    expect: /No fixed waits in e2e/,
+  },
+  {
+    name: 'a fixed wait in an e2e helper',
+    file: 'e2e/x.ts',
+    code: "import type { Frame } from '@playwright/test';\nexport const f = (frame: Frame) => frame.waitForTimeout(100);",
+    expect: /No fixed waits in e2e/,
+  },
+  {
+    name: 'a fixed wait in the live harness, which drives real job sites',
+    file: 'e2e/live/x.live.ts',
+    code: "import type { Page } from '@playwright/test';\nexport const f = (page: Page) => page.waitForTimeout(250);",
+    expect: null,
+  },
 ];
 
 describe('boundary lint rules', () => {

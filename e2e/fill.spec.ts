@@ -25,7 +25,6 @@ for (const form of FORMS) {
     await page.goto(form.url, { waitUntil: 'load' });
     const frame = await formFrame(page, form);
     await frame.waitForSelector('input:not([type="hidden"]), textarea', { timeout: 20_000 });
-    await page.waitForTimeout(1500);
     const startUrl = frame.url();
     await prepare(frame);
 

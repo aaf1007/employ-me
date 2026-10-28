@@ -15,7 +15,6 @@ test('a Fill re-plans with Provider mappings and accepted Drafts', async ({ page
   await page.goto(form.url, { waitUntil: 'load' });
   const frame = await formFrame(page, form);
   await frame.waitForSelector('#first_name');
-  await page.waitForTimeout(1000);
   await prepare(frame);
 
   // 1. Rules first; the Provider hasn't been asked yet.

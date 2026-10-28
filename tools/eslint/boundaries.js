@@ -595,4 +595,21 @@ export const boundaryConfigs = [
     chrome: false,
     patterns: DIRECTION.extension,
   }),
+  {
+    // A fixed wait races the page and the side panel, and loses on a busy machine. The live
+    // harness drives real job sites, whose timing it can't observe, so it keeps its waits.
+    name: 'employ-me/boundaries/e2e',
+    files: ['e2e/**'],
+    ignores: ['e2e/live/**'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          property: 'waitForTimeout',
+          message:
+            'No fixed waits in e2e: wait for the state the next step needs, with a web-first assertion or an event. Side-panel actions have helpers in e2e/panel.ts (CLAUDE.md "End-to-end tests").',
+        },
+      ],
+    },
+  },
 ];

@@ -2,6 +2,10 @@ import { defineConfig } from '@playwright/test';
 
 const CI = process.env['CI'] !== undefined;
 
+// Workers inherit this, and the Chromium they launch, and the Native Messaging host Chrome starts:
+// e2e never spends the user's plan. Set here rather than passed to the launch (e2e/harness.ts).
+process.env['EMPLOY_ME_PROVIDER'] = 'fake';
+
 // The extension e2e loop. See CLAUDE.md "End-to-end tests" and e2e/harness.ts.
 export default defineConfig({
   testDir: 'e2e',

@@ -152,8 +152,8 @@ export const test = base.extend<Fixtures & Options>({
       channel: 'chromium',
       headless: process.env['HEADED'] !== '1',
       args: [`--disable-extensions-except=${extensionDir}`, `--load-extension=${extensionDir}`],
-      // Inherited by the Native Messaging host Chrome starts: e2e never spends the user's plan.
-      env: { ...definedEnv(), EMPLOY_ME_PROVIDER: 'fake' },
+      // No `env` here: Chromium inherits the worker's, EMPLOY_ME_PROVIDER=fake included
+      // (playwright.config.ts). Passing it would copy every variable, tokens too, into trace.zip.
     });
     const logs: string[] = [];
     context.on('console', (message) => logs.push(`[page ${message.type()}] ${message.text()}`));
@@ -303,10 +303,4 @@ export { expect } from '@playwright/test';
 
 function isOurWorker(worker: Worker): boolean {
   return worker.url().startsWith('chrome-extension://') && worker.url().endsWith('/background.js');
-}
-
-function definedEnv(): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
-  );
 }
