@@ -482,3 +482,29 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 **Gotchas**
 - `sites.serve(url)` matches the exact URL; a page opened with a query needs a RegExp.
 - Specs that open a form must answer its public job API (`servePublicApi`): a blocked fetch logs `ERR_BLOCKED_BY_CLIENT` in the panel, and `extension.errors` catches it.
+
+## 2026-10-28 · A Resume is Filled only once the form shows it uploaded (fill, e2e; core reasons in their own commit)
+
+Recommendation 1 of [the Jobright research](research/2026-10-28-jobright-autofill.md) §7.1. Before this, "Filled" for a Resume meant the input took the file; the live test saw Greenhouse still uploading while the side panel said Filled.
+
+**Landed**
+- core (own commit, 6ebfa8e): review reasons `fileUploading` and `otherFileShown`, with the side panel's words.
+- fill: `AtsAdapter.shownFile(field)`, read-only: `uploading`, `failed`, `named` (the text the form shows) or `unknown`.
+  - Greenhouse: its upload widget, found by `upload-label-<id>` (progress bar, `.file-upload__filename`, error classes). The input itself is gone by then.
+  - Lever: `.has-file .filename`, "Analyzing resume..." while it reads, the size error. "Couldn't auto-read resume" is the parse failing; the file is still attached.
+  - Ashby: `.ashby-application-form-input-file-item-name` under the question.
+  - Workday: the newest `file-upload-item` and its "Successfully Uploaded!" / failed marker (synthetic fixture: unverified).
+  - Everyone else (`shownByInput` in `adapters/base.ts`): `aria-invalid="true"` on the input after the attach is a refusal.
+- `execute/upload.ts`: after the report is built, each Resume this execute attached is checked against what the form shows, waiting up to 5 s from the attach while it says uploading (the rest of the Fill runs meanwhile). Still uploading → needs review; refused → Couldn't fill (`fileRejected`); a different name → needs review (`otherFileShown`). A later execute (a re-plan) checks a `fileUploading` Resume again, without waiting.
+- e2e: the S3 stub now fires the upload progress event a real upload sends. Chromium sends none for a request Playwright answers, and Greenhouse leaves "uploading" only at 100%: every Greenhouse fixture used to read `<uploading>` and now shows the file name. The value reader reads `.file-upload__filename`.
+- Fixtures: helsing (generic) is now Couldn't fill: its upload token request (`/api/application-document-token`) isn't answered offline, and the form says "An error occurred while uploading". It was Filled before, which is the bug this fixes. README table regenerated, with a sentence on why.
+
+**Checked**
+- `pnpm check`; full e2e 54 of 54 (twice); fill, milestone-1 and side-panel `--repeat-each 3` with every free core busy: 66 of 66.
+- Without the progress stub, milestone-1's Greenhouse Draft spec failed every time: the first execute waited its 5 s for an upload that never finished, and the AI's re-plans queued behind it.
+
+**Left**
+- Answering helsing's upload token offline would need its response shape, which the HAR doesn't have (it's a POST).
+- Workday's and Ashby's in-progress and error states are guesses from synthetic markup and Ashby's class names; check on a live pass.
+- On a stalled upload the Fill reports up to 5 s later than before. Only a re-plan re-checks a Resume left uploading; with the helper unavailable nothing does until the next Fill.
+- Showing which Resume (its label) on the outcome, also in §7.1, isn't done.

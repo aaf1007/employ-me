@@ -6,7 +6,7 @@ import { leverAdapter } from './lever';
 import type { AtsAdapter } from './types';
 import { workdayAdapter } from './workday';
 
-export type { AtsAdapter } from './types';
+export type { AtsAdapter, ShownFile } from './types';
 export { postingPageText } from './generic';
 
 const ADAPTERS: Readonly<Record<AtsId, AtsAdapter>> = {

@@ -43,8 +43,8 @@
       "fieldId": "file",
       "label": "Resume",
       "fieldType": "file.resume",
-      "outcome": "filled",
-      "reason": "rules",
+      "outcome": "couldNotFill",
+      "reason": "fileRejected",
       "value": ""
     },
     {
