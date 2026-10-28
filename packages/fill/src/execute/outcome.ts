@@ -5,6 +5,8 @@ import type { WriteResult } from './write';
 
 // From what act/ reported to the field's FieldOutcome, with a fix the user can act on.
 
+export const FILE_REJECTED_FIX = 'The form did not take the file. Attach your Resume yourself.';
+
 export function writeOutcome(planned: PlannedField, result: WriteResult): FieldOutcome {
   const { field, fieldType, step } = planned;
   const fieldId = field.fieldId;
@@ -30,7 +32,7 @@ function failure(fieldId: string, fieldType: FieldType, isFile: boolean, error: 
             fieldId,
             fieldType,
             reason: 'fileRejected',
-            fix: 'The form did not take the file. Attach your Resume yourself.',
+            fix: FILE_REJECTED_FIX,
           }
         : {
             kind: 'couldNotFill',

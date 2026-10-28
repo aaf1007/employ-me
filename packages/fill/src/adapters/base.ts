@@ -1,7 +1,8 @@
 import type { FieldType } from '@employ-me/core';
+import { isInput } from '../dom';
 import { extractFields, type ExtractHooks } from '../extract';
 import type { ExtractedField } from '../types';
-import type { AtsAdapter } from './types';
+import type { AtsAdapter, ShownFile } from './types';
 
 /** Defaults every adapter starts from; each ATS overrides what it knows better. */
 export function adapter(
@@ -22,8 +23,21 @@ export function adapter(
     typeaheadSuggestions: () => [],
     typeToSearch: false,
     comboboxChoices: () => [],
+    shownFile: shownByInput,
     ...rest,
   };
+}
+
+/**
+ * A form with no upload widget of its own: the input holds the file, and
+ * `aria-invalid` says when the form refused it (helsing.ai: "An error
+ * occurred while uploading", with the hidden field left empty).
+ */
+export function shownByInput({ element }: ExtractedField): ShownFile {
+  if (!element.isConnected) return { kind: 'unknown' };
+  if (element.getAttribute('aria-invalid') === 'true') return { kind: 'failed' };
+  const name = isInput(element) ? element.files?.[0]?.name : undefined;
+  return name === undefined ? { kind: 'unknown' } : { kind: 'named', text: name };
 }
 
 /** Looks a field up in an adapter map by its id, then its name. */

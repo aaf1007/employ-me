@@ -3,7 +3,8 @@ import { readableText } from '../../dom';
 import type { Candidate, FieldOverrides } from '../../extract';
 import { postingKeyFromUrl } from '../../posting';
 import type { ExtractedField } from '../../types';
-import { adapter } from '../base';
+import { adapter, shownByInput } from '../base';
+import type { ShownFile } from '../types';
 
 // Elements carry [data-field-path] (_systemfield_*); Yes/No answers are
 // buttons over a hidden checkbox (research §4). The "Autofill from resume"
@@ -30,6 +31,15 @@ function classify(field: ExtractedField): FieldType | null {
   return system === undefined ? null : (SYSTEM_FIELDS[system] ?? null);
 }
 
+/** Ashby lists an attached file by name under the question, with Delete and Replace. */
+function shownFile(field: ExtractedField): ShownFile {
+  const entry = field.element.closest('[data-field-path]');
+  if (entry === null) return shownByInput(field);
+  if (entry.querySelector('[role="progressbar"]') !== null) return { kind: 'uploading' };
+  const name = readableText(entry.querySelector('.ashby-application-form-input-file-item-name'));
+  return name === '' ? shownByInput(field) : { kind: 'named', text: name };
+}
+
 export const ashbyAdapter = adapter({
   ats: 'ashby',
   findForm: (doc) =>
@@ -38,6 +48,7 @@ export const ashbyAdapter = adapter({
     null,
   postingKey: postingKeyFromUrl,
   classify,
+  shownFile,
   hooks: {
     ignore: (el) =>
       el.closest(

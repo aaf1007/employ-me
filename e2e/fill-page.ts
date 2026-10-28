@@ -147,7 +147,7 @@ export async function readValues(frame: Frame, fieldIds: readonly string[]): Pro
         if (upload !== null) {
           // Playwright's stubbed upload reports no progress events, so the widget stays at "uploading".
           if (upload.querySelector('[role="progressbar"]') !== null) return '<uploading>';
-          return text(upload).replace(/^.*?\*?\s*/, '');
+          return text(upload.querySelector('.file-upload__filename')) || text(upload);
         }
         return '<missing>';
       }

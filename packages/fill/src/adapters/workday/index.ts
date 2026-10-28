@@ -1,7 +1,8 @@
 import { deepQueryAll, isHidden, readableText, textOfIds } from '../../dom';
 import { postingKeyFromUrl } from '../../posting';
-import { adapter } from '../base';
-import type { RepeatingSection } from '../types';
+import type { ExtractedField } from '../../types';
+import { adapter, shownByInput } from '../base';
+import type { RepeatingSection, ShownFile } from '../types';
 import { describe, entryNumbers } from './fields';
 import { classify } from './map';
 
@@ -66,6 +67,24 @@ function comboboxChoices(combobox: Element): readonly string[] {
     .filter((text) => text !== '');
 }
 
+/**
+ * Workday moves an attached file into its own list and clears the input: the
+ * newest `file-upload-item` says "Successfully Uploaded!" or that it failed.
+ */
+function shownFile(field: ExtractedField): ShownFile {
+  const group = field.element.closest('[role="group"], [data-automation-id^="formField-"]');
+  const item =
+    group === null ? undefined : deepQueryAll(group, '[data-automation-id="file-upload-item"]').at(-1);
+  if (item === undefined) return shownByInput(field);
+  if (item.querySelector('[data-automation-id="file-upload-failed"]') !== null) return { kind: 'failed' };
+  if (item.querySelector('[data-automation-id="file-upload-successful"]') === null)
+    return { kind: 'uploading' };
+  return {
+    kind: 'named',
+    text: readableText(item.querySelector('[data-automation-id="file-upload-item-name"]')),
+  };
+}
+
 export const workdayAdapter = adapter({
   ats: 'workday',
   findForm,
@@ -82,4 +101,5 @@ export const workdayAdapter = adapter({
   repeatingSections,
   typeToSearch: true,
   comboboxChoices,
+  shownFile,
 });

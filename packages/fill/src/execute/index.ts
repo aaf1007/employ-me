@@ -4,6 +4,7 @@ import { plan as planForm, type FillPlan, type PlannedField } from '../plan';
 import { fieldFingerprint } from '../read';
 import { writeOutcome } from './outcome';
 import { buildReport, writeKey } from './report';
+import { confirmUploads } from './upload';
 import { performWrite, type WriteContext } from './write';
 
 /** A field the Fill can't finish until integration asks the Provider and plans again. */
@@ -53,6 +54,7 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
   const outcomes = new Map<string, FieldOutcome>();
   const writes = new Map(previous?.writes);
   const userEdited = new Set(previous?.userEdited);
+  const attachedAt = new Map<string, number>();
   let current = plan;
 
   const noteEdits = (fields: readonly PlannedField[]) => {
@@ -69,6 +71,8 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
   };
   const write = async (planned: PlannedField) => {
     writes.set(planned.field.fieldId, writeKey(planned, resume));
+    if (planned.step.kind === 'write' && planned.step.write.kind === 'file')
+      attachedAt.set(planned.field.fieldId, Date.now());
     outcomes.set(planned.field.fieldId, await run(planned, ctx));
   };
   noteEdits(plan.fields);
@@ -118,7 +122,7 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
   // You may have changed a field while this ran (its settle waits are long enough to type in).
   // The report keeps what the page shows now, so see the edit before it's taken as the Fill's own.
   noteEdits(current.fields.filter((f) => !outcomes.has(f.field.fieldId)));
-  return buildReport({
+  const report = buildReport({
     final: current,
     everyField: [...seen.values()],
     outcomes,
@@ -127,6 +131,11 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
     previous,
     resume,
   });
+  // Last, so the rest of the Fill ran while the form uploaded the Resume.
+  return {
+    ...report,
+    outcomes: await confirmUploads(report.outcomes, { adapter, resume, planned: report.planned, attachedAt }),
+  };
 }
 
 async function run(planned: PlannedField, ctx: WriteContext): Promise<FieldOutcome> {

@@ -72,6 +72,23 @@ export async function stubSideRequests(context: BrowserContext, ats: FixtureAts)
       body: `<PostResponse><Location>https://uploads.example.com/${key}</Location><Bucket>stub</Bucket><Key>${key}</Key><ETag>"stub"</ETag></PostResponse>`,
     });
   });
+  // Chromium reports no upload progress for a request Playwright answers, and
+  // Greenhouse's widget leaves "uploading" only at 100%. A real upload reports
+  // it; so does this, once the stub has answered.
+  await context.addInitScript(() => {
+    window.XMLHttpRequest = class extends XMLHttpRequest {
+      override send(body?: Document | XMLHttpRequestBodyInit | null): void {
+        if (body !== null && body !== undefined) {
+          this.addEventListener('load', () => {
+            this.upload.dispatchEvent(
+              new ProgressEvent('progress', { lengthComputable: true, loaded: 1, total: 1 }),
+            );
+          });
+        }
+        super.send(body);
+      }
+    };
+  });
   if (ats === 'lever') {
     await context.route('**/parseResume', async (route) => {
       // Slow on purpose: the engine must wait for the parse before filling.

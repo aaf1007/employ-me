@@ -98,7 +98,7 @@ Then click the reload arrow on employ-me's card in `chrome://extensions`. Your P
 | Ashby | 4 | 64 | 35 | 12 | 17 | 1 → 0 |
 | **Total** | **12** | **250** | **165** | **20** | **65** | **4 → 0** |
 
-**Recorded forms, rules only.** How much of each supported job site's forms the built-in rules fill on their own (the AI unavailable), measured on real forms recorded on 2026-10-28 with a test Profile. Workday's forms sit behind a sign-in for each employer, so its row is measured on forms built by hand from Workday's public code: it is unverified until a live pass. Every field the rules don't fill is marked "Needs review" or "Couldn't fill", with the reason and a fix. Attestations are never ticked, so they always count as "Couldn't fill". `pnpm fill-rate --write` regenerates this table.
+**Recorded forms, rules only.** How much of each supported job site's forms the built-in rules fill on their own (the AI unavailable), measured on real forms recorded on 2026-10-28 with a test Profile. Workday's forms sit behind a sign-in for each employer, so its row is measured on forms built by hand from Workday's public code: it is unverified until a live pass. Every field the rules don't fill is marked "Needs review" or "Couldn't fill", with the reason and a fix. Attestations are never ticked, so they always count as "Couldn't fill". A Resume counts as filled only once the form shows it uploaded; the generic form's (helsing.ai) upload needs its site, so offline it shows an upload error and counts as "Couldn't fill". `pnpm fill-rate --write` regenerates this table.
 
 <!-- fill-rate:start -->
 | ATS | Forms | Fields | Filled | Needs review | Couldn't fill | Fill rate |
@@ -107,7 +107,7 @@ Then click the reload arrow on employ-me's card in `chrome://extensions`. Your P
 | Lever | 3 | 53 | 41 | 0 | 12 | 77% |
 | Ashby | 5 | 83 | 43 | 8 | 32 | 52% |
 | Workday (synthetic forms: unverified until a live pass) | 3 | 110 | 79 | 0 | 31 | 72% |
-| Generic fallback | 1 | 14 | 8 | 1 | 5 | 57% |
+| Generic fallback | 1 | 14 | 7 | 1 | 6 | 50% |
 <!-- fill-rate:end -->
 
 ## Docs
