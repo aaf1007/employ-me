@@ -16,6 +16,17 @@ export const PROVIDER_IDS = ['claude', 'codex'] as const;
 export const providerIdSchema = z.enum(PROVIDER_IDS);
 export type ProviderId = z.infer<typeof providerIdSchema>;
 
+/**
+ * A model name as the Provider's CLI takes it: "sonnet", "claude-sonnet-4-5",
+ * "gpt-5-codex". It becomes a CLI argument, so it may not start with "-" and
+ * holds no spaces or shell characters.
+ */
+export const modelIdSchema = z
+  .string()
+  .max(100)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._:[\]-]*$/, 'Use a model name such as sonnet');
+export type ModelId = z.infer<typeof modelIdSchema>;
+
 /** One usage window of the user's plan, when the CLI reports it (Codex's `account/rateLimits/read`). */
 export const providerQuotaSchema = z.object({
   /** Share of this window's allowance still unused, 0 to 100. */

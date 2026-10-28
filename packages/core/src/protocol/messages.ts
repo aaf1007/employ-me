@@ -9,7 +9,7 @@ import {
   parseResumeInputSchema,
   parseResumeOutputSchema,
 } from '../provider/boundary';
-import { providerIdSchema, providerStatusSchema } from '../provider/provider';
+import { modelIdSchema, providerIdSchema, providerStatusSchema } from '../provider/provider';
 
 // Messages between the extension and the helper, over Chrome Native
 // Messaging (ADR-0001). One request, one response, matched by `id`.
@@ -21,26 +21,33 @@ export const requestIdSchema = z.string().min(1).max(64);
 
 const base = { v: versionSchema, id: requestIdSchema };
 
+/** Every request that runs a Provider names it, and optionally the model (from Settings). */
+const providerCall = {
+  provider: providerIdSchema,
+  /** Absent means the Provider's default (design.md "Default models"). */
+  model: modelIdSchema.optional(),
+};
+
 export const healthRequestSchema = z.strictObject({ ...base, type: z.literal('health') });
 
 export const mapFieldsRequestSchema = z.strictObject({
   ...base,
+  ...providerCall,
   type: z.literal('mapFields'),
-  provider: providerIdSchema,
   input: mapFieldsInputSchema,
 });
 
 export const draftAnswerRequestSchema = z.strictObject({
   ...base,
+  ...providerCall,
   type: z.literal('draftAnswer'),
-  provider: providerIdSchema,
   input: draftContextSchema,
 });
 
 export const parseResumeRequestSchema = z.strictObject({
   ...base,
+  ...providerCall,
   type: z.literal('parseResume'),
-  provider: providerIdSchema,
   input: parseResumeInputSchema,
 });
 
