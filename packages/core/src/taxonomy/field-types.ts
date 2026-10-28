@@ -30,12 +30,16 @@ export interface FieldTypeSpec {
   readonly vocab?: VocabId;
 }
 
-const ordinary = (answer: AnswerKind, vocab?: VocabId): FieldTypeSpec =>
+// Each spec keeps its sensitivity as a literal type, so types such as
+// OrdinaryFieldType can be derived from the table below.
+type SpecWith<S extends Sensitivity> = FieldTypeSpec & { readonly sensitivity: S };
+
+const ordinary = (answer: AnswerKind, vocab?: VocabId): SpecWith<'ordinary'> =>
   vocab === undefined ? { sensitivity: 'ordinary', answer } : { sensitivity: 'ordinary', answer, vocab };
-const selfId = (vocab: VocabId): FieldTypeSpec => ({ sensitivity: 'selfId', answer: 'choice', vocab });
-const attestation = (answer: AnswerKind): FieldTypeSpec => ({ sensitivity: 'attestation', answer });
-const neverStored = (answer: AnswerKind): FieldTypeSpec => ({ sensitivity: 'neverStored', answer });
-const spec = (s: FieldTypeSpec): FieldTypeSpec => s;
+const selfId = (vocab: VocabId): SpecWith<'selfId'> => ({ sensitivity: 'selfId', answer: 'choice', vocab });
+const attestation = (answer: AnswerKind): SpecWith<'attestation'> => ({ sensitivity: 'attestation', answer });
+const neverStored = (answer: AnswerKind): SpecWith<'neverStored'> => ({ sensitivity: 'neverStored', answer });
+const spec = <S extends Sensitivity>(s: SpecWith<S>): SpecWith<S> => s;
 
 /**
  * The canonical field types the fill engine classifies every field into.
@@ -159,3 +163,19 @@ export function sensitivityOf(fieldType: FieldType): Sensitivity {
 export function mayGoToProvider(fieldType: FieldType): boolean {
   return sensitivityOf(fieldType) === 'ordinary';
 }
+
+/** The field types with sensitivity `S`, as a type. */
+export type FieldTypeWith<S extends Sensitivity> = {
+  [K in FieldType]: (typeof FIELD_TYPES)[K]['sensitivity'] extends S ? K : never;
+}[FieldType];
+
+/** Field types that are neither Self-ID, Attestation nor never-stored. */
+export type OrdinaryFieldType = FieldTypeWith<'ordinary'>;
+
+export function isOrdinaryFieldType(fieldType: FieldType): fieldType is OrdinaryFieldType {
+  return sensitivityOf(fieldType) === 'ordinary';
+}
+
+export const ORDINARY_FIELD_TYPES: readonly OrdinaryFieldType[] = FIELD_TYPE_IDS.filter(isOrdinaryFieldType);
+
+export const ordinaryFieldTypeSchema = z.enum(ORDINARY_FIELD_TYPES);
