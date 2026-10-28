@@ -5,6 +5,8 @@ import {
   type ProviderStatus,
 } from '@employ-me/core';
 import { ErrorNotice } from '../common/ErrorNotice';
+import { formatDateTime } from '../format';
+import { LOW_QUOTA_PERCENT, quotaText } from './quota';
 
 const STATE: Readonly<Record<ProviderStatus['state'], string>> = {
   ready: 'Ready',
@@ -50,6 +52,15 @@ export function HelperHealth({ health }: { readonly health: HealthResult }) {
               {provider.problem === undefined ? null : (
                 <div className="muted small">{provider.problem.fix}</div>
               )}
+              {(provider.quota ?? []).map((quota, index) => (
+                <div
+                  key={index}
+                  className={quota.remainingPercent < LOW_QUOTA_PERCENT ? 'field-error' : 'muted small'}
+                  data-testid={`quota-${provider.id}`}
+                >
+                  {quotaText(quota, formatDateTime)}
+                </div>
+              ))}
             </dd>
           </div>
         ))}

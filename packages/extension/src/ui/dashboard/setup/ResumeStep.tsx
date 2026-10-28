@@ -92,7 +92,25 @@ export function ResumeStep({
           Reading your Resume with {providerName}… This can take a minute.
         </div>
       ) : null}
-      {failure === null ? null : (
+      {failure === null ? null : failure.reason === 'resumeUnreadable' ? (
+        // Retrying the same file can't help: a scan or a .doc has no text to read.
+        <ErrorNotice error={failure} title="This Resume has no text employ-me can read.">
+          <div className="stack" style={{ gap: 8, width: '100%' }} data-testid="add-readable-resume">
+            <strong>Add a copy with selectable text</strong>
+            <AddResumeForm
+              offerDefault
+              submitLabel="Add this copy"
+              onAdded={(meta) => {
+                setChosen(meta.id);
+                setFailure(null);
+              }}
+            />
+            <button type="button" className="btn" style={{ justifySelf: 'start' }} onClick={onSkip}>
+              Fill in my Profile by hand
+            </button>
+          </div>
+        </ErrorNotice>
+      ) : (
         <ErrorNotice error={failure} title="Your Resume couldn’t be read.">
           <button type="button" className="btn" onClick={() => void read()}>
             Try again

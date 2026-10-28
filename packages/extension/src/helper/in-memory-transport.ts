@@ -130,10 +130,12 @@ export function createInMemoryHelper(): InMemoryHelper {
           ...okBase,
           type: 'mapFields',
           result: {
-            mappings: request.input.fields.map((field) => ({
-              fieldId: field.fieldId,
-              match: field.control === 'textarea' ? { kind: 'needsDraft' } : { kind: 'unknown' },
-            })),
+            // As the helper's fake Provider answers.
+            mappings: request.input.fields.map((field) =>
+              field.control === 'textarea'
+                ? { fieldId: field.fieldId, match: { kind: 'needsDraft' }, confidence: 1 }
+                : { fieldId: field.fieldId, match: { kind: 'unknown' }, confidence: 0 },
+            ),
           },
         };
       case 'draftAnswer':
