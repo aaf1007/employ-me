@@ -92,8 +92,15 @@ export class FillFlow {
       fieldId,
       draft.ok ? readyDraft(request, draft.value, polish) : failedDraft(current, draft.error),
     );
-    if (draft.ok)
-      await this.replan({ draftsReady: [...new Set([...(this.feedback.draftsReady ?? []), fieldId])] });
+    const failed = new Set(this.feedback.draftsFailed);
+    if (draft.ok) failed.delete(fieldId);
+    else failed.add(fieldId);
+    await this.replan({
+      draftsReady: draft.ok
+        ? [...new Set([...(this.feedback.draftsReady ?? []), fieldId])]
+        : (this.feedback.draftsReady ?? []),
+      draftsFailed: [...failed],
+    });
   }
 
   /** Writes the Draft as you left it into the form, through act, and keeps it as a Saved Answer. */
@@ -167,6 +174,7 @@ export class FillFlow {
   private async draftAll(fields: readonly FieldView[]): Promise<void> {
     const source = this.draftSource();
     const ready: string[] = [];
+    const failed: string[] = [];
     await Promise.all(
       fields.map(async ({ fieldId, draft: request }) => {
         if (request === undefined) return;
@@ -183,12 +191,19 @@ export class FillFlow {
           draft.ok ? readyDraft(request, draft.value, false) : failedDraft(started, draft.error),
         );
         if (draft.ok) ready.push(fieldId);
-        else if (this.feedback.state === undefined) this.unavailable(draft.error);
+        else {
+          failed.push(fieldId);
+          if (this.feedback.state === undefined) this.unavailable(draft.error);
+        }
       }),
     );
+    // fill keeps a required question waiting until its Draft is ready or reported failed.
     this.feedback = {
       ...this.feedback,
       draftsReady: [...new Set([...(this.feedback.draftsReady ?? []), ...ready])],
+      ...(failed.length === 0
+        ? {}
+        : { draftsFailed: [...new Set([...(this.feedback.draftsFailed ?? []), ...failed])] }),
     };
   }
 

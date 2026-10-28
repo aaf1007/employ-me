@@ -99,6 +99,20 @@ describe('PanelController', () => {
     });
   });
 
+  // fill keeps a required question waiting until its Draft is ready or reported failed.
+  it('reports a Draft the Provider couldn’t write, so the field stops waiting', async () => {
+    const failing = background({
+      'helper.draftAnswer': () => ({
+        ok: false,
+        error: { reason: 'providerTimeout', message: 'The AI took too long.', fix: 'Click Retry.' },
+      }),
+    });
+    const { controller, tab, state } = await started(fakeTab(), failing);
+    await controller.fill();
+    expect(tab.sent.at(-1)?.provider).toMatchObject({ draftsFailed: ['why'] });
+    expect(state().drafts['why']?.status).toBe('failed');
+  });
+
   it('accepting a Draft writes your edit through a re-plan and keeps it as a Saved Answer', async () => {
     const { controller, tab, bg, state } = await started();
     await controller.fill();

@@ -44,6 +44,7 @@ export const providerFeedbackSchema = z.strictObject({
     )
     .optional(),
   draftsReady: z.array(z.string()).optional(),
+  draftsFailed: z.array(z.string()).optional(),
   accepted: z.array(z.strictObject({ fieldId: z.string(), text: z.string().max(20_000) })).optional(),
 });
 export type ProviderFeedbackMessage = z.infer<typeof providerFeedbackSchema>;
