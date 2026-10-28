@@ -6,9 +6,14 @@ import {
   type OrdinaryFieldType,
   type SavedAnswer,
 } from '@employ-me/core';
-import { guarded, isoNow, parseAllStored, type DataResult, type StoreContext } from './context';
+import { guarded, isoNow, type DataResult, type StoreContext } from './context';
 import { dataError, issuesFrom } from './errors';
 import { inTransaction, readValues, requestValue, STORES } from './idb';
+import {
+  sortSavedAnswerRecords,
+  type RefusedSavedAnswer,
+  type SavedAnswerRecords,
+} from './saved-answer-records';
 
 export interface NewSavedAnswer {
   readonly question: string;
@@ -32,11 +37,24 @@ export interface AcceptedDraft {
   readonly employer?: EmployerKey;
 }
 
+/** The Saved Answers a Fill may use. Refused ones are left out (see listRefusedSavedAnswers). */
 export function listSavedAnswers(ctx: StoreContext): Promise<DataResult<SavedAnswer[]>> {
   return guarded(() =>
     inTransaction(ctx.db, [STORES.savedAnswers], 'readonly', async (t) => {
       const all = await readAll(t);
       return all.ok ? ok(all.value.sort((a, b) => a.createdAt.localeCompare(b.createdAt))) : all;
+    }),
+  );
+}
+
+/** Saved Answers stored before employ-me refused their kind of question: shown only so you can delete them. */
+export function listRefusedSavedAnswers(ctx: StoreContext): Promise<DataResult<RefusedSavedAnswer[]>> {
+  return guarded(() =>
+    inTransaction(ctx.db, [STORES.savedAnswers], 'readonly', async (t) => {
+      const records = await readRecords(t);
+      return records.ok
+        ? ok(records.value.refused.sort((a, b) => a.question.localeCompare(b.question)))
+        : records;
     }),
   );
 }
@@ -171,11 +189,12 @@ function write(
 }
 
 async function readAll(t: IDBTransaction): Promise<DataResult<SavedAnswer[]>> {
-  return parseAllStored(
-    savedAnswerSchema,
-    await readValues(t.objectStore(STORES.savedAnswers).getAll()),
-    'Saved Answer',
-  );
+  const records = await readRecords(t);
+  return records.ok ? ok(records.value.usable) : records;
+}
+
+async function readRecords(t: IDBTransaction): Promise<DataResult<SavedAnswerRecords>> {
+  return sortSavedAnswerRecords(await readValues(t.objectStore(STORES.savedAnswers).getAll()));
 }
 
 /** Employer keys are lower-cased board slugs (core `employerKeySchema`). Blank entries are dropped. */

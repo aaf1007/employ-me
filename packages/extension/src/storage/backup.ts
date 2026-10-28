@@ -31,6 +31,7 @@ import {
   type StoreName,
 } from './idb';
 import { emptyProfileFields } from './profile-store';
+import { sortSavedAnswerRecords, withoutRefused } from './saved-answer-records';
 import { profileFieldsSchema, settingsSchema, storedApplicationSchema } from './schemas';
 
 // A full backup: everything employ-me keeps, Resume files included, as one
@@ -61,13 +62,25 @@ export const backupSchema = z.strictObject({
 });
 export type Backup = z.infer<typeof backupSchema>;
 
+/** Enough to tell a backup from another file; the rest is checked whole, with backupSchema. */
+const backupHeaderSchema = z.looseObject({ format: z.literal(BACKUP_FORMAT) });
+const backupSavedAnswersSchema = z.object({ savedAnswers: z.array(z.unknown()) });
+
 export interface BackupCounts {
   readonly resumes: number;
   readonly savedAnswers: number;
   readonly applications: number;
+  /** Refused Saved Answers left out (see saved-answer-records.ts). */
+  readonly skippedSavedAnswers: number;
 }
 
-export function exportBackup(ctx: StoreContext): Promise<DataResult<Backup>> {
+export interface ExportedBackup {
+  readonly backup: Backup;
+  /** Refused Saved Answers left out of the file. */
+  readonly skippedSavedAnswers: number;
+}
+
+export function exportBackup(ctx: StoreContext): Promise<DataResult<ExportedBackup>> {
   return guarded(async () => {
     const raw = await inTransaction(ctx.db, ALL_STORES, 'readonly', async (t) => {
       const store = (name: StoreName) => t.objectStore(name);
@@ -95,7 +108,8 @@ export function exportBackup(ctx: StoreContext): Promise<DataResult<Backup>> {
     if (!settings.ok) return settings;
     const metas = parseAllStored(resumeMetaSchema, raw.metas, 'Resume');
     if (!metas.ok) return metas;
-    const answers = parseAllStored(savedAnswerSchema, raw.answers, 'Saved Answer');
+    // A refused Saved Answer is quarantined: it never leaves the machine in a backup either.
+    const answers = sortSavedAnswerRecords(raw.answers);
     if (!answers.ok) return answers;
     const summaries = parseAllStored(storedApplicationSchema, raw.applications, 'Application');
     if (!summaries.ok) return summaries;
@@ -120,7 +134,7 @@ export function exportBackup(ctx: StoreContext): Promise<DataResult<Backup>> {
       },
     );
 
-    return parseStored(
+    const backup = parseStored(
       backupSchema,
       {
         format: BACKUP_FORMAT,
@@ -129,11 +143,14 @@ export function exportBackup(ctx: StoreContext): Promise<DataResult<Backup>> {
         profile: profile.value,
         settings: settings.value,
         resumes,
-        savedAnswers: answers.value,
+        savedAnswers: answers.value.usable,
         applications,
       },
       'backup',
     );
+    return backup.ok
+      ? ok({ backup: backup.value, skippedSavedAnswers: answers.value.refused.length })
+      : backup;
   });
 }
 
@@ -143,13 +160,17 @@ export function exportBackup(ctx: StoreContext): Promise<DataResult<Backup>> {
  */
 export function importBackup(ctx: StoreContext, raw: unknown): Promise<DataResult<BackupCounts>> {
   return guarded(async () => {
-    const header = z.object({ format: z.literal(BACKUP_FORMAT) }).safeParse(raw);
+    const header = backupHeaderSchema.safeParse(raw);
     if (!header.success) {
       return dataError('invalidInput', "This file isn't an employ-me backup", [
         { path: 'file', message: 'Choose a file exported from employ-me Settings' },
       ]);
     }
-    const parsed = backupSchema.safeParse(raw);
+    // A backup made before employ-me refused Self-ID, Attestation and never-stored questions may
+    // hold Saved Answers to them: those are left out, and the rest restores.
+    const answers = backupSavedAnswersSchema.safeParse(raw);
+    const { kept, skipped } = withoutRefused(answers.success ? answers.data.savedAnswers : []);
+    const parsed = backupSchema.safeParse(answers.success ? { ...header.data, savedAnswers: kept } : raw);
     if (!parsed.success) {
       return dataError('invalidInput', 'The backup has invalid data', issuesFrom(parsed.error));
     }
@@ -180,6 +201,7 @@ export function importBackup(ctx: StoreContext, raw: unknown): Promise<DataResul
       resumes: backup.resumes.length,
       savedAnswers: backup.savedAnswers.length,
       applications: backup.applications.length,
+      skippedSavedAnswers: skipped,
     });
   });
 }

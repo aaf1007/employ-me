@@ -44,7 +44,8 @@ async function filledStore() {
 describe('JSON backup', () => {
   it('round-trips everything, Resume files included, into an empty store', async () => {
     const { store } = await filledStore();
-    const backup = value(await store.exportBackup());
+    const { backup, skippedSavedAnswers } = value(await store.exportBackup());
+    expect(skippedSavedAnswers).toBe(0);
     // Through JSON, as a file would be.
     const file: unknown = JSON.parse(JSON.stringify(backup));
 
@@ -53,6 +54,7 @@ describe('JSON backup', () => {
       resumes: 2,
       savedAnswers: 1,
       applications: 2,
+      skippedSavedAnswers: 0,
     });
     expect(changes).toEqual(['profile', 'resumes', 'savedAnswers', 'applications', 'settings']);
 
@@ -74,45 +76,70 @@ describe('JSON backup', () => {
   it('replaces what was there', async () => {
     const { store } = await createTestStore();
     value(await store.addSavedAnswer({ question: 'Old question', answer: 'Old' }));
-    const empty = value(await (await createTestStore()).store.exportBackup());
+    const empty = value(await (await createTestStore()).store.exportBackup()).backup;
     value(await store.importBackup(empty));
     expect(value(await store.listSavedAnswers())).toEqual([]);
   });
 
   it('changes nothing when the backup is invalid', async () => {
     const { store } = await filledStore();
-    const before = value(await store.exportBackup());
+    const before = value(await store.exportBackup()).backup;
     const broken = { ...before, applications: [{ ...before.applications[0], status: 'ghosted' }] };
     expect(failure(await store.importBackup(broken)).reason).toBe('invalidInput');
     expect(value(await store.listApplications())).toHaveLength(2);
   });
 
-  it('refuses a backup that holds a Saved Answer from a Self-ID field', async () => {
+  it('leaves out a Saved Answer from a Self-ID field, restores the rest and says how many it left out', async () => {
     const { store } = await filledStore();
-    const backup = value(await store.exportBackup());
+    const { backup } = value(await store.exportBackup());
+    const [why] = backup.savedAnswers;
     const tampered = {
       ...backup,
-      savedAnswers: backup.savedAnswers.map((s) => ({ ...s, fieldType: 'selfId.us.race' })),
+      savedAnswers: [...backup.savedAnswers, { ...why, id: 'race', fieldType: 'selfId.us.race' }],
     };
-    expect(failure(await store.importBackup(tampered)).reason).toBe('invalidInput');
+    expect(value(await store.importBackup(tampered))).toMatchObject({
+      savedAnswers: 1,
+      skippedSavedAnswers: 1,
+    });
+    expect(value(await store.listSavedAnswers()).map((s) => s.id)).toEqual([why?.id]);
+    expect(value(await store.listRefusedSavedAnswers())).toEqual([]);
   });
 
-  it('refuses a backup that holds a Saved Answer to a Self-ID or never-stored question', async () => {
+  it('leaves out Saved Answers to Self-ID or never-stored questions', async () => {
     const { store } = await filledStore();
-    const backup = value(await store.exportBackup());
-    for (const question of ['Are you a protected veteran?', 'SSN', 'Date of birth']) {
-      const tampered = {
-        ...backup,
-        savedAnswers: backup.savedAnswers.map((s) => ({ ...s, question, source: 'import' })),
-      };
-      expect(failure(await store.importBackup(tampered)).reason, question).toBe('invalidInput');
-    }
+    const { backup } = value(await store.exportBackup());
+    const [why] = backup.savedAnswers;
+    const refused = ['Are you a protected veteran?', 'SSN', 'Date of birth'].map((question, index) => ({
+      ...why,
+      id: `refused-${String(index)}`,
+      question,
+      source: 'import',
+      fieldType: undefined,
+    }));
+    const tampered: unknown = JSON.parse(
+      JSON.stringify({ ...backup, savedAnswers: [...backup.savedAnswers, ...refused] }),
+    );
+    expect(value(await store.importBackup(tampered))).toMatchObject({
+      savedAnswers: 1,
+      skippedSavedAnswers: 3,
+    });
     expect(value(await store.listSavedAnswers()).map((s) => s.question)).toEqual(['Why us?']);
+  });
+
+  it('still refuses a backup whose Saved Answer is damaged in another way', async () => {
+    const { store } = await filledStore();
+    const { backup } = value(await store.exportBackup());
+    const tampered = {
+      ...backup,
+      savedAnswers: backup.savedAnswers.map((s) => ({ ...s, question: 'SSN', createdAt: 'yesterday' })),
+    };
+    expect(failure(await store.importBackup(tampered)).reason).toBe('invalidInput');
+    expect(value(await store.listApplications())).toHaveLength(2);
   });
 
   it('refuses never-stored data, a damaged Resume file and files that are not backups', async () => {
     const { store } = await filledStore();
-    const backup = value(await store.exportBackup());
+    const { backup } = value(await store.exportBackup());
     const withSin = { ...backup, profile: { ...backup.profile, sin: '123456789' } };
     expect(failure(await store.importBackup(withSin)).reason).toBe('invalidInput');
 

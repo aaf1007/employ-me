@@ -4,14 +4,18 @@ import type { DataStore, Topic } from '../../../storage';
 import { ErrorNotice } from '../common/ErrorNotice';
 import { PageHeader } from '../common/PageHeader';
 import { useStoreQuery } from '../data/use-store-query';
+import { RefusedSavedAnswerCard } from './RefusedSavedAnswerCard';
 import { SavedAnswerCard } from './SavedAnswerCard';
 import { SavedAnswerEditor } from './SavedAnswerEditor';
 
 const SAVED: readonly Topic[] = ['savedAnswers'];
 const loadSaved = (store: DataStore) => store.listSavedAnswers();
+const loadRefused = (store: DataStore) => store.listRefusedSavedAnswers();
 
 export function SavedAnswersView() {
   const saved = useStoreQuery(SAVED, loadSaved);
+  const refused = useStoreQuery(SAVED, loadRefused);
+  const quarantined = refused.result?.ok === true ? refused.result.value : [];
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -55,6 +59,17 @@ export function SavedAnswersView() {
             />
           </section>
         ) : null}
+        {quarantined.length === 0 ? null : (
+          <ul
+            className="stack"
+            style={{ listStyle: 'none', padding: 0, margin: 0 }}
+            data-testid="refused-saved-answer-list"
+          >
+            {quarantined.map((r) => (
+              <RefusedSavedAnswerCard key={r.id} refused={r} />
+            ))}
+          </ul>
+        )}
         <input
           className="input"
           type="search"

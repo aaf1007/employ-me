@@ -89,7 +89,7 @@ describe('Applications', () => {
     value(await store.deleteApplication(created.id));
     expect(value(await store.listApplications())).toEqual([]);
     expect(failure(await store.getApplication(created.id)).reason).toBe('notFound');
-    expect(value(await store.exportBackup()).applications).toEqual([]);
+    expect(value(await store.exportBackup()).backup.applications).toEqual([]);
   });
 
   it('imports in one go, skipping Postings the Tracker already has', async () => {

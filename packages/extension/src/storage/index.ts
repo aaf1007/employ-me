@@ -1,6 +1,6 @@
 export type { ApplicationChanges } from './application-store';
 export type { ImportOutcome } from './application-import';
-export { BACKUP_FORMAT, backupFileName, type Backup, type BackupCounts } from './backup';
+export { BACKUP_FORMAT, backupFileName, type Backup, type BackupCounts, type ExportedBackup } from './backup';
 export { base64ToBlob, base64ToBytes, blobToBase64 } from './base64';
 export { onDataChanged } from './changes';
 export { TOPICS, type DataResult, type StoreDeps, type Topic } from './context';
@@ -14,6 +14,7 @@ export {
 } from './errors';
 export { emptyProfileFields } from './profile-store';
 export { MAX_RESUME_BYTES, resumeMimeType, type NewResume, type ResumeFile } from './resume-store';
+export type { RefusedSavedAnswer } from './saved-answer-records';
 export type { AcceptedDraft, NewSavedAnswer, SavedAnswerChanges } from './saved-answer-store';
 export {
   applicationSummarySchema,

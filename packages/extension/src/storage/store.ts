@@ -7,6 +7,7 @@ import type { DataResult, StoreDeps } from './context';
 import { openDb } from './idb';
 import * as profile from './profile-store';
 import * as resumes from './resume-store';
+import type { RefusedSavedAnswer } from './saved-answer-records';
 import * as savedAnswers from './saved-answer-store';
 import type {
   ApplicationSummary,
@@ -36,6 +37,7 @@ export interface DataStore {
   deleteResume(id: string): Promise<DataResult<null>>;
 
   listSavedAnswers(): Promise<DataResult<SavedAnswer[]>>;
+  listRefusedSavedAnswers(): Promise<DataResult<RefusedSavedAnswer[]>>;
   addSavedAnswer(answer: savedAnswers.NewSavedAnswer): Promise<DataResult<SavedAnswer>>;
   updateSavedAnswer(id: string, changes: savedAnswers.SavedAnswerChanges): Promise<DataResult<SavedAnswer>>;
   saveAcceptedDraft(draft: savedAnswers.AcceptedDraft): Promise<DataResult<SavedAnswer>>;
@@ -57,7 +59,7 @@ export interface DataStore {
   getSettings(): Promise<DataResult<Settings>>;
   saveSettings(settings: SettingsInput): Promise<DataResult<Settings>>;
 
-  exportBackup(): Promise<DataResult<backup.Backup>>;
+  exportBackup(): Promise<DataResult<backup.ExportedBackup>>;
   importBackup(file: unknown): Promise<DataResult<backup.BackupCounts>>;
 
   close(): void;
@@ -78,6 +80,7 @@ export function createDataStore(db: IDBDatabase, deps: StoreDeps): DataStore {
     deleteResume: (id) => resumes.deleteResume(ctx, id),
 
     listSavedAnswers: () => savedAnswers.listSavedAnswers(ctx),
+    listRefusedSavedAnswers: () => savedAnswers.listRefusedSavedAnswers(ctx),
     addSavedAnswer: (answer) => savedAnswers.addSavedAnswer(ctx, answer),
     updateSavedAnswer: (id, changes) => savedAnswers.updateSavedAnswer(ctx, id, changes),
     saveAcceptedDraft: (draft) => savedAnswers.saveAcceptedDraft(ctx, draft),

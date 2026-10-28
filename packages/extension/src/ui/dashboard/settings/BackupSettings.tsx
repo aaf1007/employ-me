@@ -11,6 +11,13 @@ interface Prepared {
   readonly href: string;
   readonly name: string;
   readonly size: number;
+  /** Refused Saved Answers left out of the file. */
+  readonly skippedSavedAnswers: number;
+}
+
+/** Why a refused Saved Answer is left out (storage/saved-answer-records.ts). */
+function leftOut(count: number): string {
+  return `${plural(count, 'Saved Answer')} ${count === 1 ? 'was' : 'were'} left out: employ-me no longer keeps answers to Self-ID questions, Attestations, or questions about passwords, SIN/SSN, date of birth or references.`;
 }
 
 /** Just enough of a backup to say what it holds before you restore it; importBackup checks all of it. */
@@ -53,11 +60,13 @@ export function BackupSettings() {
       setProblem(backup.error);
       return;
     }
-    const blob = new Blob([JSON.stringify(backup.value, null, 2)], { type: 'application/json' });
+    const { backup: file, skippedSavedAnswers } = backup.value;
+    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
     setPrepared({
       href: URL.createObjectURL(blob),
-      name: backupFileName(backup.value.exportedAt),
+      name: backupFileName(file.exportedAt),
       size: blob.size,
+      skippedSavedAnswers,
     });
   };
 
@@ -94,10 +103,9 @@ export function BackupSettings() {
       setProblem(result.error);
       return;
     }
-    const { applications, savedAnswers, resumes } = result.value;
-    toast(
-      `Backup restored: ${plural(applications, 'Application')}, ${plural(savedAnswers, 'Saved Answer')}, ${plural(resumes, 'Resume')}.`,
-    );
+    const { applications, savedAnswers, resumes, skippedSavedAnswers } = result.value;
+    const restored = `Backup restored: ${plural(applications, 'Application')}, ${plural(savedAnswers, 'Saved Answer')}, ${plural(resumes, 'Resume')}.`;
+    toast(skippedSavedAnswers === 0 ? restored : `${restored} ${leftOut(skippedSavedAnswers)}`);
   };
 
   return (
@@ -125,6 +133,14 @@ export function BackupSettings() {
           </a>
         )}
       </div>
+      {prepared === null || prepared.skippedSavedAnswers === 0 ? null : (
+        <div className="notice notice-warn" role="status" data-testid="backup-skipped">
+          <p>
+            {leftOut(prepared.skippedSavedAnswers)} Delete{' '}
+            {prepared.skippedSavedAnswers === 1 ? 'it' : 'them'} in Saved Answers.
+          </p>
+        </div>
+      )}
       <div className="field">
         <label htmlFor={`${id}-file`}>Restore a backup</label>
         <input

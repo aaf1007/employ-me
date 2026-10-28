@@ -1,14 +1,8 @@
-import {
-  PROFILE_SCHEMA_VERSION,
-  ok,
-  profileSchema,
-  resumeMetaSchema,
-  savedAnswerSchema,
-  type Profile,
-} from '@employ-me/core';
+import { PROFILE_SCHEMA_VERSION, ok, profileSchema, resumeMetaSchema, type Profile } from '@employ-me/core';
 import { guarded, parseAllStored, parseStored, type DataResult, type StoreContext } from './context';
 import { dataError, issuesFrom } from './errors';
 import { inTransaction, KV_KEYS, readValue, readValues, requestValue, STORES } from './idb';
+import { sortSavedAnswerRecords } from './saved-answer-records';
 import {
   profileFieldsSchema,
   settingsSchema,
@@ -65,14 +59,15 @@ export function getProfile(ctx: StoreContext): Promise<DataResult<Profile>> {
       if (!fields.ok) return fields;
       const metas = parseAllStored(resumeMetaSchema, resumes, 'Resume');
       if (!metas.ok) return metas;
-      const answers = parseAllStored(savedAnswerSchema, savedAnswers, 'Saved Answer');
+      // Refused Saved Answers are quarantined: never part of what a Fill reads.
+      const answers = sortSavedAnswerRecords(savedAnswers);
       if (!answers.ok) return answers;
       return parseStored(
         profileSchema,
         {
           ...fields.value,
           resumes: metas.value.sort((a, b) => a.addedAt.localeCompare(b.addedAt)),
-          savedAnswers: answers.value.sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+          savedAnswers: answers.value.usable.sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
         },
         'Profile',
       );
