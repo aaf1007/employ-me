@@ -79,7 +79,9 @@ export class PanelController {
     const details = await this.details;
     const posting = detected.posting === null ? null : withPublicDetails(detected.posting, details);
     this.store.set({ posting });
-    this.openSession();
+    // One port for the whole Fill: closing it ends the content script's session, and with it the
+    // report a re-plan needs to leave your edits alone.
+    if (this.closeSession === null) this.openSession();
     const { resumeId } = this.store.get();
     const first = await this.deps.tab.fill({
       type: 'fill',
