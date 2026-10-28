@@ -32,6 +32,10 @@ Concrete rules a reviewer can check. Lint and types enforce many of them; the re
 ## DOM (packages/fill)
 
 - Read the DOM anywhere in fill. Write it, or dispatch events on it, only through `act/`. Extend `act/` with a new guarded operation when you need one.
+- Outside `act/`, fill writes nothing through a computed key (`x[key] = v`): build objects with `Object.fromEntries` or a `Map`. Nowhere in fill is a method called through one (`x[name]()`).
+- `act/` dispatches only events built in place with a literal type (`el.dispatchEvent(new Event('input', …))`), and never presses Enter.
+- core and fill never touch the global object (`globalThis`, `window`, `self`, `top`, `parent`, `frames`, `opener`). Use the global you need by name, or the element's own document.
+- No code builds elements or HTML (`createElement`, `innerHTML`, `insertAdjacentHTML`), and nothing in core, fill or the extension loads code at run time (`import()`). The extension's pages render through React.
 - Check element kinds with `localName` and attributes, not `instanceof`: elements from iframes belong to another realm.
 - Walk open shadow roots when extracting.
 - Nothing is injected into job sites' pages: no overlays, no styles, no attributes. The side panel is the UI.
