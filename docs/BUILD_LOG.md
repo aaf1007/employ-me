@@ -289,3 +289,50 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 **Gotchas**
 - Workday's public bundles are the best source for its markup. The jobs bundle holds the sign-in components; `candidate-experience-apply-flow` holds the step pages, field paths and widgets.
 - `extension/wxt.config.ts` built CSP origins with `pattern.replace('/*', '')`, which breaks on `https://*.…`. It now strips only the trailing `*`.
+
+## 2026-10-28 · Generic fallback on company sites, and refused Saved Answers quarantined (extension, fill `adapters/generic`)
+
+**Landed**
+- **The toolbar click grants activeTab now.** With `openPanelOnActionClick: true`, Chrome opens the panel itself and grants no activeTab: `ExtensionActionRunner::RunAction` returns `kToggleSidePanel` before `GrantTabPermissions`, with a comment saying tab permissions aren't granted in that case (chromium `chrome/browser/extensions/extension_action_runner.cc`, crbug.com/40904917). Chrome's activeTab docs list "executing an action" but don't mention the side panel. So `background/action.ts` sets `openPanelOnActionClick: false` and opens the panel from `action.onClicked` with `sidePanel.open({ windowId })`, called in the click. That path grants activeTab first and then dispatches `onClicked`. No host permission was added.
+- **Fill on an unknown site.** With no content script in any frame (checked after 3 detects, about 1 s), the panel shows `unknown-site`: the host when Chrome reveals it, and the already-applied warning keyed from the address. Nothing has run in the page at that point. Clicking Fill calls `tab.reach()` (`sidepanel/site-access.ts`):
+  - `scripting.executeScript({ allFrames, func: probeFrame })` reads every frame employ-me may read: its URL and its iframes' origins (`content/probe.ts`, read-only).
+  - Each frame is pinged by `frameId`. Frames that don't answer get `content-scripts/ats.js` (`CONTENT_SCRIPT_FILE`) injected. Known ATS hosts never do, since the manifest covers them, so a frame never runs two copies.
+  - `detect` then asks each reached frame, and the one with the most fields is the target for `fill`, `feedback` and the session port. After that the Fill is the usual one: Filled, Needs your review, and Couldn't fill with a fix.
+  - Without activeTab (the panel was opened another way, or you moved to another tab), the panel says `noAccess`: click the toolbar icon on this page, then Fill.
+- **Iframes on unknown hosts.** A frame from the same site is covered by activeTab with `allFrames`. If no reachable frame has a form, and frames from other https sites didn't answer the probe, `noForm` lists those sites with "Allow … and Fill". That button calls `permissions.request` for those origins only (`optional_host_permissions: https://*/*`), as the click handler's first call. The request needs its own click because a transient-activation window after the probe's await isn't reliable. If the reachable frames do have a form, it fills straight away and no permission prompt appears, since third-party iframes like videos and captchas are common.
+- **Later pages of the same Fill.** When a page loads while a Fill you started on an unknown site is open, the panel injects again (activeTab covers the same site). That gives later steps of the form, or "Did you apply?" on the thank-you page. A load with no Fill open forgets the grant and waits for your click again.
+- **Posting key with no public API** (fill `posting/key.ts`, interface change). `genericPostingKey` now canonicalizes the URL first, strips `/apply` and similar suffixes from the path, and keeps the query parameters that pick the job, sorted. So `/jobs/42` and `/jobs/42/apply?utm_source=x` give the same key, and `?jobId=1` and `?jobId=2` don't. It drops presentation, session, token and email parameters. `?gh_jid=` still wins. The Tracker's hand-added and CSV-imported keys use the same function (`tracker/posting-key.ts`, whose `company` argument is gone), so the warning finds them. The debug report drops a key's query part.
+- **Snapshot with no public API.** The description comes from the page's JSON-LD, as before. Failing that, it comes from `postingPageText` (fill `adapters/generic/page-text.ts`): the page's main text without the form, nav, header, footer, labels or controls. That text goes to `Detected.pageText` and is used only for the Snapshot. It is never part of the Posting a Draft sees.
+- **Refused Saved Answers quarantined** (`storage/saved-answer-records.ts`). A stored entry is quarantined when the only thing core's `savedAnswerSchema` refuses is its sensitive question, or its Self-ID, Attestation or never-stored `fieldType`. Any other damage is still `corrupt`.
+  - `listSavedAnswers`, `getProfile` (what `profile.get` gives the Fill and the Draft context) and every write's uniqueness check skip quarantined entries.
+  - `listRefusedSavedAnswers` returns `{ id, question }` only. Saved Answers shows each with a plain note and Delete.
+  - `exportBackup` returns `{ backup, skippedSavedAnswers }`, and Settings says how many were left out. `importBackup` drops refused entries before checking the rest, and its counts gain `skippedSavedAnswers`, which the toast reports.
+  - Two backup tests changed from "refused" to "left out, rest restored". A Saved Answer damaged in another way still fails the whole restore.
+- **Tests.**
+  - Unit: `generic-site.test.ts` (controller and `reachSite`), `action.test.ts`, `saved-answer-records.test.ts`, fill `generic.test.ts`, and generic keys in `posting.test.ts`.
+  - e2e `generic-site.spec.ts`: Helsing replayed at helsing.ai (nothing runs before Fill, then outcomes, the Attestation left alone, nothing submitted, "Did you apply?", the Tracker's Snapshot from JSON-LD, and the warning on return before Fill). A synthetic company page with its form in an iframe from another unknown host, filled inside the frame.
+  - e2e `saved-answers-refused.spec.ts`: a legacy entry written into IndexedDB is listed, deleted, absent from `profile.get`, skipped in export, and skipped in restore.
+  - `smoke.spec.ts` checks `openPanelOnActionClick: false` plus an `onClicked` listener.
+
+**Test-only path.** Playwright can't click Chrome's toolbar icon (the activeTab grant) or answer a permission prompt. `wxt build --mode e2e` adds `E2E_COMPANY_SITES` (helsing.ai, careers.example.org, forms.example.net) to `host_permissions`, standing in for both. Everything after the grant is the real code. Production manifests are unchanged: `pnpm build`'s host permissions are still only the ATS and API hosts.
+
+**Interface changes outside the extension**
+- fill exports `genericPostingKey` (changed, as above) and `postingPageText` (new, in `adapters/generic`). `adapters/index.ts` and `index.ts` gained one export line each.
+- No core changes.
+
+**Unverified (needs real Chrome, by hand)**
+- The toolbar click on a real company site: the panel opens, the host shows, Fill injects. Chrome 116 is the manifest minimum, and `sidePanel.open` arrived in 116.
+- "Allow … and Fill" and Chrome's prompt.
+- With `openPanelOnActionClick` off, clicking the icon while the panel is open doesn't close it. `sidePanel.close()` needs Chrome 141.
+
+**Left**
+- Frames nested two levels deep inside a newly allowed site need another Allow, because the probe sees one level per reach.
+- In the iframe case the Snapshot's page text comes from the form's frame, not the company page around it.
+- The generic adapter still takes the largest `<form>`. A page with a sign-up form bigger than its Application Form fills the wrong one. You review before anything is submitted.
+- WXT's content-script wrapper posts a `wxt:content-script-started` message to the page's window when it starts. That's true on ATS hosts already, and now also on company sites after Fill. It isn't a DOM change, but a page can see it.
+
+**Gotchas**
+- A new company-site e2e fixture needs its host in `E2E_COMPANY_SITES` (`packages/extension/wxt.config.ts`), and the spec needs `helper: 'inMemory'` (the test build).
+- `scripting.executeScript({ func })` sends the function's source. `probeFrame` must use nothing from outside its own body.
+- With frames reached by `reach()`, `tabs.sendMessage` goes to one `frameId`. A frame without the form doesn't answer, and the call rejects ("message port closed"), which `send` turns into `undefined`.
+- The full e2e suite is flaky under load on main as well. Main at 653c53f failed the MongoDB embed spec once. This branch failed `side-panel.spec.ts` "one Fill carries on" ("Changed by you") twice and Lever polish once in full runs. Each passes alone, 8 of 8 with `--repeat-each 8 --workers 5`, and the third full run was 52 of 52 green. Unit tests that waited a fixed 10 ms for "Did you apply?" now use `vi.waitFor`.
