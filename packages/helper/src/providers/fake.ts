@@ -74,12 +74,21 @@ function defaultMapFields(input: MapFieldsInput): MapFieldsOutput {
   };
 }
 
+/**
+ * A Draft with one claim from nowhere, so tests see it flagged. In polish
+ * mode it returns your own text, marked as tidied.
+ */
 function defaultDraft(input: DraftContext): DraftAnswerOutput {
+  const language = input.question.language ?? 'en';
+  if (input.mode === 'polish') {
+    const own = input.userDraft ?? '';
+    return { draft: { text: `${own} (polished)`, language, claims: [{ text: own, support: 'userDraft' }] } };
+  }
   return {
     draft: {
-      text: `Fake draft for: ${input.question.label}`,
-      language: input.question.language ?? 'en',
-      claims: [],
+      text: `Fake draft for: ${input.question.label} I once led a team of fifty.`,
+      language,
+      claims: [{ text: 'I once led a team of fifty.', support: 'unsupported' }],
     },
   };
 }

@@ -1,4 +1,5 @@
 import {
+  toDraftContext,
   toProviderField,
   type FieldDescriptor,
   type MapFieldsInput,
@@ -58,6 +59,45 @@ describe('fake provider', () => {
       signal,
     );
     expect(result).toMatchObject({ ok: false, error: { reason: 'providerRateLimited' } });
+  });
+});
+
+describe('fake provider Drafts', () => {
+  const draftContext = (mode: 'write' | 'polish', userDraft?: string) => {
+    const context = toDraftContext(
+      {
+        links: {},
+        background: { workHistory: [], education: [], skills: [], languages: [] },
+        savedAnswers: [],
+      },
+      {
+        question: { label: 'Why us?', required: true },
+        mode,
+        ...(userDraft === undefined ? {} : { userDraft }),
+        posting: {},
+      },
+    );
+    if (!context.ok) throw new Error('fixture should build');
+    return context.value;
+  };
+
+  it('writes a Draft with one unsupported claim, so tests see it flagged', async () => {
+    const result = await createFakeProvider('claude').draftAnswer(draftContext('write'), signal);
+    expect(result).toMatchObject({
+      ok: true,
+      value: { draft: { claims: [{ support: 'unsupported' }] } },
+    });
+  });
+
+  it('polishes your own text in polish mode', async () => {
+    const result = await createFakeProvider('codex').draftAnswer(
+      draftContext('polish', 'I like it.'),
+      signal,
+    );
+    expect(result).toMatchObject({
+      ok: true,
+      value: { draft: { text: 'I like it. (polished)', claims: [{ support: 'userDraft' }] } },
+    });
   });
 });
 
