@@ -51,6 +51,7 @@ export interface Answered {
 const ATTESTATION_FIX =
   'Attestations are left for you. Read it, and tick or choose it yourself if you agree.';
 const NEVER_FIX = 'employ-me never stores or fills this. Enter it yourself.';
+const UNRECOGNIZED_FIX = 'Neither the rules nor the AI recognised this question. Answer it yourself.';
 
 /** The answer for one classified field, in the order design.md "Who fills what" gives. */
 export function answerFor(
@@ -81,6 +82,8 @@ export function answerFor(
   const mapping = provider.mappings.get(field.fieldId);
   if (mapping !== undefined) return fromMapping(field, mapping, classification, ctx, provider);
   if (fieldType === 'freeText.question') return { fieldType, answer: draftAnswer(field, provider) };
+  // The AI has answered the field mapping and left this one out.
+  if (provider.state === 'answered') return unrecognized(field, fieldType, provider);
   return { fieldType, answer: providerNeeded('mapping', provider) };
 }
 
@@ -113,7 +116,7 @@ function fromMapping(
     case 'fieldType': {
       const mapped = mapping.fieldType;
       if (mapped === 'unknown' || mapped === 'freeText.question') {
-        return { fieldType: ruleType, answer: draftAnswer(field, provider) };
+        return unrecognized(field, ruleType, provider);
       }
       // The rules didn't see a Self-ID question, Attestation or never-stored
       // field here, and the AI says it is one. Self-ID fills only from your
@@ -160,14 +163,22 @@ function fromMapping(
       // The AI says it's free text: a Draft answers it, and its Draft button works.
       return { fieldType: 'freeText.question', answer: draftAnswer(field, provider) };
     case 'unknown':
-      return {
-        fieldType: ruleType,
-        answer: skip(
-          'unrecognizedField',
-          'Neither the rules nor the AI recognised this question. Answer it yourself.',
-        ),
-      };
+      return unrecognized(field, ruleType, provider);
   }
+}
+
+/**
+ * A question neither the rules nor the AI recognised. In a text box it's a
+ * free-text question ("years of experience with X?", "security clearance?"),
+ * so it gets a Draft, or a Draft button when optional (design.md "Drafts").
+ * Anything else is yours to answer.
+ */
+function unrecognized(field: ExtractedField, fieldType: FieldType, provider: ProviderInputs): Answered {
+  const box = field.widget === 'text' || field.widget === 'textarea';
+  if (box && (field.control === 'text' || field.control === 'textarea')) {
+    return { fieldType: 'freeText.question', answer: draftAnswer(field, provider) };
+  }
+  return { fieldType, answer: skip('unrecognizedField', UNRECOGNIZED_FIX) };
 }
 
 /** Free-text questions: Drafts for required ones, a Draft button for optional ones (design.md "Drafts"). */
@@ -182,7 +193,7 @@ function draftAnswer(field: ExtractedField, provider: ProviderInputs): Answer {
   // When the whole Provider is unavailable, its own reason and fix say more.
   if (provider.state !== 'unavailable' && provider.draftsFailed.has(field.fieldId)) {
     return skip(
-      'providerUnavailable',
+      'draftFailed',
       'The AI did not write a Draft for this question. Click Draft to try again, or write your own.',
     );
   }
@@ -194,13 +205,6 @@ function providerNeeded(need: 'mapping' | 'draft', provider: ProviderInputs): An
     return skip(
       'providerUnavailable',
       provider.unavailableFix ?? 'The AI is unavailable. Answer this one yourself, or click Retry.',
-    );
-  }
-  // A Draft is still awaited after field mapping: a question the AI found is drafted in the next round.
-  if (provider.state === 'answered' && need === 'mapping') {
-    return skip(
-      'unrecognizedField',
-      'Neither the rules nor the AI recognised this question. Answer it yourself.',
     );
   }
   return { kind: 'provider', need };

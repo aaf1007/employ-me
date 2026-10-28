@@ -187,8 +187,15 @@ export function backgroundAnswer(
         : yesNo(profile.screening.nonCompete);
     case 'screening.workedHereBefore': {
       const before = ctx.employer === null ? undefined : profile.screening.workedHereBefore[ctx.employer];
-      // "A company missing here is asked, not guessed" (core screening.ts).
-      return before === undefined ? { kind: 'review', reason: 'askEachTime' } : yesNo(before);
+      if (before !== undefined) return yesNo(before);
+      // "A company missing here is asked, not guessed" (core screening.ts). It isn't "ask me each time":
+      // you never chose that, the Profile just doesn't list this company yet.
+      return skip(
+        'notInProfile',
+        ctx.employer === null
+          ? 'Answer this one yourself: employ-me couldn’t tell which company this is.'
+          : `Your Profile doesn’t say whether you’ve worked at ${ctx.employer} before. Answer it yourself, or add ${ctx.employer} under Profile → Screening answers.`,
+      );
     }
     case 'file.resume':
       return ctx.hasResume

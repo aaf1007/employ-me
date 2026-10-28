@@ -46,7 +46,7 @@ type WriteOrStep =
 const write = (w: Write): WriteOrStep => ({ kind: 'write', write: w });
 const skipped = (
   fix: string,
-  reason: 'noMatchingOption' | 'controlNotSupported' = 'controlNotSupported',
+  reason: 'noMatchingOption' | 'notInProfile' | 'controlNotSupported' = 'controlNotSupported',
 ): WriteOrStep => ({
   kind: 'step',
   step: { kind: 'skip', reason, fix },
@@ -61,8 +61,12 @@ function writeFor(value: Canonical, field: ExtractedField, fieldType: FieldType)
     case 'text':
     case 'textarea':
       // "Yes" only answers a yes/no question, not "What is the address…?"
+      // A text box has no options, so the reason is what the Profile lacks.
       if (value.kind === 'yesNo' && !YES_NO_QUESTION.test(normalizeLabel(field.label))) {
-        return skipped('This asks for more than a yes or no. Answer it yourself.', 'noMatchingOption');
+        return skipped(
+          'Your Profile has only a yes or no for this, and it asks for more. Answer it yourself.',
+          'notInProfile',
+        );
       }
       return write({ kind: 'text', text: asText(value, field), check: checkFor(fieldType, field) });
     case 'checkbox':

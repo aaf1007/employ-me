@@ -88,7 +88,7 @@ describe('My Information', () => {
     loadPage(usApply);
     expect(summary(plan(document, profile, [], { url: US_APPLY }))).toEqual([
       ['source--source', 'screening.howHeard', 'skip'],
-      ['previousWorker--candidateIsPreviousWorker', 'screening.workedHereBefore', 'review'],
+      ['previousWorker--candidateIsPreviousWorker', 'screening.workedHereBefore', 'skip'],
       ['country--country', 'address.country', 'write'],
       ['name--legalName--firstName', 'name.first', 'write'],
       ['name--legalName--middleName', 'name.middle', 'skip'],

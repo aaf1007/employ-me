@@ -194,9 +194,10 @@ describe('plan', () => {
     expect(next.draftRequests.map((d) => d.fieldId)).toEqual(['q']);
     expect(answered({ draftsReady: ['q'] }).fields[0]?.step).toMatchObject({ kind: 'review' });
     // A Draft the Provider couldn't write stops the wait: the field says so, with the fix.
+    // Live, Ramp (Ashby), 2026-10-28: it said "The AI is unavailable", though the AI had just mapped the form.
     expect(answered({ draftsFailed: ['q'] }).fields[0]?.step).toMatchObject({
       kind: 'skip',
-      reason: 'providerUnavailable',
+      reason: 'draftFailed',
     });
   });
 
@@ -263,6 +264,23 @@ describe('plan', () => {
     expect(plan(document, profile, [], { url: URL_US }).fields[0]?.step).toEqual({
       kind: 'review',
       reason: 'askEachTime',
+    });
+  });
+
+  // Live, 2026-10-28: a company the Profile doesn't list said "You asked to answer this one each time."
+  it('"worked here before" for a company the Profile doesn’t list says so, and how to add it', () => {
+    form(`
+      <fieldset><legend>Have you previously worked for Acme?</legend>
+        <label><input type="radio" name="w" value="Yes"> Yes</label>
+        <label><input type="radio" name="w" value="No"> No</label>
+      </fieldset>`);
+    const step = plan(document, profile, [], { url: URL_US }).fields[0]?.step;
+    expect(step).toMatchObject({ kind: 'skip', reason: 'notInProfile' });
+    expect(step).toHaveProperty('fix', expect.stringMatching(/worked at acme before.*Screening answers/));
+    const known = profileSchema.parse({ ...profile, screening: { workedHereBefore: { acme: false } } });
+    expect(plan(document, known, [], { url: URL_US }).fields[0]?.step).toMatchObject({
+      kind: 'write',
+      write: { kind: 'choose', labels: ['No'] },
     });
   });
 

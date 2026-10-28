@@ -58,7 +58,12 @@ const RULES: readonly Rule[] = [
   { fieldType: 'phone.countryCode', test: /\b(country|dial(ling)?|calling) code\b/ },
   { fieldType: 'phone.full', test: /\b(phone|mobile|cell|telephone)( number)?\b/ },
 
-  { fieldType: 'workAuth.usPerson', test: /\bu s person\b|\bexport control\w*\b|\bitar\b/ },
+  {
+    fieldType: 'workAuth.usPerson',
+    test: /\bu s person\b|\bexport control\w*\b|\bitar\b/,
+    // "For export control, please list any countries of which you are a citizen" asks for your citizenships.
+    not: /\b(list|name|which|what)\b.*\bcountries\b.*\bcitizen\w*\b|\bcountries of (citizenship|nationality)\b/,
+  },
   {
     fieldType: 'workAuth.sponsorship',
     test: /\bsponsor\w*\b|\b(require|need)\w* (an? )?(employment |work )?visa\b|\bimmigration (support|assistance)\b/,

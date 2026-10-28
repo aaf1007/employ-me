@@ -9,6 +9,7 @@ import {
 import type { CountryChoice } from '../classify';
 import { textTarget, type OptionTarget } from '../match';
 import type { ExtractedField } from '../types';
+import { exportControlAnswer } from './export-control';
 import { countryName, countryTarget } from './places';
 import {
   isChoice,
@@ -112,7 +113,7 @@ function workAuthAnswer(
         : option(textTarget(auth.status));
     case 'workAuth.citizenship': {
       if (auth.citizenships.length === 0) return missing('your citizenships');
-      if (!isChoice(field)) return text(auth.citizenships.map(countryName).join(', '));
+      if (!isChoice(field)) return citizenshipText(auth.citizenships, field);
       const targets = auth.citizenships.map(countryTarget);
       return { kind: 'answer', value: { kind: 'options', targets }, source: 'rules' };
     }
@@ -121,8 +122,22 @@ function workAuthAnswer(
         ? missing('an explanation of your Work Authorization')
         : text(auth.explanation);
     case 'workAuth.usPerson':
-      return auth.usPerson === undefined ? missing('whether you are a "U.S. person"') : yesNo(auth.usPerson);
+      return exportControlAnswer(field, auth, ctx.profile);
   }
+}
+
+/** Your citizenships, flagged when the box also asks for permanent residencies or dates the Profile doesn't hold. */
+function citizenshipText(citizenships: readonly CountryCode[], field: ExtractedField): Answer {
+  const asksMore =
+    /\bpermanent resident\w*\b|\bresidenc\w*\b|\bwhen\b|\bdates?\b|\bsince\b|\bobtained\b/.test(
+      normalizeLabel(field.label),
+    );
+  return {
+    kind: 'answer',
+    value: { kind: 'text', text: citizenships.map(countryName).join(', ') },
+    source: 'rules',
+    ...(asksMore ? { review: 'asksForMore' } : {}),
+  };
 }
 
 function salaryAnswer(field: ExtractedField, country: CountryCode, ctx: AnswerContext): Answer {
