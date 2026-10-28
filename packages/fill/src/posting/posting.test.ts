@@ -6,6 +6,7 @@ import { loadPage, render } from '../test-support/dom';
 import {
   canonicalPostingUrl,
   countriesIn,
+  genericPostingKey,
   parsePublicPosting,
   postingKeyFromUrl,
   publicApiRequest,
@@ -41,6 +42,37 @@ describe('Posting keys and URLs', () => {
       new URL('https://careers.example.com/jobs?gh_jid=123&utm_source=x&gh_src=y&lever-source=z#apply'),
     );
     expect(url.href).toBe('https://careers.example.com/jobs?gh_jid=123');
+  });
+});
+
+describe('Posting keys on company sites', () => {
+  const keyOf = (url: string) => genericPostingKey(new URL(url));
+
+  it('gives a job page and its apply step the same key', () => {
+    const page = keyOf('https://www.Example.com/careers/42/?utm_source=board');
+    expect(page).toEqual({ ats: 'generic', employer: 'example.com', jobId: '/careers/42' });
+    expect(keyOf('https://example.com/careers/42/apply#form')).toEqual(page);
+  });
+
+  it('keeps the query parameters that pick the job, in a fixed order', () => {
+    expect(
+      keyOf('https://jobs.example.org/apply?req=7&jobId=42&step=2&lang=fr&email=sam%40example.com'),
+    ).toEqual({
+      ats: 'generic',
+      employer: 'jobs.example.org',
+      jobId: '/?jobId=42&req=7',
+    });
+    expect(keyOf('https://jobs.example.org/apply?jobId=43')).not.toEqual(
+      keyOf('https://jobs.example.org/apply?jobId=42'),
+    );
+  });
+
+  it('uses the job id a Greenhouse embed gives', () => {
+    expect(keyOf('https://helsing.ai/jobs/4927641101?gh_jid=4927641101&gh_src=x')).toEqual({
+      ats: 'generic',
+      employer: 'helsing.ai',
+      jobId: '4927641101',
+    });
   });
 });
 

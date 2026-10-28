@@ -2,7 +2,7 @@
 // panel) calls plan() then execute(), feeds the Provider's answers and the
 // user's accepted Drafts back through plan(), and executes again.
 export * as act from './act';
-export { adapterFor, type AtsAdapter } from './adapters';
+export { adapterFor, postingPageText, type AtsAdapter } from './adapters';
 export type { ProfileView } from './answer';
 export { classifyField, type ClassifyContext, type CountryChoice } from './classify';
 export {
@@ -34,6 +34,7 @@ export {
 export {
   canonicalPostingUrl,
   countriesIn,
+  genericPostingKey,
   parsePublicPosting,
   postingKeyFromUrl,
   publicApiRequest,

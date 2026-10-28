@@ -45,13 +45,31 @@ export function postingKeyFromUrl(url: URL): PostingKey | null {
   }
 }
 
+/** The apply step at the end of a job page's path. */
+const APPLY_STEP = /\/(apply|apply-now|applynow|application|submit)$/i;
+/** Query parameters that say how a page is shown, or who is looking, not which job it is. */
+const NOT_THE_JOB =
+  /^(lang|locale|language|hl|step|page|tab|view|mode|embed|theme|sid|session.*|.*token|auth.*|code|e?mail|_.*)$/i;
+
 /**
- * A Posting on a company's own site. Greenhouse embeds say which job they
- * show with `?gh_jid=`; other sites are keyed by host and path.
+ * A Posting on a company's own site, which has no public job API to name it.
+ * Greenhouse embeds say which job they show with `?gh_jid=`. Other sites are
+ * keyed by host, path and the query parameters that pick the job, so the job
+ * page and its apply step (`/jobs/42` and `/jobs/42/apply`), and each step of
+ * one form, give the same key, and `?jobId=1` and `?jobId=2` don't.
  */
 export function genericPostingKey(url: URL): PostingKey {
-  const jobId = url.searchParams.get('gh_jid') ?? (url.pathname.replace(/\/+$/, '') || '/');
-  return key('generic', url.hostname.replace(/^www\./, ''), jobId);
+  const canonical = canonicalPostingUrl(url);
+  const host = canonical.hostname.replace(/^www\./, '');
+  const ghJid = canonical.searchParams.get('gh_jid');
+  if (ghJid !== null) return key('generic', host, ghJid);
+  const path = canonical.pathname.replace(/\/+$/, '').replace(APPLY_STEP, '') || '/';
+  const query = [...canonical.searchParams]
+    .filter(([name]) => !NOT_THE_JOB.test(name))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, value]) => `${name}=${value}`)
+    .join('&');
+  return key('generic', host, query === '' ? path : `${path}?${query}`);
 }
 
 /** Removes utm_* and other tracking parameters, and the fragment (research §7 "De-duplication"). */
