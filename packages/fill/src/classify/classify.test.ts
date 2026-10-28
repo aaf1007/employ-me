@@ -111,6 +111,8 @@ describe('Attestations and never-stored fields are found deterministically', () 
     ['Date of birth', 'never.dateOfBirth'],
     ['Social Insurance Number (SIN)', 'never.governmentId'],
     ['Professional references', 'never.reference'],
+    // A password question in a plain text box is still never filled.
+    ['Confirm your password', 'never.password'],
   ] as const)('%s → %s', (label, expected) => {
     expect(typeOf(label)).toBe(expected);
   });

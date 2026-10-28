@@ -26,7 +26,7 @@ import {
 import { RESUME_MIME_TYPES } from '../profile/resume';
 import type { SavedAnswer } from '../profile/saved-answer';
 import { err, ok, type Result } from '../result';
-import { fieldTypeSchema, mayGoToProvider, type FieldType } from '../taxonomy';
+import { fieldTypeSchema, mayGoToProvider, sensitiveQuestion, type FieldType } from '../taxonomy';
 
 // The Provider boundary (design.md "AI" and "Sensitive questions").
 //
@@ -37,7 +37,8 @@ import { fieldTypeSchema, mayGoToProvider, type FieldType } from '../taxonomy';
 //  - Field mapping carries labels and options only, never a Profile value and
 //    never a field's current value.
 //  - Fields the rules classified as Self-ID, Attestation or never-stored are
-//    refused.
+//    refused, and so are Saved Answers whose question reads like one. The
+//    Saved Answer schema refuses those already; this is the second line.
 //  - Draft context is an explicit whitelist of Profile facts.
 //  - Outputs from a Provider are parsed leniently (unknown keys stripped) and
 //    treated strictly as data.
@@ -47,6 +48,7 @@ import { fieldTypeSchema, mayGoToProvider, type FieldType } from '../taxonomy';
 
 export type BoundaryRefusal =
   | { readonly reason: 'sensitiveField'; readonly fieldId: string; readonly fieldType: FieldType }
+  | { readonly reason: 'sensitiveQuestion'; readonly savedAnswerId: string }
   | { readonly reason: 'invalid'; readonly message: string };
 
 // ---------------------------------------------------------------- inputs
@@ -82,13 +84,15 @@ export function toProviderField(
 
 /** Saved Answers go to field mapping as questions only, never answers. */
 export const providerSavedQuestionSchema = z
-  .strictObject({ id: idSchema, question: z.string().max(2000) })
+  .strictObject({ id: idSchema, question: z.string().max(2000).refine(isOrdinaryQuestion) })
   .brand<'ProviderSavedQuestion'>();
 export type ProviderSavedQuestion = z.infer<typeof providerSavedQuestionSchema>;
 
 export function toProviderSavedQuestion(
   saved: Pick<SavedAnswer, 'id' | 'question'>,
 ): Result<ProviderSavedQuestion, BoundaryRefusal> {
+  if (!isOrdinaryQuestion(saved.question))
+    return err({ reason: 'sensitiveQuestion', savedAnswerId: saved.id });
   return parseInput(providerSavedQuestionSchema, { id: saved.id, question: saved.question });
 }
 
@@ -141,7 +145,12 @@ export const draftContextSchema = z
     posting: draftPostingSchema,
     facts: draftFactsSchema,
     savedAnswers: z
-      .array(z.strictObject({ question: z.string().max(2000), answer: z.string().max(20_000) }))
+      .array(
+        z.strictObject({
+          question: z.string().max(2000).refine(isOrdinaryQuestion),
+          answer: z.string().max(20_000),
+        }),
+      )
       .max(500),
   })
   .refine((c) => c.mode === 'write' || (c.userDraft ?? '').trim() !== '', {
@@ -168,7 +177,11 @@ export interface DraftRequest {
   readonly employer?: EmployerKey;
 }
 
-/** The only way to build a Draft context. Copies whitelisted facts field by field. */
+/**
+ * The only way to build a Draft context. Copies whitelisted facts field by
+ * field, and leaves out any Saved Answer whose question is Self-ID, an
+ * Attestation or never-stored.
+ */
 export function toDraftContext(
   source: DraftSource,
   request: DraftRequest,
@@ -192,10 +205,12 @@ export function toDraftContext(
       skills: background.skills,
       languages: background.languages,
     },
-    savedAnswers: source.savedAnswers.map((saved) => ({
-      question: saved.question,
-      answer: (employer === undefined ? undefined : saved.employerOverrides[employer]) ?? saved.answer,
-    })),
+    savedAnswers: source.savedAnswers
+      .filter((saved) => isOrdinaryQuestion(saved.question))
+      .map((saved) => ({
+        question: saved.question,
+        answer: (employer === undefined ? undefined : saved.employerOverrides[employer]) ?? saved.answer,
+      })),
   });
 }
 
@@ -281,6 +296,11 @@ export const parseResumeOutputSchema = z.object({ extract: resumeExtractSchema }
 export type ParseResumeOutput = z.infer<typeof parseResumeOutputSchema>;
 
 // --------------------------------------------------------------- helpers
+
+/** Not Self-ID, not an Attestation, not never-stored (taxonomy/sensitive.ts). */
+function isOrdinaryQuestion(question: string): boolean {
+  return sensitiveQuestion(question) === null;
+}
 
 function parseInput<S extends z.ZodType>(schema: S, value: unknown): Result<z.infer<S>, BoundaryRefusal> {
   const parsed = schema.safeParse(value);

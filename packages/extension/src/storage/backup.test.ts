@@ -97,6 +97,19 @@ describe('JSON backup', () => {
     expect(failure(await store.importBackup(tampered)).reason).toBe('invalidInput');
   });
 
+  it('refuses a backup that holds a Saved Answer to a Self-ID or never-stored question', async () => {
+    const { store } = await filledStore();
+    const backup = value(await store.exportBackup());
+    for (const question of ['Are you a protected veteran?', 'SSN', 'Date of birth']) {
+      const tampered = {
+        ...backup,
+        savedAnswers: backup.savedAnswers.map((s) => ({ ...s, question, source: 'import' })),
+      };
+      expect(failure(await store.importBackup(tampered)).reason, question).toBe('invalidInput');
+    }
+    expect(value(await store.listSavedAnswers()).map((s) => s.question)).toEqual(['Why us?']);
+  });
+
   it('refuses never-stored data, a damaged Resume file and files that are not backups', async () => {
     const { store } = await filledStore();
     const backup = value(await store.exportBackup());

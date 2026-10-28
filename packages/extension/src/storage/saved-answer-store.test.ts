@@ -66,6 +66,25 @@ describe('Saved Answers', () => {
     expect(value(await store.listSavedAnswers())).toHaveLength(1);
   });
 
+  it('refuses a question that is Self-ID, an Attestation or never-stored, typed in or edited', async () => {
+    const { store } = await createTestStore();
+    for (const question of ['What is your race?', 'Social Security Number', 'Password', 'Date of birth']) {
+      const error = failure(await store.addSavedAnswer({ question, answer: 'x' }));
+      expect(error.reason, question).toBe('invalidInput');
+      expect(error.issues?.map((issue) => issue.path)).toEqual(['question']);
+    }
+    const saved = value(await store.addSavedAnswer({ question: 'Why us?', answer: 'Because.' }));
+    expect(failure(await store.updateSavedAnswer(saved.id, { question: 'What is your SIN?' })).reason).toBe(
+      'invalidInput',
+    );
+    expect(
+      failure(
+        await store.saveAcceptedDraft({ question: 'Gender', answer: 'x', fieldType: 'freeText.question' }),
+      ).reason,
+    ).toBe('invalidInput');
+    expect(value(await store.listSavedAnswers()).map((s) => s.question)).toEqual(['Why us?']);
+  });
+
   // Untyped input (runtime messages, backups) is covered in router.test.ts and backup.test.ts.
   it('cannot be created from a Self-ID, Attestation or never-stored field', () => {
     expectTypeOf<AcceptedDraft['fieldType']>().toEqualTypeOf<OrdinaryFieldType>();

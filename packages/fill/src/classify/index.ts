@@ -1,17 +1,20 @@
 import {
+  detectSensitive,
   labelsMatch,
   normalizeLabel,
   sensitivityOf,
   type CountryCode,
   type FieldType,
   type SavedAnswer,
+  type SelfIdTopic,
 } from '@employ-me/core';
 import { countriesNamedIn } from '../posting';
 import type { Classification, ExtractedField, FillContext } from '../types';
 import { autocompleteType, ruleFor } from './rules';
-import { detectSensitive, type SelfIdTopic } from './sensitive';
 
-export { isSelfIdSection, selfIdTopic, type SelfIdTopic } from './sensitive';
+// The Self-ID, Attestation and never-stored detection lives in core
+// (taxonomy/sensitive.ts), so Saved Answers are refused by the same rules.
+export { isSelfIdSection, selfIdTopic, type SelfIdTopic } from '@employ-me/core';
 export { LANGUAGES } from './rules';
 
 /** Which country's Work Authorization and Self-ID Answers apply (design.md "Country-specific answers"). */

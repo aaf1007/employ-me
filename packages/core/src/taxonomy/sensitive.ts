@@ -1,9 +1,13 @@
-import type { FieldType } from '@employ-me/core';
+import { normalizeLabel } from '../labels/normalize';
+import type { FieldType } from './field-types';
 
-// Deterministic detection of the fields that must never be guessed at or sent
-// to a Provider: never-stored data, Attestations and Self-ID questions
-// (design.md "Sensitive questions"; research §6 "Always handled by fixed
-// rules"). Runs on normalized text: lower case, punctuation turned to spaces.
+// Deterministic detection of the questions that must never be guessed at,
+// stored as a Saved Answer or sent to a Provider: never-stored data,
+// Attestations and Self-ID questions (design.md "Sensitive questions";
+// research §6 "Always handled by fixed rules"). The fill engine runs it on
+// every field; core runs it on every Saved Answer's question, so the same
+// rules decide both. Runs on normalized text: lower case, punctuation turned
+// to spaces.
 //
 // A question about a fact or about what you're willing to do is not an
 // Attestation (glossary), so "Will you consent to a background check?" is
@@ -24,6 +28,8 @@ export type Sensitive =
   | { readonly kind: 'selfId'; readonly topic: SelfIdTopic };
 
 const NEVER: ReadonlyArray<readonly [FieldType, RegExp]> = [
+  // A password box is found by its type too; this catches a typed question.
+  ['never.password', /\b(password|passcode|passphrase|mot de passe)\b/],
   [
     'never.governmentId',
     /\b(sin|ssn|social (security|insurance) (number|no)|national insurance number|passport number|tax (id|identification) number)\b/,
@@ -130,4 +136,19 @@ export function selfIdTopic(label: string): SelfIdTopic | null {
 /** True for headings of Self-ID blocks, e.g. "Voluntary Self-Identification". */
 export function isSelfIdSection(section: string): boolean {
   return SELF_ID_SECTION.test(section);
+}
+
+/**
+ * What a question on its own (no options, section or control) is, when it is
+ * sensitive. Saved Answers use it: their questions have nothing else around
+ * them.
+ */
+export function sensitiveQuestion(question: string): Sensitive | null {
+  return detectSensitive({
+    label: normalizeLabel(question),
+    section: '',
+    description: '',
+    options: [],
+    isPassword: false,
+  });
 }

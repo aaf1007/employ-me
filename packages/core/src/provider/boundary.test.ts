@@ -3,12 +3,16 @@ import type { FieldDescriptor } from '../fields/descriptor';
 import { profileSchema } from '../profile/profile';
 import { helperRequestSchema } from '../protocol/messages';
 import { FIELD_TYPE_IDS, sensitivityOf } from '../taxonomy';
+import type { SavedAnswer } from '../profile/saved-answer';
 import {
+  draftContextSchema,
   draftSchema,
   mapFieldsInputSchema,
   mapFieldsOutputSchema,
+  providerSavedQuestionSchema,
   toDraftContext,
   toProviderField,
+  toProviderSavedQuestion,
   type MapFieldsInput,
   type ProviderField,
 } from './boundary';
@@ -89,6 +93,12 @@ describe('mapFieldsInputSchema', () => {
 });
 
 describe('toDraftContext', () => {
+  const base = {
+    employerOverrides: {},
+    source: 'manual',
+    createdAt: '2026-10-27T00:00:00Z',
+    updatedAt: '2026-10-27T00:00:00Z',
+  } as const;
   const request = {
     question: { label: 'Why us?', required: true },
     mode: 'write',
@@ -113,6 +123,60 @@ describe('toDraftContext', () => {
   it('needs your own draft in polish mode', () => {
     expect(toDraftContext(profile, { ...request, mode: 'polish' }).ok).toBe(false);
   });
+
+  // Second line of defence: savedAnswerSchema refuses these questions, but a
+  // caller can build SavedAnswer objects without parsing them.
+  it('leaves out Saved Answers whose question is Self-ID, an Attestation or never-stored', () => {
+    const unparsed = (question: string, answer: string): SavedAnswer => ({
+      ...base,
+      id: question,
+      question,
+      answer,
+    });
+    const source = {
+      ...profile,
+      savedAnswers: [
+        ...profile.savedAnswers,
+        unparsed('What is your race?', 'SENTINEL-RACE'),
+        unparsed('Do you identify as transgender?', 'SENTINEL-SELFID'),
+        unparsed('Social Security Number', 'SENTINEL-SSN'),
+        unparsed('Password', 'SENTINEL-PASSWORD'),
+        unparsed('Date of birth', 'SENTINEL-DOB'),
+        unparsed('I certify that the above is true', 'SENTINEL-ATTESTATION'),
+      ],
+    };
+    const result = toDraftContext(source, request);
+    expect(result.ok).toBe(true);
+    expect(JSON.stringify(result)).not.toContain('SENTINEL');
+    expect(result.ok && result.value.savedAnswers).toEqual([{ question: 'Why us?', answer: 'Acme answer' }]);
+  });
+
+  it('refuses a Draft context carrying a sensitive Saved Answer when parsed', () => {
+    const context = toDraftContext(profile, request);
+    if (!context.ok) throw new Error('fixture should build');
+    const smuggled = {
+      ...context.value,
+      savedAnswers: [{ question: 'What is your SIN?', answer: 'SENTINEL' }],
+    };
+    expect(draftContextSchema.safeParse(smuggled).success).toBe(false);
+  });
+});
+
+describe('toProviderSavedQuestion', () => {
+  it('sends an ordinary question', () => {
+    expect(toProviderSavedQuestion({ id: 's1', question: 'Why us?' }).ok).toBe(true);
+  });
+
+  it.each(['What is your gender?', 'SSN', 'Password', 'Birthday', 'Signature'])(
+    'refuses the sensitive question %j',
+    (question) => {
+      expect(toProviderSavedQuestion({ id: 's1', question })).toEqual({
+        ok: false,
+        error: { reason: 'sensitiveQuestion', savedAnswerId: 's1' },
+      });
+      expect(providerSavedQuestionSchema.safeParse({ id: 's1', question }).success).toBe(false);
+    },
+  );
 });
 
 describe('helperRequestSchema', () => {
