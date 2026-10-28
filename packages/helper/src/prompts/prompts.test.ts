@@ -164,6 +164,13 @@ describe('parseResume prompt', () => {
     expect(JSON.stringify(task.schema)).not.toMatch(/workAuthorization|selfId|salary/);
     expect(task.prompt).toContain('<resume>');
   });
+
+  // Live, Codex, 2026-10-28: "BASc" came back with no degree level, as "not clear".
+  it('says a degree abbreviation makes its level clear', () => {
+    const { task } = parseResumePrompt('Sam Lee\nBASc, Computer Engineering');
+    expect(task.system).toMatch(/BASc/);
+    expect(task.system).toMatch(/MSc/);
+  });
 });
 
 describe('dataBlock', () => {

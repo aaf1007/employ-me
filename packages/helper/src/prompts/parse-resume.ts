@@ -64,7 +64,7 @@ export const PARSE_RESUME_SYSTEM = [
   'Phone: countryCode is the calling code such as +1; number is the rest, digits and spaces only. Use type mobile unless the resume says otherwise.',
   'Links are full URLs starting with https:// (linkedin, github, and portfolio for a personal site).',
   'Work history description: the bullet points as written, one per line.',
-  'Education: degree as written; degreeLevel only when the degree makes it clear; gpa only when both the value and the scale are given (3.8/4.0).',
+  'Education: degree as written; degreeLevel only when the degree makes it clear, which its usual abbreviation does (BA, BSc, BASc, BEng, BMath and BCom are bachelor; MA, MSc, MEng and MBA are master; PhD is doctorate); gpa only when both the value and the scale are given (3.8/4.0).',
   'Skills: short names, as written. Languages: spoken languages only, never programming languages, and only with a level the resume states.',
   UNTRUSTED_DATA_RULE,
 ].join('\n');
