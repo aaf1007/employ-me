@@ -62,3 +62,38 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - research §10's "can `claude` started by Chrome read the Keychain?": yes, given `USER`, which launchd passes to GUI apps.
 - pdf.js prints warnings with `console.log`: keep `verbosity: 0`; `host.ts` also points the console at stderr.
 - A `win32` layout of a POSIX temp path is a relative path: one test wrote files into the repo root before it was fixed. Use real local paths in install tests.
+
+## 2026-10-28 · Extension data layer and dashboard (packages/extension)
+
+**Landed**
+- Storage: IndexedDB behind a typed `DataStore` (`src/storage/`). The Profile's own fields, Resumes (metadata, plus the file as a Blob), Saved Answers, Applications (Snapshots in their own store, so the Tracker list never loads every job description) and Settings. Every write goes through core's schemas and every read is parsed back; damaged data is `corrupt`, IndexedDB failures `storageFailed`, each with a fix. Writes announce what changed on a BroadcastChannel, so open pages refresh (a Snapshot recorded from the side panel shows up live in the Tracker). Full JSON backup and restore, Resume files included (base64), all-or-nothing.
+- Background message API for the side panel and the content script (`src/messaging/background.ts`; call it with `callBackground` from `background-client.ts`). Both directions are parsed, and each message says who may send it:
+  - Pages and content scripts: `profile.get`, `settings.get`, `resumes.getFile {resumeId?}` (base64), `applications.findByPosting {key}`, `applications.recordSubmission {source, posting, snapshot}`, `savedAnswers.saveAcceptedDraft {question, answer, fieldType, employer?}`.
+  - Extension pages only, so a job site can't spend your plan: `helper.health`, `helper.parseResume {resumeId?}`, `helper.mapFields {input}`, `helper.draftAnswer {input}`. Provider and model come from Settings; `input` must be built with core's `to*` functions (the request type is the schema's branded output).
+- Helper client (`src/helper/`): `connectNative` behind `HelperTransport`. One warm port, ids matched to answers, per-type timeouts, and an idle close after 5 minutes. Chrome's disconnect messages map to `helperNotInstalled` or `helperDisconnected` with their fixes. `wxt build --mode e2e` swaps in a scriptable in-memory helper; production bundles don't contain it.
+- Dashboard: setup (Resume, read through the helper, review with pre-filled fields highlighted, then countries, Work Authorization per country, preferences, salary per country in its currency, screening, Self-ID defaulting to decline; each step saves), Profile (every section editable, one save bar), Resumes (labelled, one default), Saved Answers (search, edit, delete, per-company overrides), Tracker (search, Status and company filters, Status, notes, Snapshot view, add by hand with the already-applied warning, CSV export, CSV import with column mapping), Settings (Provider and model, helper health with plan quota, backup and restore). `resumeUnreadable` asks for a readable copy instead of offering Retry.
+- e2e: `test.use({ helper: 'inMemory' })` loads the test build (documented in CLAUDE.md). Specs cover setup, the Tracker, CSV round trips and backup, plus setup against the real helper's fake Provider and `fail:resumeUnreadable`.
+
+**Core changes** (own commits)
+- Guardrail gap closed: a Saved Answer from a form field (`source: 'draft'`) must carry `fieldType: OrdinaryFieldType`. Self-ID, Attestation and never-stored types fail to compile and fail to parse (storage reads, backups, runtime messages). The taxonomy's spec helpers keep sensitivity as a literal type, so `FieldTypeWith<S>` / `OrdinaryFieldType` / `ordinaryFieldTypeSchema` derive from `FIELD_TYPES`.
+- Optional `model` (`modelIdSchema`: no leading `-`, no spaces or shell text) on mapFields, draftAnswer and parseResume requests.
+
+**Decisions the docs didn't cover**
+- The dashboard uses the data API directly (same origin as the background); the side panel and content scripts go through background messages. Runtime messages are JSON, so Resume bytes cross as base64.
+- Accepting a Draft for a question you already have: on one employer's form it becomes that employer's override (dropped again if it equals the main answer); otherwise it replaces the answer. Questions are unique by `labelsMatch`.
+- Applications added by hand or imported get a Posting key from known ATS URLs (board slug, job id), else `generic` / company slug / host and path. Rows without a company or an http(s) URL aren't imported (core's Posting requires a URL); the preview lists them by row. A missing applied date becomes today's, with a warning.
+- CSV cells that start like a spreadsheet formula get a leading apostrophe on export, and exactly one is removed on import, so round trips are exact.
+- Setup requires an answered Work Authorization (authorized, sponsorship) for each country you add. Core's address needs a street, so a Resume that gives only a city stops the review step there.
+- Downloads are plain links you click, and file inputs are cleared by remounting them: `.click()` and assigning `.value` stay banned in the extension too.
+
+**Left**
+- The helper doesn't read the request's `model` yet: it takes models from its own `config.json`. Until it does, the Settings model field is saved and sent but has no effect. The helper fix is small (pass `request.model` to the Provider in `dispatch`).
+- Manual and imported Posting keys duplicate a little of what fill's `postingKeyFromUrl` will do; switch `src/tracker/posting-key.ts` to it once it lands, so both always agree.
+- The side-panel Fill flow (not built here) should use the messages above, and send `applications.findByPosting` when a Posting opens.
+- No status history or reminders (design.md says none for v1).
+
+**Gotchas**
+- Chrome styles extension pages' `body` at 75% of `system-ui`, so text came out at 10.5px. `src/ui/styles.css` now resets `body` to `:root`'s font; this fixes the side panel too.
+- eslint-plugin-react-hooks 7 includes the React Compiler rules (`refs`, `purity`, `set-state-in-effect`, …). Load data in effects with the `setState` inside the promise callback, and call `new Date()` / `crypto.randomUUID()` only in event handlers.
+- fake-indexeddb 6.2.6 (dev dependency) backs the data layer's unit tests. Real Chrome storage is covered by e2e (Blob round trip in the backup spec).
+- In e2e, wait for the list after a delete before clicking the next row: it reloads from the broadcast, and a stale count races it.
