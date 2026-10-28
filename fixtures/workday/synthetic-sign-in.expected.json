@@ -1,0 +1,56 @@
+{
+  "fixture": "workday/synthetic-sign-in",
+  "ats": "workday",
+  "synthetic": true,
+  "posting": {},
+  "fields": [
+    {
+      "fieldId": "email",
+      "label": "Email Address",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "password",
+      "label": "Password",
+      "fieldType": "never.password",
+      "outcome": "couldNotFill",
+      "reason": "neverStored",
+      "value": ""
+    },
+    {
+      "fieldId": "verifyPassword",
+      "label": "Verify New Password",
+      "fieldType": "never.password",
+      "outcome": "couldNotFill",
+      "reason": "neverStored",
+      "value": ""
+    },
+    {
+      "fieldId": "createAccountCheckbox",
+      "label": "Yes, I have read and consent to the terms and conditions",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email Address",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "password",
+      "label": "Password",
+      "fieldType": "never.password",
+      "outcome": "couldNotFill",
+      "reason": "neverStored",
+      "value": ""
+    }
+  ]
+}

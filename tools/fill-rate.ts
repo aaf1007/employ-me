@@ -14,12 +14,13 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const FIXTURES = path.join(ROOT, 'fixtures');
 const START = '<!-- fill-rate:start -->';
 const END = '<!-- fill-rate:end -->';
-const ORDER = ['greenhouse', 'lever', 'ashby', 'generic'] as const;
+const ORDER = ['greenhouse', 'lever', 'ashby', 'workday', 'generic'] as const;
 
 // Just what the table counts. The full shape (e2e/expected.ts) is checked by
 // the specs; it imports core, which plain node can't load from source.
 const expectedFileSchema = z.object({
   ats: z.enum(ORDER),
+  synthetic: z.literal(true).optional(),
   fields: z.array(z.object({ outcome: z.enum(['filled', 'needsReview', 'couldNotFill']) })),
 });
 type ExpectedFile = z.infer<typeof expectedFileSchema>;
@@ -27,6 +28,7 @@ const NAMES: Record<(typeof ORDER)[number], string> = {
   greenhouse: 'Greenhouse',
   lever: 'Lever',
   ashby: 'Ashby',
+  workday: 'Workday',
   generic: 'Generic fallback',
 };
 
@@ -60,7 +62,10 @@ function render(files: readonly ExpectedFile[]): string {
     const review = count('needsReview');
     const couldNot = count('couldNotFill');
     const rate = fields.length === 0 ? '–' : `${Math.round((100 * filled) / fields.length)}%`;
-    return `| ${NAMES[ats]} | ${forms.length} | ${fields.length} | ${filled} | ${review} | ${couldNot} | ${rate} |`;
+    // Hand-built fixtures prove the adapter against our reading of the ATS, not the ATS itself.
+    const unverified = forms.length > 0 && forms.every((f) => f.synthetic === true);
+    const name = unverified ? `${NAMES[ats]} (synthetic forms: unverified until a live pass)` : NAMES[ats];
+    return `| ${name} | ${forms.length} | ${fields.length} | ${filled} | ${review} | ${couldNot} | ${rate} |`;
   });
   return [
     "| ATS | Forms | Fields | Filled | Needs review | Couldn't fill | Fill rate |",

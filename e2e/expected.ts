@@ -19,7 +19,9 @@ export type ExpectedField = z.infer<typeof expectedFieldSchema>;
 
 export const expectedFileSchema = z.strictObject({
   fixture: z.string(),
-  ats: z.enum(['greenhouse', 'lever', 'ashby', 'generic']),
+  ats: z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'generic']),
+  /** Hand-built, never recorded (Workday's forms sit behind sign-in): unverified until a live pass. */
+  synthetic: z.literal(true).optional(),
   posting: z.strictObject({
     title: z.string().optional(),
     company: z.string().optional(),

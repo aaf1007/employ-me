@@ -1,0 +1,240 @@
+{
+  "fixture": "workday/synthetic-ca-apply",
+  "ats": "workday",
+  "synthetic": true,
+  "posting": {},
+  "fields": [
+    {
+      "fieldId": "sourcePrompt",
+      "label": "How Did You Hear About Us?",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "RBC Careers Site"
+    },
+    {
+      "fieldId": "previousWorker",
+      "label": "Have you previously worked for RBC?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "needsReview",
+      "reason": "askEachTime",
+      "value": ""
+    },
+    {
+      "fieldId": "countryDropdown",
+      "label": "Country",
+      "fieldType": "address.country",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada"
+    },
+    {
+      "fieldId": "legalNameSection_firstName",
+      "label": "Given Name(s)",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "legalNameSection_lastName",
+      "label": "Family Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "preferredNameCheckbox",
+      "label": "I have a preferred name",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "checked"
+    },
+    {
+      "fieldId": "addressSection_addressLine1",
+      "label": "Address Line 1",
+      "fieldType": "address.line1",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "100 Queen St W"
+    },
+    {
+      "fieldId": "addressSection_city",
+      "label": "City",
+      "fieldType": "address.city",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto"
+    },
+    {
+      "fieldId": "addressSection_countryRegion",
+      "label": "Province or Territory",
+      "fieldType": "address.region",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Ontario"
+    },
+    {
+      "fieldId": "addressSection_postalCode",
+      "label": "Postal Code",
+      "fieldType": "address.postalCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "M5H 2N2"
+    },
+    {
+      "fieldId": "email",
+      "label": "Email Address",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phone-device-type",
+      "label": "Phone Device Type",
+      "fieldType": "phone.type",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Mobile"
+    },
+    {
+      "fieldId": "countryPhoneCode",
+      "label": "Country Phone Code",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada (+1)"
+    },
+    {
+      "fieldId": "phone-number",
+      "label": "Phone Number",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "416 555 0123"
+    },
+    {
+      "fieldId": "phone-extension",
+      "label": "Phone Extension",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "preferredNameSection_firstName",
+      "label": "Preferred Given Name(s)",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sammy"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10001",
+      "label": "Are you legally eligible to work in Canada?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10002",
+      "label": "Will you now or in the future require sponsorship to work in Canada?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10003",
+      "label": "Are you currently employed by RBC or one of its subsidiaries?",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10004",
+      "label": "What is your notice period?",
+      "fieldType": "pref.noticePeriod",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2 weeks"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10005",
+      "label": "Do you speak French?",
+      "fieldType": "language.proficiency",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10006",
+      "label": "Which work arrangement do you prefer?",
+      "fieldType": "pref.workModel",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Hybrid"
+    },
+    {
+      "fieldId": "3b0c1d2e3f4a10007",
+      "label": "What are your salary expectations (CAD)?",
+      "fieldType": "pref.salary",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "120,000 - 140,000 CAD per year"
+    },
+    {
+      "fieldId": "gender",
+      "label": "Gender",
+      "fieldType": "selfId.ca.genderIdentity",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Man"
+    },
+    {
+      "fieldId": "9c8d7e6f5a4b10001",
+      "label": "Do you identify as an Indigenous person (First Nations, Métis or Inuit)?",
+      "fieldType": "selfId.ca.indigenous",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No"
+    },
+    {
+      "fieldId": "9c8d7e6f5a4b10002",
+      "label": "Do you identify as a member of a visible minority group?",
+      "fieldType": "selfId.ca.visibleMinority",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "9c8d7e6f5a4b10003",
+      "label": "Do you identify as a person with a disability?",
+      "fieldType": "selfId.ca.disability",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No"
+    },
+    {
+      "fieldId": "9c8d7e6f5a4b10004",
+      "label": "Do you identify as a member of the 2SLGBTQIA+ community?",
+      "fieldType": "selfId.other",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I do not wish to answer"
+    },
+    {
+      "fieldId": "agreementCheckbox",
+      "label": "Yes, I have read and consent to the terms and conditions",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    }
+  ]
+}

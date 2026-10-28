@@ -1,0 +1,613 @@
+{
+  "fixture": "workday/synthetic-us-apply",
+  "ats": "workday",
+  "synthetic": true,
+  "posting": {
+    "title": "Software Engineer, OpenShell",
+    "company": "NVIDIA USA",
+    "location": "US, CA, Remote, United States of America",
+    "country": "US"
+  },
+  "fields": [
+    {
+      "fieldId": "source--source",
+      "label": "How Did You Hear About Us?",
+      "fieldType": "screening.howHeard",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Company Website"
+    },
+    {
+      "fieldId": "previousWorker--candidateIsPreviousWorker",
+      "label": "Have you previously worked for NVIDIA as an employee or contractor?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "needsReview",
+      "reason": "askEachTime",
+      "value": ""
+    },
+    {
+      "fieldId": "country--country",
+      "label": "Country",
+      "fieldType": "address.country",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada"
+    },
+    {
+      "fieldId": "name--legalName--firstName",
+      "label": "First Name",
+      "fieldType": "name.first",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sam"
+    },
+    {
+      "fieldId": "name--legalName--middleName",
+      "label": "Middle Name",
+      "fieldType": "name.middle",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "name--legalName--lastName",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "name--preferredCheck",
+      "label": "I have a preferred name",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "checked"
+    },
+    {
+      "fieldId": "address--addressLine1",
+      "label": "Address Line 1",
+      "fieldType": "address.line1",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "100 Queen St W"
+    },
+    {
+      "fieldId": "address--city",
+      "label": "City",
+      "fieldType": "address.city",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto"
+    },
+    {
+      "fieldId": "address--countryRegion",
+      "label": "State",
+      "fieldType": "address.region",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Ontario"
+    },
+    {
+      "fieldId": "address--postalCode",
+      "label": "Postal Code",
+      "fieldType": "address.postalCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "M5H 2N2"
+    },
+    {
+      "fieldId": "emailAddress--emailAddress",
+      "label": "Email Address",
+      "fieldType": "contact.email",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam.lee@example.com"
+    },
+    {
+      "fieldId": "phoneNumber--phoneType",
+      "label": "Phone Device Type",
+      "fieldType": "phone.type",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Mobile"
+    },
+    {
+      "fieldId": "phoneNumber--countryPhoneCode",
+      "label": "Country Phone Code",
+      "fieldType": "phone.countryCode",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Canada (+1)"
+    },
+    {
+      "fieldId": "phoneNumber--phoneNumber",
+      "label": "Phone Number",
+      "fieldType": "phone.number",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "416 555 0123"
+    },
+    {
+      "fieldId": "phoneNumber--extension",
+      "label": "Phone Extension",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "phoneNumber--smsOptIn",
+      "label": "Yes, I agree to receive text messages (SMS) from NVIDIA about my application.",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "name--preferredName--firstName",
+      "label": "First Name",
+      "fieldType": "name.preferred",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Sammy"
+    },
+    {
+      "fieldId": "name--preferredName--lastName",
+      "label": "Last Name",
+      "fieldType": "name.last",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Lee"
+    },
+    {
+      "fieldId": "skills",
+      "label": "Type to Add Skills",
+      "fieldType": "skill.list",
+      "outcome": "couldNotFill",
+      "reason": "controlNotSupported",
+      "value": ""
+    },
+    {
+      "fieldId": "file-upload-input-ref",
+      "label": "Resume/CV",
+      "fieldType": "file.resume",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "sam-lee-resume.pdf"
+    },
+    {
+      "fieldId": "socialNetworkAccounts--linkedInAccount",
+      "label": "LinkedIn",
+      "fieldType": "link.linkedin",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "https://www.linkedin.com/in/sam-lee-example"
+    },
+    {
+      "fieldId": "socialNetworkAccounts--twitterAccount",
+      "label": "Twitter",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "socialNetworkAccounts--facebookAccount",
+      "label": "Facebook",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "workExperience--jobTitle--0",
+      "label": "Job Title",
+      "fieldType": "work.title",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Software Engineer"
+    },
+    {
+      "fieldId": "workExperience--companyName--0",
+      "label": "Company",
+      "fieldType": "work.employer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Northwind Analytics"
+    },
+    {
+      "fieldId": "workExperience--location--0",
+      "label": "Location",
+      "fieldType": "work.location",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Toronto, ON"
+    },
+    {
+      "fieldId": "workExperience--currentlyWorkHere--0",
+      "label": "I currently work here",
+      "fieldType": "work.current",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "checked"
+    },
+    {
+      "fieldId": "workExperience--startDate-month--0",
+      "label": "From (Month)",
+      "fieldType": "work.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "05"
+    },
+    {
+      "fieldId": "workExperience--startDate-year--0",
+      "label": "From (Year)",
+      "fieldType": "work.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2023"
+    },
+    {
+      "fieldId": "workExperience--roleDescription--0",
+      "label": "Role Description",
+      "fieldType": "work.description",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "workExperience--jobTitle--1",
+      "label": "Job Title",
+      "fieldType": "work.title",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Software Engineering Intern"
+    },
+    {
+      "fieldId": "workExperience--companyName--1",
+      "label": "Company",
+      "fieldType": "work.employer",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Contoso Labs"
+    },
+    {
+      "fieldId": "workExperience--location--1",
+      "label": "Location",
+      "fieldType": "work.location",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "workExperience--currentlyWorkHere--1",
+      "label": "I currently work here",
+      "fieldType": "work.current",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "workExperience--startDate-month--1",
+      "label": "From (Month)",
+      "fieldType": "work.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "01"
+    },
+    {
+      "fieldId": "workExperience--startDate-year--1",
+      "label": "From (Year)",
+      "fieldType": "work.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2022"
+    },
+    {
+      "fieldId": "workExperience--endDate-month--1",
+      "label": "To (Month)",
+      "fieldType": "work.endDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "08"
+    },
+    {
+      "fieldId": "workExperience--endDate-year--1",
+      "label": "To (Year)",
+      "fieldType": "work.endDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2022"
+    },
+    {
+      "fieldId": "workExperience--roleDescription--1",
+      "label": "Role Description",
+      "fieldType": "work.description",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "education--school--0",
+      "label": "School or University",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Waterloo"
+    },
+    {
+      "fieldId": "education--degree--0",
+      "label": "Degree",
+      "fieldType": "edu.degree",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Bachelor's Degree"
+    },
+    {
+      "fieldId": "education--fieldOfStudy--0",
+      "label": "Field of Study",
+      "fieldType": "edu.discipline",
+      "outcome": "couldNotFill",
+      "reason": "controlNotSupported",
+      "value": ""
+    },
+    {
+      "fieldId": "education--gradeAverage--0",
+      "label": "Overall Result (GPA)",
+      "fieldType": "edu.gpa",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "3.7"
+    },
+    {
+      "fieldId": "education--firstYearAttended-year--0",
+      "label": "From (Year)",
+      "fieldType": "edu.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2018"
+    },
+    {
+      "fieldId": "education--lastYearAttended-year--0",
+      "label": "To (Actual or Expected) (Year)",
+      "fieldType": "edu.endDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2023"
+    },
+    {
+      "fieldId": "education--school--1",
+      "label": "School or University",
+      "fieldType": "edu.school",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "University of Toronto"
+    },
+    {
+      "fieldId": "education--degree--1",
+      "label": "Degree",
+      "fieldType": "edu.degree",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Master's Degree"
+    },
+    {
+      "fieldId": "education--fieldOfStudy--1",
+      "label": "Field of Study",
+      "fieldType": "edu.discipline",
+      "outcome": "couldNotFill",
+      "reason": "controlNotSupported",
+      "value": ""
+    },
+    {
+      "fieldId": "education--gradeAverage--1",
+      "label": "Overall Result (GPA)",
+      "fieldType": "edu.gpa",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "education--firstYearAttended-year--1",
+      "label": "From (Year)",
+      "fieldType": "edu.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2023"
+    },
+    {
+      "fieldId": "education--lastYearAttended-year--1",
+      "label": "To (Actual or Expected) (Year)",
+      "fieldType": "edu.endDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2025"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210001",
+      "label": "Are you legally authorized to work in the country in which this job is located?",
+      "fieldType": "workAuth.authorized",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210002",
+      "label": "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?",
+      "fieldType": "workAuth.sponsorship",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210003",
+      "label": "Are you at least 18 years of age?",
+      "fieldType": "identity.over18",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210004",
+      "label": "Have you ever been employed by NVIDIA as an employee, contractor or intern?",
+      "fieldType": "screening.workedHereBefore",
+      "outcome": "needsReview",
+      "reason": "askEachTime",
+      "value": ""
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210005",
+      "label": "Are you willing to relocate for this position?",
+      "fieldType": "pref.relocation",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "Yes"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210006",
+      "label": "Are you bound by a non-compete or other restrictive covenant that would prevent you from working at NVIDIA?",
+      "fieldType": "screening.nonCompete",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "No"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210007",
+      "label": "What are your base salary expectations for this role?",
+      "fieldType": "pref.salary",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "150,000 - 170,000 USD per year"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210008-month",
+      "label": "When would you be available to start? (Month)",
+      "fieldType": "pref.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "01"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210008-day",
+      "label": "When would you be available to start? (Day)",
+      "fieldType": "pref.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "04"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210008-year",
+      "label": "When would you be available to start? (Year)",
+      "fieldType": "pref.startDate",
+      "outcome": "filled",
+      "reason": "rules",
+      "value": "2027"
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210009",
+      "label": "Describe a project where you made code run faster on a GPU.",
+      "fieldType": "freeText.question",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210010",
+      "label": "Which of these areas interest you? (select all that apply)",
+      "fieldType": "unknown",
+      "outcome": "couldNotFill",
+      "reason": "providerUnavailable",
+      "value": ""
+    },
+    {
+      "fieldId": "primaryQuestionnaire--0b1f7a2e01c210011",
+      "label": "I certify that the information I have provided in this application is true and complete.",
+      "fieldType": "attestation.certify",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "personalInfoUS--gender",
+      "label": "Gender",
+      "fieldType": "selfId.us.sex",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Male"
+    },
+    {
+      "fieldId": "personalInfoUS--ethnicity",
+      "label": "Ethnicity",
+      "fieldType": "selfId.us.race",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "Asian (Not Hispanic or Latino) (United States of America)"
+    },
+    {
+      "fieldId": "personalInfoUS--veteranStatus",
+      "label": "Veteran Status",
+      "fieldType": "selfId.us.veteran",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "I am not a protected veteran"
+    },
+    {
+      "fieldId": "termsAndConditions--acceptTermsAndAgreements",
+      "label": "Yes, I have read and consent to the terms and conditions",
+      "fieldType": "attestation.consent",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": "unchecked"
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--name",
+      "label": "Name",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--employeeId",
+      "label": "Employee ID (if applicable)",
+      "fieldType": "selfId.other",
+      "outcome": "couldNotFill",
+      "reason": "notInProfile",
+      "value": ""
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--dateSignedOn-month",
+      "label": "Date (Month)",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--dateSignedOn-day",
+      "label": "Date (Day)",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--dateSignedOn-year",
+      "label": "Date (Year)",
+      "fieldType": "attestation.signature",
+      "outcome": "couldNotFill",
+      "reason": "attestation",
+      "value": ""
+    },
+    {
+      "fieldId": "selfIdentifiedDisabilityData--disabilityStatus",
+      "label": "Please check one of the boxes below:",
+      "fieldType": "selfId.us.disability",
+      "outcome": "filled",
+      "reason": "selfId",
+      "value": "No, I do not have a disability"
+    }
+  ]
+}

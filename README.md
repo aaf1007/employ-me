@@ -13,7 +13,7 @@ An open-source Chrome extension that fills in job applications from your own pro
 
 ## Coverage
 
-How much of each supported job site's forms the built-in rules fill on their own (the AI unavailable), measured on real forms recorded on 2026-10-28 with a test Profile. Every field the rules don't fill is marked "Needs review" or "Couldn't fill", with the reason and a fix. Attestations are never ticked, so they always count as "Couldn't fill". `pnpm fill-rate --write` regenerates this table.
+How much of each supported job site's forms the built-in rules fill on their own (the AI unavailable), measured on real forms recorded on 2026-10-28 with a test Profile. Workday's forms sit behind a sign-in for each employer, so its row is measured on forms built by hand from Workday's public code: it is unverified until a live pass. Every field the rules don't fill is marked "Needs review" or "Couldn't fill", with the reason and a fix. Attestations are never ticked, so they always count as "Couldn't fill". `pnpm fill-rate --write` regenerates this table.
 
 <!-- fill-rate:start -->
 | ATS | Forms | Fields | Filled | Needs review | Couldn't fill | Fill rate |
@@ -21,6 +21,7 @@ How much of each supported job site's forms the built-in rules fill on their own
 | Greenhouse | 5 | 126 | 90 | 4 | 32 | 71% |
 | Lever | 3 | 53 | 41 | 0 | 12 | 77% |
 | Ashby | 3 | 42 | 28 | 0 | 14 | 67% |
+| Workday (synthetic forms: unverified until a live pass) | 3 | 110 | 79 | 3 | 28 | 72% |
 | Generic fallback | 1 | 14 | 8 | 1 | 5 | 57% |
 <!-- fill-rate:end -->
 
