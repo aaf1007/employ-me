@@ -5,6 +5,8 @@ const CI = process.env['CI'] !== undefined;
 // The extension e2e loop. See CLAUDE.md "End-to-end tests" and e2e/harness.ts.
 export default defineConfig({
   testDir: 'e2e',
+  // The opt-in live harness (playwright.live.config.ts) touches real job sites and spends real plans.
+  testIgnore: ['live/**'],
   globalSetup: './e2e/global-setup.ts',
   outputDir: 'test-results',
   fullyParallel: true,

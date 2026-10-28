@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:live": "playwright test -c playwright.live.config.ts",
     "build": "pnpm -r build",
     "setup:local": "pnpm build && node packages/helper/dist/cli.mjs setup --extension packages/extension/.output/chrome-mv3",
     "smoke:providers": "vitest run --config packages/helper/vitest.smoke.config.ts",

@@ -4,7 +4,13 @@ export default defineConfig({
   test: {
     projects: [
       'packages/*',
-      { test: { name: 'tools', environment: 'node', include: ['tools/**/*.test.ts'] } },
+      {
+        test: {
+          name: 'tools',
+          environment: 'node',
+          include: ['tools/**/*.test.ts', 'e2e/live/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

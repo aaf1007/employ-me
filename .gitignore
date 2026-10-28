@@ -13,3 +13,5 @@ test-results/
 .claude/worktrees/
 # The fill engine's e2e bundle (e2e/fill-bundle/build.ts)
 e2e/.build/
+# The live harness's results and call ledger (e2e/live/)
+.live-runs/
