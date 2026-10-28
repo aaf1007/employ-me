@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="employ-me-fixture" content="synthetic">
+<meta name="employ-me-fixture-sources" content="Workday public bundle candidate-experience-jobs 2026.43.25 (its sign-in and create-account components)">
+<!--
+  SYNTHETIC FIXTURE, built by hand on 2026-10-28 from the sign-in and
+  create-account components in Workday's public jobs bundle: signInContent,
+  a <form> with email, password and verifyPassword (type=password,
+  autocomplete=new-password), createAccountCheckbox with the employer's
+  consent text, and type=submit buttons createAccountSubmitButton /
+  signInSubmitButton; signInLink, createAccountLink and forgotPasswordLink
+  switch between them. Served at a real public Posting's apply URL (RBC).
+  employ-me may fill the email here and nothing else.
+-->
+<title>Create Account</title>
+<style>[hidden] { display: none !important; }</style>
+</head>
+<body>
+<div id="root">
+  <div data-automation-id="signInContent">
+    <h3>Create Account</h3>
+    <form novalidate>
+      <div data-automation-id="formField-email">
+        <label for="input-1">Email Address<abbr title="required">*</abbr></label>
+        <input type="text" id="input-1" data-automation-id="email" aria-required="true" autocomplete="email">
+      </div>
+      <div data-automation-id="formField-password">
+        <label for="input-2">Password<abbr title="required">*</abbr></label>
+        <input type="password" id="input-2" data-automation-id="password" aria-required="true" autocomplete="new-password">
+      </div>
+      <div data-automation-id="formField-verifyPassword">
+        <label for="input-3">Verify New Password<abbr title="required">*</abbr></label>
+        <input type="password" id="input-3" data-automation-id="verifyPassword" aria-required="true" autocomplete="new-password">
+      </div>
+      <div data-automation-id="formField-createAccountCheckbox">
+        <p>RBC will process your personal information to consider your application.</p>
+        <input type="checkbox" id="input-4" data-automation-id="createAccountCheckbox" aria-required="true">
+        <label for="input-4">Yes, I have read and consent to the terms and conditions</label>
+      </div>
+      <button type="submit" data-automation-id="createAccountSubmitButton">Create Account</button>
+    </form>
+    <div>Already have an account? <button type="button" data-automation-id="signInLink">Sign In</button></div>
+  </div>
+</div>
+
+<template id="fixture-sign-in">
+  <h3>Sign In</h3>
+  <form novalidate>
+    <div data-automation-id="formField-email">
+      <label for="input-5">Email Address<abbr title="required">*</abbr></label>
+      <input type="text" id="input-5" data-automation-id="email" aria-required="true" autocomplete="email">
+    </div>
+    <div data-automation-id="formField-password">
+      <label for="input-6">Password<abbr title="required">*</abbr></label>
+      <input type="password" id="input-6" data-automation-id="password" aria-required="true" autocomplete="current-password">
+    </div>
+    <div><button type="button" data-automation-id="forgotPasswordLink">Forgot your password?</button></div>
+    <button type="submit" data-automation-id="signInSubmitButton">Sign In</button>
+  </form>
+  <div>Don't have an account yet? <button type="button" data-automation-id="createAccountLink">Create Account</button></div>
+</template>
+
+<script src="/employ-me-synthetic/synthetic-workday.js"></script>
+</body>
+</html>

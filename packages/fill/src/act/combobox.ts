@@ -11,11 +11,20 @@ import type { ActIntent, ActResult, Pick } from './types';
 
 const OPEN_TIMEOUT_MS = 1500;
 const SEARCH_TIMEOUT_MS = 6000;
+/** How long a list that lists only what you search for gets to show results after typing. */
+const TYPED_SEARCH_TIMEOUT_MS = 3000;
 
 export interface ComboboxRequest {
   readonly pick: Pick;
   /** Typed into the box first, for long or remote lists (cities, schools). */
   readonly search?: string;
+  /**
+   * Typed only when the open list has nothing that fits, for lists that show
+   * only what you search for (Workday's schools and skills).
+   */
+  readonly searchIfNeeded?: string;
+  /** Where else the ATS shows the choice (Workday's selected-item pills). Read-only. */
+  readonly shown?: (combobox: Element) => readonly string[];
 }
 
 export async function chooseComboboxOption(
@@ -26,24 +35,34 @@ export async function chooseComboboxOption(
   const refusal = checkTarget(combobox, 'openCombobox', intent.fieldType);
   if (refusal !== null) return err(refusal);
 
+  const retry =
+    isInput(combobox) && request.searchIfNeeded !== request.search ? request.searchIfNeeded : undefined;
   const before = comboboxDisplay(combobox);
-  const listbox = await openListbox(combobox, request.search);
-  if (listbox === null) return err({ reason: 'optionNotFound', detail: 'the list did not open' });
+  let listbox = await openListbox(combobox, request.search, retry !== undefined);
+  let options = listbox === null ? null : await listedOptions(listbox, request.search !== undefined);
+  let labels = (options ?? []).map((o) => readableText(o));
+  if (options !== null && request.search === undefined) rememberOptions(combobox, labels);
+  let choice = options === null ? null : request.pick(labels);
 
-  const options = await waitFor(
-    () => {
-      const found = optionsIn(listbox);
-      return found.length > 0 && !isLoading(listbox) ? found : null;
-    },
-    request.search === undefined ? OPEN_TIMEOUT_MS : SEARCH_TIMEOUT_MS,
-  );
+  // Only a list that showed nothing until searched (searchIfNeeded) can end here: its search needs Enter.
+  let searched = false;
+  if (choice === null && retry !== undefined) {
+    typeSearch(combobox, retry);
+    searched = true;
+    listbox = await waitFor(() => listboxOf(combobox), TYPED_SEARCH_TIMEOUT_MS);
+    options = listbox === null ? null : await listedOptions(listbox, true);
+    labels = (options ?? []).map((o) => readableText(o));
+    choice = options === null ? null : request.pick(labels);
+  }
+  if ((listbox === null || options === null) && searched) {
+    close(combobox);
+    return err({ reason: 'searchShowedNothing', detail: 'typing a search listed nothing' });
+  }
+  if (listbox === null) return err({ reason: 'optionNotFound', detail: 'the list did not open' });
   if (options === null) {
     close(combobox);
     return err({ reason: 'optionNotFound', detail: 'the list had no options' });
   }
-  const labels = options.map((o) => readableText(o));
-  if (request.search === undefined) rememberOptions(combobox, labels);
-  const choice = request.pick(labels);
   const option = choice === null ? undefined : options[choice];
   if (option === undefined || choice === null) {
     close(combobox);
@@ -57,7 +76,10 @@ export async function chooseComboboxOption(
   firePress(option);
   const label = labels[choice] ?? '';
   const shows = () =>
-    comboboxShows(combobox, label) || comboboxShowsShortForm(combobox, label, before) ? true : null;
+    comboboxShows(combobox, label, request.shown?.(combobox)) ||
+    comboboxShowsShortForm(combobox, label, before)
+      ? true
+      : null;
   let stuck = await waitFor(shows, 300);
   if (stuck === null && listboxOf(combobox) !== null) {
     // Some wrappers (Greenhouse's) commit the choice when the menu closes.
@@ -73,7 +95,7 @@ export async function chooseComboboxOption(
 /** Reads a combobox's options without choosing one: opens it, reads, closes. */
 export async function readComboboxOptions(combobox: Element, intent: ActIntent): Promise<readonly string[]> {
   if (checkTarget(combobox, 'openCombobox', intent.fieldType) !== null) return [];
-  const listbox = await openListbox(combobox, undefined);
+  const listbox = await openListbox(combobox, undefined, false);
   if (listbox === null) return [];
   const options = await waitFor(() => {
     const found = optionsIn(listbox);
@@ -85,18 +107,34 @@ export async function readComboboxOptions(combobox: Element, intent: ActIntent):
   return labels;
 }
 
-async function openListbox(combobox: Element, search: string | undefined): Promise<Element | null> {
+/** The options a list shows once it has finished loading, or null if it shows none in time. */
+function listedOptions(listbox: Element, searched: boolean): Promise<Element[] | null> {
+  return waitFor(
+    () => {
+      const found = optionsIn(listbox);
+      return found.length > 0 && !isLoading(listbox) ? found : null;
+    },
+    searched ? SEARCH_TIMEOUT_MS : OPEN_TIMEOUT_MS,
+  );
+}
+
+/**
+ * Opens the list. `searchFollows` means an empty list is no failure yet: the
+ * caller will search, so the slow keyboard fallbacks are skipped.
+ */
+async function openListbox(
+  combobox: Element,
+  search: string | undefined,
+  searchFollows: boolean,
+): Promise<Element | null> {
   fireFocus(combobox);
   const already = listboxOf(combobox);
   // The whole press: react-select opens on mousedown, but Greenhouse's
   // wrapper controls the menu and toggles it on mouseup.
   if (already === null || optionsIn(already).length === 0) firePress(combobox);
-  if (search !== undefined && isInput(combobox)) {
-    setNative(combobox, 'value', search);
-    fireInput(combobox, search.slice(-1));
-    fireChange(combobox);
-  }
+  if (search !== undefined && isInput(combobox)) typeSearch(combobox, search);
   let listbox = await waitFor(() => listboxOf(combobox), 400);
+  if (listbox === null && searchFollows) return null;
   if (listbox === null) {
     // Keyboard fallback: most comboboxes open on ArrowDown (Greenhouse on its keyup).
     fireKey(combobox, 'keydown', 'ArrowDown');
@@ -109,6 +147,13 @@ async function openListbox(combobox: Element, search: string | undefined): Promi
     listbox = await waitFor(() => listboxOf(combobox), OPEN_TIMEOUT_MS);
   }
   return listbox;
+}
+
+/** Types into the search box. Never Enter: it can submit the form (events.ts). */
+function typeSearch(combobox: Element, text: string): void {
+  setNative(combobox, 'value', text);
+  fireInput(combobox, text.slice(-1));
+  fireChange(combobox);
 }
 
 function isLoading(listbox: Element): boolean {

@@ -60,6 +60,8 @@ function identityAnswer(fieldType: FieldType, field: ExtractedField, ctx: Answer
         ? missing('your name')
         : text([legal.first, legal.middle, legal.last].filter(Boolean).join(' '));
     case 'name.preferred': {
+      // Workday's "I have a preferred name" box, which shows the preferred-name fields.
+      if (field.widget === 'checkbox') return yesNo(preferred !== undefined);
       const first = preferred?.first ?? legal?.first;
       if (first === undefined) return missing('your preferred name');
       const wantsFull = !/\bfirst\b/.test(normalizeLabel(field.label)) && preferred?.last !== undefined;

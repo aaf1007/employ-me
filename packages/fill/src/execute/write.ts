@@ -47,7 +47,7 @@ export async function performWrite(
       return result(await act.attachFile(input, ctx.resume, intent));
     }
     case 'combobox':
-      return comboboxWrite(field, write.targets, intent);
+      return comboboxWrite(field, write.targets, intent, ctx.adapter);
     case 'typeahead': {
       const seen = new Seen();
       const res = await act.chooseTypeaheadOption(
@@ -68,15 +68,19 @@ async function comboboxWrite(
   field: ExtractedField,
   targets: readonly OptionTarget[],
   intent: act.ActIntent,
+  adapter: AtsAdapter,
 ): Promise<WriteResult> {
+  const shown = (combobox: Element) => adapter.comboboxChoices(combobox);
   for (const target of targets) {
-    if (act.comboboxShows(field.element, target.text)) continue;
+    if (act.comboboxShows(field.element, target.text, shown(field.element))) continue;
     const seen = new Seen();
     const res = await act.chooseComboboxOption(
       field.element,
       {
         pick: (labels) => seen.pick(labels, target),
         ...(target.search === undefined ? {} : { search: target.search }),
+        ...(adapter.typeToSearch ? { searchIfNeeded: target.search ?? target.text } : {}),
+        shown,
       },
       intent,
     );

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="employ-me-fixture" content="synthetic">
+<meta name="employ-me-fixture-sources" content="research §4 (classic data-automation-id names); Workday public bundles 2026.43.25 for page ids and widgets; rbc-2026-10-28.cxs.json for the Posting">
+<!--
+  SYNTHETIC FIXTURE, built by hand on 2026-10-28. Never recorded: Workday's
+  Application Forms sit behind a separate sign-in for each employer, and
+  employ-me never creates accounts or enters passwords.
+
+  Served at the apply URL of a real public Posting (RBC R-0000187445, Toronto).
+  This one uses the classic names, which name the control in
+  data-automation-id (legalNameSection_firstName, addressSection_city,
+  countryDropdown, phone-device-type, previousWorker, agreementCheckbox) and
+  number controls input-N; employers still differ in which scheme they serve
+  (research §10). Like the real apply flow it has no JSON-LD: the Posting's
+  facts come from the public CXS API (fixtures/workday/rbc-2026-10-28.cxs.json).
+  Guessed, and to be checked on a live pass: nesting, label wiring, the
+  Canadian employment-equity questions' wording and every option list.
+-->
+<title>Lead Software Developer</title>
+<style>
+  [hidden] { display: none !important; }
+  .mirror { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  [data-automation-id="activeListContainer"] { border: 1px solid #999; background: #fff; }
+</style>
+</head>
+<body data-fixture-counter="40">
+<div id="root">
+<div data-automation-id="applyFlowPage">
+  <div data-automation-id="progressBar">
+    <ol><li>My Information</li><li>Application Questions</li><li>Voluntary Disclosures</li><li>Review</li></ol>
+  </div>
+
+  <div data-automation-id="applyFlowMyInfoPage" data-fixture-step>
+    <h2>My Information</h2>
+
+    <div data-automation-id="formField-sourcePrompt">
+      <label for="input-2">How Did You Hear About Us?<abbr title="required">*</abbr></label>
+      <div data-automation-id="multiselectInputContainer">
+        <ul data-automation-id="selectedItemList"></ul>
+        <input type="text" id="input-2" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-required="true" placeholder="Search" autocomplete="off" data-fixture-options='["Agency","Career Fair","Employee Referral","Job Board","RBC Careers Site","Social Media"]'>
+      </div>
+    </div>
+
+    <fieldset data-automation-id="previousWorker">
+      <legend>Have you previously worked for RBC?<abbr title="required">*</abbr></legend>
+      <div><input type="radio" id="input-3" name="candidateIsPreviousWorker" value="true"><label for="input-3">Yes</label></div>
+      <div><input type="radio" id="input-4" name="candidateIsPreviousWorker" value="false"><label for="input-4">No</label></div>
+    </fieldset>
+
+    <div data-automation-id="formField-countryDropdown">
+      <label for="input-5">Country<abbr title="required">*</abbr></label>
+      <button type="button" id="input-5" data-automation-id="countryDropdown" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="id-canada" data-fixture-region="input-12" data-fixture-options='["Canada","United Kingdom","United States of America"]'>Canada</button>
+      <input type="text" class="mirror" tabindex="-1" value="id-canada">
+    </div>
+
+    <h3>Legal Name</h3>
+    <div data-automation-id="formField-legalNameSection_firstName">
+      <label for="input-6">Given Name(s)<abbr title="required">*</abbr></label>
+      <input type="text" id="input-6" data-automation-id="legalNameSection_firstName" aria-required="true">
+    </div>
+    <div data-automation-id="formField-legalNameSection_lastName">
+      <label for="input-7">Family Name<abbr title="required">*</abbr></label>
+      <input type="text" id="input-7" data-automation-id="legalNameSection_lastName" aria-required="true">
+    </div>
+    <div data-automation-id="formField-preferredNameCheckbox">
+      <input type="checkbox" id="input-8" data-automation-id="preferredNameCheckbox" data-fixture-toggles='[data-fixture-slot="preferredName"]'>
+      <label for="input-8">I have a preferred name</label>
+    </div>
+    <div data-fixture-slot="preferredName" data-fixture-template="preferred-name"></div>
+    <template id="preferred-name">
+      <div data-automation-id="formField-preferredNameSection_firstName">
+        <label for="input-9">Preferred Given Name(s)<abbr title="required">*</abbr></label>
+        <input type="text" id="input-9" data-automation-id="preferredNameSection_firstName" aria-required="true">
+      </div>
+    </template>
+
+    <h3>Address</h3>
+    <div data-automation-id="formField-addressSection_addressLine1">
+      <label for="input-10">Address Line 1<abbr title="required">*</abbr></label>
+      <input type="text" id="input-10" data-automation-id="addressSection_addressLine1" aria-required="true">
+    </div>
+    <div data-automation-id="formField-addressSection_city">
+      <label for="input-11">City<abbr title="required">*</abbr></label>
+      <input type="text" id="input-11" data-automation-id="addressSection_city" aria-required="true">
+    </div>
+    <div data-automation-id="formField-addressSection_countryRegion">
+      <label for="input-12">Province or Territory<abbr title="required">*</abbr></label>
+      <button type="button" id="input-12" data-automation-id="addressSection_countryRegion" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Alberta","British Columbia","Ontario","Quebec"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-addressSection_postalCode">
+      <label for="input-13">Postal Code<abbr title="required">*</abbr></label>
+      <input type="text" id="input-13" data-automation-id="addressSection_postalCode" aria-required="true">
+    </div>
+
+    <h3>Email Address</h3>
+    <div data-automation-id="formField-email">
+      <label for="input-14">Email Address<abbr title="required">*</abbr></label>
+      <input type="text" id="input-14" data-automation-id="email" aria-required="true">
+    </div>
+
+    <h3>Phone</h3>
+    <div data-automation-id="formField-phone-device-type">
+      <label for="input-15">Phone Device Type<abbr title="required">*</abbr></label>
+      <button type="button" id="input-15" data-automation-id="phone-device-type" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Home","Mobile","Work"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-countryPhoneCode">
+      <label for="input-16">Country Phone Code<abbr title="required">*</abbr></label>
+      <div data-automation-id="multiselectInputContainer">
+        <ul data-automation-id="selectedItemList"></ul>
+        <input type="text" id="input-16" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-required="true" placeholder="Search" autocomplete="off" data-fixture-options='["Canada (+1)","United Kingdom (+44)","United States of America (+1)"]'>
+      </div>
+    </div>
+    <div data-automation-id="formField-phone-number">
+      <label for="input-17">Phone Number<abbr title="required">*</abbr></label>
+      <input type="text" id="input-17" data-automation-id="phone-number" aria-required="true">
+    </div>
+    <div data-automation-id="formField-phone-extension">
+      <label for="input-18">Phone Extension</label>
+      <input type="text" id="input-18" data-automation-id="phone-extension">
+    </div>
+  </div>
+
+  <div data-automation-id="applyFlowPrimaryQuestionsPage" data-fixture-step hidden>
+    <h2>Application Questions</h2>
+    <div data-automation-id="formField-3b0c1d2e3f4a10001">
+      <label for="input-30">Are you legally eligible to work in Canada?<abbr title="required">*</abbr></label>
+      <button type="button" id="input-30" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10002">
+      <label for="input-31">Will you now or in the future require sponsorship to work in Canada?<abbr title="required">*</abbr></label>
+      <button type="button" id="input-31" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10003">
+      <label for="input-32">Are you currently employed by RBC or one of its subsidiaries?<abbr title="required">*</abbr></label>
+      <button type="button" id="input-32" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10004">
+      <label for="input-33">What is your notice period?<abbr title="required">*</abbr></label>
+      <input type="text" id="input-33" aria-required="true">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10005">
+      <label for="input-34">Do you speak French?<abbr title="required">*</abbr></label>
+      <button type="button" id="input-34" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10006">
+      <label for="input-35">Which work arrangement do you prefer?<abbr title="required">*</abbr></label>
+      <button type="button" id="input-35" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Hybrid","On-site","Remote"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-3b0c1d2e3f4a10007">
+      <label for="input-36">What are your salary expectations (CAD)?<abbr title="required">*</abbr></label>
+      <input type="text" id="input-36" aria-required="true">
+    </div>
+  </div>
+
+  <div data-automation-id="applyFlowVoluntaryDisclosuresPage" data-fixture-step hidden>
+    <h2>Voluntary Disclosures</h2>
+    <p>RBC is committed to employment equity. Answering is voluntary and your answers are kept confidential.</p>
+    <div data-automation-id="formField-gender">
+      <label for="input-50">Gender</label>
+      <button type="button" id="input-50" data-automation-id="gender" aria-haspopup="listbox" aria-expanded="false" value="" data-fixture-options='["Man","Woman","Non-binary","Two-Spirit","Another gender identity","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-9c8d7e6f5a4b10001">
+      <label for="input-51">Do you identify as an Indigenous person (First Nations, Métis or Inuit)?</label>
+      <button type="button" id="input-51" aria-haspopup="listbox" aria-expanded="false" value="" data-fixture-options='["Yes","No","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-9c8d7e6f5a4b10002">
+      <label for="input-52">Do you identify as a member of a visible minority group?</label>
+      <button type="button" id="input-52" aria-haspopup="listbox" aria-expanded="false" value="" data-fixture-options='["Yes","No","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-9c8d7e6f5a4b10003">
+      <label for="input-53">Do you identify as a person with a disability?</label>
+      <button type="button" id="input-53" aria-haspopup="listbox" aria-expanded="false" value="" data-fixture-options='["Yes","No","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-9c8d7e6f5a4b10004">
+      <label for="input-54">Do you identify as a member of the 2SLGBTQIA+ community?</label>
+      <button type="button" id="input-54" aria-haspopup="listbox" aria-expanded="false" value="" data-fixture-options='["Yes","No","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-agreementCheckbox">
+      <input type="checkbox" id="input-55" data-automation-id="agreementCheckbox" aria-required="true">
+      <label for="input-55">Yes, I have read and consent to the terms and conditions</label>
+    </div>
+  </div>
+
+  <div data-automation-id="applyFlowReviewPage" data-fixture-step hidden>
+    <h2>Review</h2>
+    <dl><dt>Country</dt><dd>As entered</dd></dl>
+  </div>
+
+  <div data-automation-id="pageFooter">
+    <button type="button" data-automation-id="pageFooterBackButton">Back</button>
+    <button type="button" data-automation-id="pageFooterNextButton">Save and Continue</button>
+  </div>
+</div>
+</div>
+
+<template id="fixture-congratulations">
+  <div data-automation-id="signInContent" role="dialog" aria-labelledby="congratulations-heading">
+    <h3 id="congratulations-heading">Congratulations!</h3>
+    <p>Thank you for applying to RBC. We will review your application and be in touch.</p>
+  </div>
+</template>
+
+<script src="/employ-me-synthetic/synthetic-workday.js"></script>
+</body>
+</html>

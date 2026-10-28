@@ -32,4 +32,13 @@ export interface AtsAdapter {
   readonly checkStrategy: NonNullable<ActIntent['strategy']>;
   /** Suggestions under a typeahead box, for widgets the adapter marked `typeahead`. */
   typeaheadSuggestions(input: Element): readonly Element[];
+  /**
+   * Some lists here show only what you search for (Workday's prompts:
+   * schools, skills; research §4). When the open list has no fit, act/ types
+   * the answer and looks again. It never presses Enter, which some of them
+   * need (act/events.ts): those end as "Couldn't fill" with that fix.
+   */
+  readonly typeToSearch: boolean;
+  /** What a combobox shows as chosen outside its own text, e.g. Workday's selected-item pills. Read-only. */
+  comboboxChoices(combobox: Element): readonly string[];
 }

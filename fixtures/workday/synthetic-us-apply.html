@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="employ-me-fixture" content="synthetic">
+<meta name="employ-me-fixture-sources" content="Workday public bundles candidate-experience-jobs and candidate-experience-apply-flow 2026.43.25 (wd5.myworkdaycdn.com); research §4; JSON-LD copied from nvidia-2026-10-28.posting.html">
+<!--
+  SYNTHETIC FIXTURE, built by hand on 2026-10-28. Never recorded: Workday's
+  Application Forms sit behind a separate sign-in for each employer, and
+  employ-me never creates accounts or enters passwords.
+
+  Served at the apply URL of a real public Posting (NVIDIA JR2020825, US).
+  Markup follows Workday's current naming, read from its public apply-flow
+  bundle: step pages applyFlow*Page, field ids that join the field's path with
+  "--" (name--legalName--firstName, workExperience-N--jobTitle,
+  personalInfoUS--gender, selfIdentifiedDisabilityData--disabilityStatus,
+  termsAndConditions--acceptTermsAndAgreements), formField-* wrappers,
+  "Select One" buttons, searchBox prompts with selectedItem pills,
+  dateSection*-input spinbuttons, add-button panel sets, file-upload-input-ref,
+  pageFooterNextButton. Guessed, and to be checked on a live pass: the exact
+  nesting, label wiring, the prompt input's role, the entry containers' ids,
+  the question ids and every option list.
+-->
+<title>Software Engineer, OpenShell</title>
+<script type="application/ld+json">
+{"jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressCountry": "United States of America", "addressLocality": "US, CA, Remote"}}, "hiringOrganization": {"name": "2100 NVIDIA USA", "@type": "Organization", "sameAs": ""}, "identifier": {"name": "Software Engineer, OpenShell", "@type": "PropertyValue", "value": "JR2020825"}, "datePosted": "2026-07-31", "employmentType": "FULL_TIME", "title": "Software Engineer, OpenShell", "description": "Are you ready to translate groundbreaking AI research into secure, production-grade systems? Want to shape the next generation of AI agent infrastructure? Join us!", "@context": "http://schema.org", "@type": "JobPosting"}
+</script>
+<style>
+  [hidden] { display: none !important; }
+  .mirror { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .file { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  [data-automation-id="activeListContainer"] { border: 1px solid #999; background: #fff; }
+</style>
+</head>
+<body data-fixture-counter="22">
+<div id="root">
+<div data-automation-id="applyFlowPage">
+  <h1>Software Engineer, OpenShell</h1>
+  <div data-automation-id="progressBar">
+    <ol>
+      <li>My Information</li><li>My Experience</li><li>Application Questions</li>
+      <li>Voluntary Disclosures</li><li>Self Identify</li><li>Review</li>
+    </ol>
+  </div>
+
+  <!-- Step 1 -->
+  <div data-automation-id="applyFlowMyInfoPage" data-fixture-step>
+    <h2>My Information</h2>
+    <p><abbr title="required">*</abbr> Indicates a required field</p>
+
+    <div data-automation-id="formField-source">
+      <label for="source--source">How Did You Hear About Us?<abbr title="required">*</abbr></label>
+      <div data-automation-id="multiSelectContainer">
+        <div data-automation-id="multiselectInputContainer">
+          <ul data-automation-id="selectedItemList"></ul>
+          <input type="text" id="source--source" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-autocomplete="list" aria-required="true" placeholder="Search" autocomplete="off" data-fixture-options='["Company Website","Employee Referral","Job Board","LinkedIn","Social Media","University Recruiting","Other"]'>
+        </div>
+      </div>
+    </div>
+
+    <fieldset id="previousWorker--candidateIsPreviousWorker" data-automation-id="formField-candidateIsPreviousWorker">
+      <legend>Have you previously worked for NVIDIA as an employee or contractor?<abbr title="required">*</abbr></legend>
+      <div><input type="radio" id="previousWorker-true" name="candidateIsPreviousWorker" value="true" aria-required="true"><label for="previousWorker-true">Yes</label></div>
+      <div><input type="radio" id="previousWorker-false" name="candidateIsPreviousWorker" value="false" aria-required="true"><label for="previousWorker-false">No</label></div>
+    </fieldset>
+
+    <div data-automation-id="formField-country">
+      <label for="country--country">Country<abbr title="required">*</abbr></label>
+      <button type="button" id="country--country" name="country" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="id-united-states-of-america" data-fixture-region="address--countryRegion" data-fixture-options='["Canada","Mexico","United Kingdom","United States of America"]'>United States of America</button>
+      <input type="text" class="mirror" tabindex="-1" value="id-united-states-of-america">
+    </div>
+
+    <h3>Legal Name</h3>
+    <div data-automation-id="formField-legalName--firstName">
+      <label for="name--legalName--firstName">First Name<abbr title="required">*</abbr></label>
+      <input type="text" id="name--legalName--firstName" aria-required="true">
+    </div>
+    <div data-automation-id="formField-legalName--middleName">
+      <label for="name--legalName--middleName">Middle Name</label>
+      <input type="text" id="name--legalName--middleName">
+    </div>
+    <div data-automation-id="formField-legalName--lastName">
+      <label for="name--legalName--lastName">Last Name<abbr title="required">*</abbr></label>
+      <input type="text" id="name--legalName--lastName" aria-required="true">
+    </div>
+    <div data-automation-id="formField-preferredCheck">
+      <input type="checkbox" id="name--preferredCheck" data-fixture-toggles='[data-fixture-slot="preferredName"]'>
+      <label for="name--preferredCheck">I have a preferred name</label>
+    </div>
+    <div data-fixture-slot="preferredName" data-fixture-template="preferred-name"></div>
+    <template id="preferred-name">
+      <h3>Preferred Name</h3>
+      <div data-automation-id="formField-preferredName--firstName">
+        <label for="name--preferredName--firstName">First Name<abbr title="required">*</abbr></label>
+        <input type="text" id="name--preferredName--firstName" aria-required="true">
+      </div>
+      <div data-automation-id="formField-preferredName--lastName">
+        <label for="name--preferredName--lastName">Last Name<abbr title="required">*</abbr></label>
+        <input type="text" id="name--preferredName--lastName" aria-required="true">
+      </div>
+    </template>
+
+    <h3>Address</h3>
+    <div data-automation-id="formField-addressLine1">
+      <label for="address--addressLine1">Address Line 1<abbr title="required">*</abbr></label>
+      <input type="text" id="address--addressLine1" aria-required="true">
+    </div>
+    <div data-automation-id="formField-city">
+      <label for="address--city">City<abbr title="required">*</abbr></label>
+      <input type="text" id="address--city" aria-required="true">
+    </div>
+    <div data-automation-id="formField-countryRegion">
+      <label for="address--countryRegion">State<abbr title="required">*</abbr></label>
+      <button type="button" id="address--countryRegion" name="countryRegion" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["California","New York","Texas","Washington"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-postalCode">
+      <label for="address--postalCode">Postal Code<abbr title="required">*</abbr></label>
+      <input type="text" id="address--postalCode" aria-required="true">
+    </div>
+
+    <h3>Email Address</h3>
+    <div data-automation-id="formField-emailAddress">
+      <label for="emailAddress--emailAddress">Email Address<abbr title="required">*</abbr></label>
+      <input type="text" id="emailAddress--emailAddress" aria-required="true">
+    </div>
+
+    <h3>Phone</h3>
+    <div data-automation-id="formField-phoneType">
+      <label for="phoneNumber--phoneType">Phone Device Type<abbr title="required">*</abbr></label>
+      <button type="button" id="phoneNumber--phoneType" name="phoneType" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Home","Mobile","Work"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-countryPhoneCode">
+      <label for="phoneNumber--countryPhoneCode">Country Phone Code<abbr title="required">*</abbr></label>
+      <div data-automation-id="multiSelectContainer">
+        <div data-automation-id="multiselectInputContainer">
+          <ul data-automation-id="selectedItemList"><li><div data-automation-id="selectedItem" aria-label="United States of America (+1)">United States of America (+1)</div><div data-automation-id="DELETE_charm" role="button" aria-label="press delete to clear value"></div></li></ul>
+          <input type="text" id="phoneNumber--countryPhoneCode" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-required="true" placeholder="Search" autocomplete="off" data-fixture-options='["Canada (+1)","Mexico (+52)","United Kingdom (+44)","United States of America (+1)"]'>
+        </div>
+      </div>
+    </div>
+    <div data-automation-id="formField-phoneNumber">
+      <label for="phoneNumber--phoneNumber">Phone Number<abbr title="required">*</abbr></label>
+      <input type="text" id="phoneNumber--phoneNumber" aria-required="true">
+    </div>
+    <div data-automation-id="formField-extension">
+      <label for="phoneNumber--extension">Phone Extension</label>
+      <input type="text" id="phoneNumber--extension">
+    </div>
+    <div data-automation-id="formField-smsOptIn">
+      <input type="checkbox" id="phoneNumber--smsOptIn">
+      <label for="phoneNumber--smsOptIn">Yes, I agree to receive text messages (SMS) from NVIDIA about my application.</label>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div data-automation-id="applyFlowMyExpPage" data-fixture-step hidden>
+    <h2>My Experience</h2>
+
+    <div role="group" aria-labelledby="Work-Experience-section">
+      <h3 id="Work-Experience-section">Work Experience</h3>
+      <div data-fixture-entries data-fixture-template="work-entry"></div>
+      <button type="button" data-automation-id="add-button" aria-label="Add Work Experience" data-fixture-section="Work Experience">Add</button>
+    </div>
+    <template id="work-entry">
+      <div role="group" aria-labelledby="workExperience-{n}-panel" data-automation-id="workExperience-{n}" data-fixture-scope>
+        <h4 id="workExperience-{n}-panel">Work Experience {i}</h4>
+        <button type="button" data-automation-id="panel-set-delete-button" aria-label="Delete Work Experience {i}">Delete</button>
+        <div data-automation-id="formField-jobTitle">
+          <label for="workExperience-{n}--jobTitle">Job Title<abbr title="required">*</abbr></label>
+          <input type="text" id="workExperience-{n}--jobTitle" aria-required="true">
+        </div>
+        <div data-automation-id="formField-companyName">
+          <label for="workExperience-{n}--companyName">Company<abbr title="required">*</abbr></label>
+          <input type="text" id="workExperience-{n}--companyName" aria-required="true">
+        </div>
+        <div data-automation-id="formField-location">
+          <label for="workExperience-{n}--location">Location</label>
+          <input type="text" id="workExperience-{n}--location">
+        </div>
+        <div data-automation-id="formField-currentlyWorkHere">
+          <input type="checkbox" id="workExperience-{n}--currentlyWorkHere" data-fixture-toggles='[data-automation-id="formField-endDate"]' data-fixture-toggle-mode="remove">
+          <label for="workExperience-{n}--currentlyWorkHere">I currently work here</label>
+        </div>
+        <div data-automation-id="formField-startDate">
+          <label>From<abbr title="required">*</abbr></label>
+          <div data-automation-id="dateInputWrapper">
+            <div id="workExperience-{n}--startDate-dateSectionMonth-display" data-automation-id="dateSectionMonth-display" aria-hidden="true" data-placeholder="MM">MM</div>
+            <input type="text" id="workExperience-{n}--startDate-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" role="spinbutton" aria-label="Month" aria-valuemin="1" aria-valuemax="12" aria-required="true" data-fixture-length="2" value="">
+            <span aria-hidden="true">/</span>
+            <div id="workExperience-{n}--startDate-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+            <input type="text" id="workExperience-{n}--startDate-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" aria-required="true" data-fixture-length="4" value="">
+            <button type="button" data-automation-id="dateIcon" aria-label="Calendar">Calendar</button>
+          </div>
+        </div>
+        <div data-automation-id="formField-endDate">
+          <label>To<abbr title="required">*</abbr></label>
+          <div data-automation-id="dateInputWrapper">
+            <div id="workExperience-{n}--endDate-dateSectionMonth-display" data-automation-id="dateSectionMonth-display" aria-hidden="true" data-placeholder="MM">MM</div>
+            <input type="text" id="workExperience-{n}--endDate-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" role="spinbutton" aria-label="Month" aria-valuemin="1" aria-valuemax="12" aria-required="true" data-fixture-length="2" value="">
+            <span aria-hidden="true">/</span>
+            <div id="workExperience-{n}--endDate-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+            <input type="text" id="workExperience-{n}--endDate-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" aria-required="true" data-fixture-length="4" value="">
+            <button type="button" data-automation-id="dateIcon" aria-label="Calendar">Calendar</button>
+          </div>
+        </div>
+        <div data-automation-id="formField-roleDescription">
+          <label for="workExperience-{n}--roleDescription">Role Description</label>
+          <textarea id="workExperience-{n}--roleDescription"></textarea>
+        </div>
+      </div>
+    </template>
+
+    <div role="group" aria-labelledby="Education-section">
+      <h3 id="Education-section">Education</h3>
+      <div data-fixture-entries data-fixture-template="education-entry"></div>
+      <button type="button" data-automation-id="add-button" aria-label="Add Education" data-fixture-section="Education">Add</button>
+    </div>
+    <template id="education-entry">
+      <div role="group" aria-labelledby="education-{n}-panel" data-automation-id="education-{n}" data-fixture-scope>
+        <h4 id="education-{n}-panel">Education {i}</h4>
+        <button type="button" data-automation-id="panel-set-delete-button" aria-label="Delete Education {i}">Delete</button>
+        <div data-automation-id="formField-school">
+          <label for="education-{n}--school">School or University<abbr title="required">*</abbr></label>
+          <div data-automation-id="multiSelectContainer">
+            <div data-automation-id="multiselectInputContainer">
+              <ul data-automation-id="selectedItemList"></ul>
+              <input type="text" id="education-{n}--school" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-required="true" placeholder="Search" autocomplete="off" data-fixture-catalog="true" data-fixture-typeahead="true" data-fixture-options='["University of British Columbia","University of Toronto","University of Waterloo","Waterloo Collegiate Institute","Wilfrid Laurier University"]'>
+            </div>
+          </div>
+        </div>
+        <div data-automation-id="formField-degree">
+          <label for="education-{n}--degree">Degree<abbr title="required">*</abbr></label>
+          <button type="button" id="education-{n}--degree" name="degree" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["High School Diploma","Associate&#39;s Degree","Bachelor&#39;s Degree","Master&#39;s Degree","Doctorate","Other"]'>Select One</button>
+          <input type="text" class="mirror" tabindex="-1" value="">
+        </div>
+        <div data-automation-id="formField-fieldOfStudy">
+          <label for="education-{n}--fieldOfStudy">Field of Study</label>
+          <div data-automation-id="multiSelectContainer">
+            <div data-automation-id="multiselectInputContainer">
+              <ul data-automation-id="selectedItemList"></ul>
+              <input type="text" id="education-{n}--fieldOfStudy" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" placeholder="Search" autocomplete="off" data-fixture-catalog="true" data-fixture-options='["Computer Engineering","Computer Science","Electrical Engineering","Mathematics","Software Engineering"]'>
+            </div>
+          </div>
+        </div>
+        <div data-automation-id="formField-gradeAverage">
+          <label for="education-{n}--gradeAverage">Overall Result (GPA)</label>
+          <input type="text" id="education-{n}--gradeAverage">
+        </div>
+        <div data-automation-id="formField-firstYearAttended">
+          <label>From</label>
+          <div data-automation-id="dateInputWrapper">
+            <div id="education-{n}--firstYearAttended-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+            <input type="text" id="education-{n}--firstYearAttended-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" data-fixture-length="4" value="">
+          </div>
+        </div>
+        <div data-automation-id="formField-lastYearAttended">
+          <label>To (Actual or Expected)</label>
+          <div data-automation-id="dateInputWrapper">
+            <div id="education-{n}--lastYearAttended-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+            <input type="text" id="education-{n}--lastYearAttended-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" data-fixture-length="4" value="">
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div role="group" aria-labelledby="Skills-section">
+      <h3 id="Skills-section">Skills</h3>
+      <div data-automation-id="formField-skills">
+        <label for="skills-input">Type to Add Skills</label>
+        <div data-automation-id="multiSelectContainer">
+          <div data-automation-id="multiselectInputContainer">
+            <ul data-automation-id="selectedItemList"></ul>
+            <input type="text" id="skills-input" data-automation-id="searchBox" role="combobox" aria-haspopup="listbox" aria-expanded="false" placeholder="Search" autocomplete="off" data-fixture-multi="true" data-fixture-catalog="true" data-fixture-options='["C++","CUDA","JavaScript","PyTorch","Python","React","React Native","TypeScript"]'>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div role="group" aria-labelledby="Resume-CV-section">
+      <h3 id="Resume-CV-section">Resume/CV</h3>
+      <div data-automation-id="file-upload-drop-zone">
+        <p>Drop files here</p>
+        <p>or</p>
+        <button type="button" data-automation-id="select-files">Select files</button>
+        <input type="file" class="file" data-automation-id="file-upload-input-ref">
+      </div>
+      <div data-fixture-uploads></div>
+    </div>
+
+    <div role="group" aria-labelledby="Websites-section">
+      <h3 id="Websites-section">Websites</h3>
+      <p>Add any relevant websites.</p>
+      <div data-fixture-entries data-fixture-template="website-entry"></div>
+      <button type="button" data-automation-id="add-button" aria-label="Add Websites" data-fixture-section="Websites">Add</button>
+    </div>
+    <template id="website-entry">
+      <div role="group" data-automation-id="websites-{n}" data-fixture-scope>
+        <div data-automation-id="formField-url">
+          <label for="websites-{n}--url">URL<abbr title="required">*</abbr></label>
+          <input type="text" id="websites-{n}--url" aria-required="true">
+        </div>
+      </div>
+    </template>
+
+    <div role="group" aria-labelledby="Social-Network-URLs-section">
+      <h3 id="Social-Network-URLs-section">Social Network URLs</h3>
+      <div data-automation-id="formField-linkedInAccount">
+        <label for="socialNetworkAccounts--linkedInAccount">LinkedIn</label>
+        <input type="text" id="socialNetworkAccounts--linkedInAccount">
+      </div>
+      <div data-automation-id="formField-twitterAccount">
+        <label for="socialNetworkAccounts--twitterAccount">Twitter</label>
+        <input type="text" id="socialNetworkAccounts--twitterAccount">
+      </div>
+      <div data-automation-id="formField-facebookAccount">
+        <label for="socialNetworkAccounts--facebookAccount">Facebook</label>
+        <input type="text" id="socialNetworkAccounts--facebookAccount">
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div data-automation-id="applyFlowPrimaryQuestionsPage" data-fixture-step hidden>
+    <h2>Application Questions</h2>
+    <div data-automation-id="primaryQuestionnairePage">
+      <div data-automation-id="formField-0b1f7a2e01c210001">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210001">Are you legally authorized to work in the country in which this job is located?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210001" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210002">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210002">Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210002" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210003">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210003">Are you at least 18 years of age?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210003" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210004">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210004">Have you ever been employed by NVIDIA as an employee, contractor or intern?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210004" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210005">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210005">Are you willing to relocate for this position?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210005" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210006">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210006">Are you bound by a non-compete or other restrictive covenant that would prevent you from working at NVIDIA?<abbr title="required">*</abbr></label>
+        <button type="button" id="primaryQuestionnaire--0b1f7a2e01c210006" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Yes","No"]'>Select One</button>
+        <input type="text" class="mirror" tabindex="-1" value="">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210007">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210007">What are your base salary expectations for this role?<abbr title="required">*</abbr></label>
+        <input type="text" id="primaryQuestionnaire--0b1f7a2e01c210007" aria-required="true">
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210008">
+        <label>When would you be available to start?<abbr title="required">*</abbr></label>
+        <div data-automation-id="dateInputWrapper">
+          <div id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionMonth-display" data-automation-id="dateSectionMonth-display" aria-hidden="true" data-placeholder="MM">MM</div>
+          <input type="text" id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" role="spinbutton" aria-label="Month" aria-valuemin="1" aria-valuemax="12" aria-required="true" data-fixture-length="2" value="">
+          <span aria-hidden="true">/</span>
+          <div id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionDay-display" data-automation-id="dateSectionDay-display" aria-hidden="true" data-placeholder="DD">DD</div>
+          <input type="text" id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionDay-input" data-automation-id="dateSectionDay-input" role="spinbutton" aria-label="Day" aria-valuemin="1" aria-valuemax="31" aria-required="true" data-fixture-length="2" value="">
+          <span aria-hidden="true">/</span>
+          <div id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+          <input type="text" id="primaryQuestionnaire--0b1f7a2e01c210008-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" aria-required="true" data-fixture-length="4" value="">
+          <button type="button" data-automation-id="dateIcon" aria-label="Calendar">Calendar</button>
+        </div>
+      </div>
+      <div data-automation-id="formField-0b1f7a2e01c210009">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210009">Describe a project where you made code run faster on a GPU.<abbr title="required">*</abbr></label>
+        <textarea id="primaryQuestionnaire--0b1f7a2e01c210009" aria-required="true" maxlength="2000"></textarea>
+      </div>
+      <fieldset id="primaryQuestionnaire--0b1f7a2e01c210010" data-automation-id="formField-0b1f7a2e01c210010">
+        <legend>Which of these areas interest you? (select all that apply)</legend>
+        <div><input type="checkbox" id="q10-a" name="primaryQuestionnaire--0b1f7a2e01c210010"><label for="q10-a">Agent infrastructure</label></div>
+        <div><input type="checkbox" id="q10-b" name="primaryQuestionnaire--0b1f7a2e01c210010"><label for="q10-b">Graphics</label></div>
+        <div><input type="checkbox" id="q10-c" name="primaryQuestionnaire--0b1f7a2e01c210010"><label for="q10-c">Robotics</label></div>
+      </fieldset>
+      <div data-automation-id="formField-0b1f7a2e01c210011">
+        <input type="checkbox" id="primaryQuestionnaire--0b1f7a2e01c210011" aria-required="true">
+        <label for="primaryQuestionnaire--0b1f7a2e01c210011">I certify that the information I have provided in this application is true and complete.</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div data-automation-id="applyFlowVoluntaryDisclosuresPage" data-fixture-step hidden>
+    <h2>Voluntary Disclosures</h2>
+    <p>NVIDIA is an equal opportunity employer. Submission of this information is voluntary and declining to provide it will not subject you to any adverse treatment.</p>
+    <div data-automation-id="formField-gender">
+      <label for="personalInfoUS--gender">Gender<abbr title="required">*</abbr></label>
+      <button type="button" id="personalInfoUS--gender" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["Female","Male","I do not wish to answer"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-ethnicity">
+      <label for="personalInfoUS--ethnicity">Ethnicity<abbr title="required">*</abbr></label>
+      <button type="button" id="personalInfoUS--ethnicity" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["American Indian or Alaska Native (Not Hispanic or Latino) (United States of America)","Asian (Not Hispanic or Latino) (United States of America)","Black or African American (Not Hispanic or Latino) (United States of America)","Hispanic or Latino (United States of America)","Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino) (United States of America)","Two or More Races (Not Hispanic or Latino) (United States of America)","White (Not Hispanic or Latino) (United States of America)","I do not wish to answer. (United States of America)"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <div data-automation-id="formField-veteranStatus">
+      <label for="personalInfoUS--veteranStatus">Veteran Status<abbr title="required">*</abbr></label>
+      <button type="button" id="personalInfoUS--veteranStatus" aria-haspopup="listbox" aria-expanded="false" aria-required="true" value="" data-fixture-options='["I am not a protected veteran","I identify as one or more of the classifications of protected veteran","I do not wish to self-identify"]'>Select One</button>
+      <input type="text" class="mirror" tabindex="-1" value="">
+    </div>
+    <h3>Terms and Conditions</h3>
+    <div data-automation-id="richText"><p>I certify that the information on this form is accurate. I understand NVIDIA may verify it.</p></div>
+    <div data-automation-id="formField-acceptTermsAndAgreements">
+      <input type="checkbox" id="termsAndConditions--acceptTermsAndAgreements" aria-required="true">
+      <label for="termsAndConditions--acceptTermsAndAgreements">Yes, I have read and consent to the terms and conditions</label>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div data-automation-id="applyFlowSelfIdentifyPage" data-fixture-step hidden>
+    <h2>Self Identify</h2>
+    <h3>Voluntary Self-Identification of Disability</h3>
+    <p>Form CC-305. We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities.</p>
+    <div data-automation-id="formField-name">
+      <label for="selfIdentifiedDisabilityData--name">Name<abbr title="required">*</abbr></label>
+      <input type="text" id="selfIdentifiedDisabilityData--name" aria-required="true">
+    </div>
+    <div data-automation-id="formField-employeeId">
+      <label for="selfIdentifiedDisabilityData--employeeId">Employee ID (if applicable)</label>
+      <input type="text" id="selfIdentifiedDisabilityData--employeeId">
+    </div>
+    <div data-automation-id="formField-dateSignedOn">
+      <label>Date<abbr title="required">*</abbr></label>
+      <p>Enter today's date.</p>
+      <div data-automation-id="dateInputWrapper">
+        <div id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionMonth-display" data-automation-id="dateSectionMonth-display" aria-hidden="true" data-placeholder="MM">MM</div>
+        <input type="text" id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionMonth-input" data-automation-id="dateSectionMonth-input" role="spinbutton" aria-label="Month" aria-valuemin="1" aria-valuemax="12" aria-required="true" data-fixture-length="2" value="">
+        <span aria-hidden="true">/</span>
+        <div id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionDay-display" data-automation-id="dateSectionDay-display" aria-hidden="true" data-placeholder="DD">DD</div>
+        <input type="text" id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionDay-input" data-automation-id="dateSectionDay-input" role="spinbutton" aria-label="Day" aria-valuemin="1" aria-valuemax="31" aria-required="true" data-fixture-length="2" value="">
+        <span aria-hidden="true">/</span>
+        <div id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionYear-display" data-automation-id="dateSectionYear-display" aria-hidden="true" data-placeholder="YYYY">YYYY</div>
+        <input type="text" id="selfIdentifiedDisabilityData--dateSignedOn-dateSectionYear-input" data-automation-id="dateSectionYear-input" role="spinbutton" aria-label="Year" aria-valuemin="1900" aria-valuemax="2100" aria-required="true" data-fixture-length="4" value="">
+        <button type="button" data-automation-id="dateIcon" aria-label="Calendar">Calendar</button>
+      </div>
+    </div>
+    <fieldset id="selfIdentifiedDisabilityData--disabilityStatus" data-automation-id="formField-disabilityStatus">
+      <legend>Please check one of the boxes below:<abbr title="required">*</abbr></legend>
+      <div><input type="checkbox" id="64cbff5f364f10000ae7a421cf210000" name="disabilityStatus"><label for="64cbff5f364f10000ae7a421cf210000">Yes, I have a disability (or previously had a disability)</label></div>
+      <div><input type="checkbox" id="64cbff5f364f10000aeec1fdcc5c0000" name="disabilityStatus"><label for="64cbff5f364f10000aeec1fdcc5c0000">No, I do not have a disability</label></div>
+      <div><input type="checkbox" id="64cbff5f364f10000af3af293a050000" name="disabilityStatus"><label for="64cbff5f364f10000af3af293a050000">I do not want to answer</label></div>
+    </fieldset>
+  </div>
+
+  <!-- Step 6 -->
+  <div data-automation-id="applyFlowReviewPage" data-fixture-step hidden>
+    <h2>Review</h2>
+    <h3>My Information</h3>
+    <dl><dt>How Did You Hear About Us?</dt><dd>As entered</dd></dl>
+    <h3>My Experience</h3>
+    <dl><dt>Resume/CV</dt><dd>As entered</dd></dl>
+  </div>
+
+  <div data-automation-id="pageFooter">
+    <button type="button" data-automation-id="pageFooterBackButton">Back</button>
+    <button type="button" data-automation-id="pageFooterNextButton">Save and Continue</button>
+  </div>
+</div>
+</div>
+
+<template id="fixture-congratulations">
+  <div data-automation-id="signInContent" role="dialog" aria-labelledby="congratulations-heading">
+    <h3 id="congratulations-heading">Congratulations!</h3>
+    <p>Your application has successfully been submitted.</p>
+    <a href="#userHome">View My Applications</a>
+  </div>
+</template>
+
+<script src="/employ-me-synthetic/synthetic-workday.js"></script>
+</body>
+</html>

@@ -191,13 +191,29 @@ const MONTHS = [
   'December',
 ];
 
-/** ISO for date inputs, MM/DD/YYYY for date pickers, "January 4, 2027" in plain text boxes. */
+/**
+ * ISO for date inputs, one part per box for ARIA date segments (Workday's
+ * MM/DD/YYYY spinbuttons), MM/DD/YYYY for date pickers, "January 4, 2027"
+ * (or "April 2025" for a month) in plain text boxes.
+ */
 function formatDate(iso: string, field: ExtractedField): string {
   const [year = '', month = '', day = ''] = iso.split('-');
-  if (field.element.getAttribute('type') === 'date') return iso;
-  const hint = `${field.element.getAttribute('placeholder') ?? ''} ${field.element.getAttribute('class') ?? ''}`;
-  if (/\b(mm|dd)\b|date|pick/i.test(hint)) return `${month}/${day}/${year}`;
-  return `${MONTHS[Number(month) - 1] ?? month} ${String(Number(day))}, ${year}`;
+  const el = field.element;
+  if (el.getAttribute('role') === 'spinbutton') return datePart(el, { year, month, day });
+  if (el.getAttribute('type') === 'date') return iso;
+  const hint = `${el.getAttribute('placeholder') ?? ''} ${el.getAttribute('class') ?? ''}`;
+  if (/\b(mm|dd)\b|date|pick/i.test(hint)) return day === '' ? `${month}/${year}` : `${month}/${day}/${year}`;
+  const name = MONTHS[Number(month) - 1] ?? month;
+  return day === '' ? `${name} ${year}` : `${name} ${String(Number(day))}, ${year}`;
+}
+
+/** Which part of a date one spinbutton holds, from its name or its range. */
+function datePart(el: Element, parts: { year: string; month: string; day: string }): string {
+  const name = `${el.getAttribute('aria-label') ?? ''} ${el.getAttribute('data-automation-id') ?? ''} ${el.id}`;
+  const max = el.getAttribute('aria-valuemax');
+  if (/month/i.test(name) || max === '12') return parts.month;
+  if (/\bday\b|dateSectionDay|-day\b/i.test(name) || max === '31') return parts.day;
+  return parts.year;
 }
 
 function checkFor(fieldType: FieldType, field: ExtractedField): TextCheck {

@@ -78,11 +78,14 @@ export function optionsIn(listbox: Element): Element[] {
   );
 }
 
-/** Whether a combobox now shows `label` as (one of) its value(s). */
-export function comboboxShows(combobox: Element, label: string): boolean {
+/**
+ * Whether a combobox now shows `label` as (one of) its value(s). `also` is
+ * what the ATS shows elsewhere (Workday's selected-item pills).
+ */
+export function comboboxShows(combobox: Element, label: string, also: readonly string[] = []): boolean {
   const wanted = normalizeLabel(label);
   if (wanted === '') return false;
-  const shown = [shownValue(combobox)];
+  const shown = [shownValue(combobox), ...also];
   // react-select renders the value beside the input, in its control container.
   // Not any wider: the field's own label must not count as its value.
   const control = combobox.closest('[class*="control"], [class*="Control"], .select-shell');

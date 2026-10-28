@@ -39,6 +39,14 @@ function failure(fieldId: string, fieldType: FieldType, isFile: boolean, error: 
             reason: 'valueDidNotStick',
             fix: "The form didn't keep the value. Fill it in yourself.",
           };
+    case 'searchShowedNothing':
+      return {
+        kind: 'couldNotFill',
+        fieldId,
+        fieldType,
+        reason: 'controlNotSupported',
+        fix: 'This list shows its options only after you search, and only on Enter, which employ-me never presses. Type your answer, press Enter and pick it yourself.',
+      };
     case 'optionNotFound':
       return {
         kind: 'couldNotFill',

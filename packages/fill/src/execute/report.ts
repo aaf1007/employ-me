@@ -31,10 +31,23 @@ export function buildReport(parts: ReportParts): FillReport {
   const fields: FieldDescriptor[] = [];
   const values = new Map<string, string>();
   const onPage = new Set(final.fields.map((f) => f.field.fieldId));
+  const earlier = new Set(previous?.planned.map((p) => p.field.fieldId));
 
   for (const planned of everyField) {
     const fieldId = planned.field.fieldId;
     const kept = before.get(fieldId);
+    // Appeared and went in this same execute, before anything was written to
+    // it ("To" goes when Workday's "I currently work here" is ticked): no
+    // longer a field of the form. An earlier step's fields stay.
+    if (
+      !outcomes.has(fieldId) &&
+      !onPage.has(fieldId) &&
+      kept === undefined &&
+      !earlier.has(fieldId) &&
+      !planned.field.element.isConnected
+    ) {
+      continue;
+    }
     const sameWrite = writes.get(fieldId) === writeKey(planned, resume);
     let outcome: FieldOutcome | null;
     const written = outcomes.get(fieldId);

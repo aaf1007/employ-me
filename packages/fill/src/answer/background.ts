@@ -24,6 +24,11 @@ const BACKGROUND_TYPES = [
   'work.employer',
   'work.currentTitle',
   'work.title',
+  'work.location',
+  'work.current',
+  'work.startDate',
+  'work.endDate',
+  'work.description',
   'edu.school',
   'edu.degree',
   'edu.discipline',
@@ -65,6 +70,39 @@ export function backgroundAnswer(
       const job = jobFor(field, ctx);
       return job === undefined ? missing('your work history') : text(job.title);
     }
+    case 'work.location': {
+      const job = jobFor(field, ctx);
+      if (job === undefined) return missing('your work history');
+      return job.location === undefined || job.location === ''
+        ? missing('where this job was')
+        : text(job.location);
+    }
+    case 'work.current': {
+      const job = jobFor(field, ctx);
+      return job === undefined ? missing('your work history') : yesNo(job.current);
+    }
+    case 'work.startDate': {
+      const job = jobFor(field, ctx);
+      return job === undefined ? missing('your work history') : dateAnswer(field, job.startDate);
+    }
+    case 'work.endDate': {
+      const job = jobFor(field, ctx);
+      if (job === undefined) return missing('your work history');
+      if (job.current) {
+        return skip(
+          'notInProfile',
+          'You still work here, so this stays empty. Tick "I currently work here".',
+        );
+      }
+      return job.endDate === undefined ? missing('when this job ended') : dateAnswer(field, job.endDate);
+    }
+    case 'work.description': {
+      const job = jobFor(field, ctx);
+      if (job === undefined) return missing('your work history');
+      return job.description === undefined || job.description === ''
+        ? missing('a description of this job')
+        : text(job.description);
+    }
     case 'edu.school': {
       const school = schoolFor(field, ctx);
       // Typed into searchable lists: Greenhouse loads schools by search term.
@@ -86,11 +124,11 @@ export function backgroundAnswer(
     }
     case 'edu.endDate': {
       const date = schoolFor(field, ctx)?.endDate;
-      return date === undefined ? missing('your graduation date') : option(yearMonthTarget(date));
+      return date === undefined ? missing('your graduation date') : dateAnswer(field, date);
     }
     case 'edu.startDate': {
       const date = schoolFor(field, ctx)?.startDate;
-      return date === undefined ? missing('your education start date') : option(yearMonthTarget(date));
+      return date === undefined ? missing('your education start date') : dateAnswer(field, date);
     }
     case 'edu.gpa': {
       const gpa = schoolFor(field, ctx)?.gpa;
@@ -158,6 +196,13 @@ export function backgroundAnswer(
         'Cover letters are left for you. Attach or write one yourself, or click Draft.',
       );
   }
+}
+
+/** A month ("2023-05"): picked from a list of dates, else written as a date (one part per box on Workday). */
+function dateAnswer(field: ExtractedField, yearMonth: string): Answer {
+  return isChoice(field)
+    ? option(yearMonthTarget(yearMonth))
+    : { kind: 'answer', value: { kind: 'date', iso: yearMonth }, source: 'rules' };
 }
 
 const options = (targets: readonly OptionTarget[]): Answer => ({

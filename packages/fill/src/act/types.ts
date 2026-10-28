@@ -4,7 +4,9 @@ import type { Refusal } from './guard';
 export type ActError =
   | Refusal
   | { readonly reason: 'valueDidNotStick'; readonly detail: string }
-  | { readonly reason: 'optionNotFound'; readonly detail: string };
+  | { readonly reason: 'optionNotFound'; readonly detail: string }
+  /** The list shows options only once searched, and typing didn't search (Workday's Enter-only prompts). */
+  | { readonly reason: 'searchShowedNothing'; readonly detail: string };
 
 export type ActResult = Result<void, ActError>;
 

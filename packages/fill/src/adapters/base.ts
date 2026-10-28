@@ -20,6 +20,8 @@ export function adapter(
     repeatingSections: () => [],
     checkStrategy: 'click',
     typeaheadSuggestions: () => [],
+    typeToSearch: false,
+    comboboxChoices: () => [],
     ...rest,
   };
 }

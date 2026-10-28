@@ -141,7 +141,8 @@ function repeats(adapter: AtsAdapter, form: Element, profile: ProfileView): Repe
       section.section === 'education'
         ? profile.background.education.length
         : profile.background.workHistory.length;
-    if (section.addButton !== null && section.entries > 0 && want > section.entries) {
+    // Workday starts its sections empty, with only an "Add" button.
+    if (section.addButton !== null && want > section.entries) {
       steps.push({ section: section.section, button: section.addButton, have: section.entries, want });
     }
   }
