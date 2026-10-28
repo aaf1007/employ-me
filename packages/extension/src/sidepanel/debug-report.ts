@@ -8,9 +8,17 @@ import type { PanelState } from './state';
 // value: no Profile data, no Saved Answers, no Drafts, no suggestions, no
 // option lists (an open list can show your own search). As a last guard,
 // any of your own words that still turn up (a label that quoted a value) are
-// replaced before it is copied.
+// replaced before it is copied: whole words only, and never inside the
+// form's own ids, so the report still lines up with the form.
 
 const REMOVED = '[removed]';
+/** The form's own ids and the Posting's: never scrubbed (they're the page's attributes, not your words). */
+const IDS = new Set(['fieldId', 'employer', 'jobId']);
+/** Answers on every form that say nothing about you. Scrubbing them only broke the form's own words. */
+const SAYS_NOTHING =
+  /^(yes|no|none|other|true|false|n\/?a|not applicable)$|\b(decline[sd]?|prefer not|rather not|do not wish|don['’]t wish|not to (say|answer|disclose|specify|self[- ]?identify))\b/i;
+/** Currency and country codes ("CAD", "US"). */
+const CODE = /^[A-Z]{2,3}$/;
 
 export function buildDebugReport(state: PanelState, profile: Profile | null, version: string): string {
   const { detected, posting, view, provider } = state;
@@ -45,7 +53,12 @@ export function buildDebugReport(state: PanelState, profile: Profile | null, ver
     fields: view?.fields.map((field) => fieldLine(field, state)) ?? [],
     submission: state.submission.state,
   };
-  return scrub(JSON.stringify(report, null, 2), secretsOf(state, profile));
+  const secrets = secretsOf(state, profile);
+  return JSON.stringify(
+    report,
+    (key, value: unknown) => (typeof value === 'string' && !IDS.has(key) ? scrub(value, secrets) : value),
+    2,
+  );
 }
 
 function fieldLine(field: FieldView, state: PanelState) {
@@ -92,7 +105,8 @@ function secretsOf(state: PanelState, profile: Profile | null): string[] {
     if (typeof value === 'string') {
       const text = value.trim();
       // Enum values ("hybrid", "notProtectedVeteran") aren't your words and never appear on their own.
-      if (text.length >= 3 && !/^[a-z][A-Za-z]*$/.test(text)) found.add(text);
+      const enumValue = /^[a-z][A-Za-z]*$/.test(text);
+      if (text.length >= 3 && !enumValue && !CODE.test(text) && !SAYS_NOTHING.test(text)) found.add(text);
     } else if (typeof value === 'number') {
       if (Math.abs(value) >= 1000) found.add(String(value));
     } else if (Array.isArray(value)) {
@@ -113,10 +127,14 @@ function secretsOf(state: PanelState, profile: Profile | null): string[] {
   return [...found].sort((a, b) => b.length - a.length);
 }
 
+/** Whole words only: "Sam" goes, "Samples" stays. */
 function scrub(text: string, secrets: readonly string[]): string {
   let out = text;
   for (const secret of secrets) {
-    out = out.replace(new RegExp(escapeRegExp(JSON.stringify(secret).slice(1, -1)), 'gi'), REMOVED);
+    out = out.replace(
+      new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(secret)}(?![\\p{L}\\p{N}])`, 'giu'),
+      REMOVED,
+    );
   }
   return out;
 }
