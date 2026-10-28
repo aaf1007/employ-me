@@ -90,8 +90,13 @@ function pong(): Pong {
     type: 'pong',
     ats: adapterFor(new URL(location.href)).ats,
     url: location.href,
-    topFrame: window.top === window,
+    topFrame: isTopFrame(),
   };
+}
+
+/** A frame with no ancestors is the tab's top frame (read without the global object). */
+function isTopFrame(): boolean {
+  return location.ancestorOrigins.length === 0;
 }
 
 /** The Application Form in this frame, or the ATS's confirmation. Null when neither is here. */
@@ -106,7 +111,7 @@ function detect(): Detected | null {
     type: 'detected',
     ats: adapter.ats,
     url: url.href,
-    topFrame: window.top === window,
+    topFrame: isTopFrame(),
     fieldCount,
     posting: readPosting(document, url),
     confirmed,

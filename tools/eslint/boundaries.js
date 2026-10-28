@@ -125,7 +125,7 @@ const DOM_WRITE = {
   ],
 };
 
-const READ_ONLY_WHY = `Outside act/, fill only reads the job site's page, and nothing is injected into it (CODING_STANDARDS.md "DOM"). ${ACT_WHY}`;
+const READ_ONLY_WHY = `Outside act/, fill and the extension's content script only read the job site's page, and nothing is injected into it (CODING_STANDARDS.md "DOM"). ${ACT_WHY}`;
 
 /** fill outside act/: the page is read-only. */
 const READ_ONLY_DOM = {
@@ -522,6 +522,11 @@ function scope(name, files, ignores, options) {
 const ACT = ['packages/fill/src/act/**'];
 const CORE_BOUNDARY = ['packages/core/src/provider/**', 'packages/core/src/protocol/**'];
 const NET_MODULE = ['packages/extension/src/net/ats-public-api.ts'];
+/** The extension's code that runs inside job sites' pages. */
+const CONTENT_SCRIPT = [
+  'packages/extension/src/content/**',
+  'packages/extension/src/entrypoints/*.content.ts',
+];
 const HELPER_STDOUT_ALLOWED = [
   'packages/helper/src/host.ts',
   'packages/helper/src/cli.ts',
@@ -568,9 +573,20 @@ export const boundaryConfigs = [
     properties: HELPER_STDOUT,
   }),
   ...scope('helper-stdout', HELPER_STDOUT_ALLOWED, [], inHelper),
-  ...scope('extension', ['packages/extension/**'], NET_MODULE, {
+  ...scope('extension', ['packages/extension/**'], [...NET_MODULE, ...CONTENT_SCRIPT], {
     ...inBrowser,
     chrome: false,
+    patterns: DIRECTION.extension,
+  }),
+  // The content script runs in job sites' pages: it reads them like fill and
+  // writes only through fill's act/ (outlines included), with no network.
+  // It reaches the extension through the imported `browser`, never the global object.
+  ...scope('extension-content', CONTENT_SCRIPT, [], {
+    ...inBrowser,
+    chrome: false,
+    readOnlyDom: true,
+    computedCalls: true,
+    globalObject: true,
     patterns: DIRECTION.extension,
   }),
   ...scope('extension-net', NET_MODULE, [], {

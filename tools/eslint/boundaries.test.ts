@@ -59,6 +59,55 @@ const cases: Array<{ name: string; file: string; code: string; expect: RegExp | 
     code: "export const d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');",
     expect: /prototype value-setter/,
   },
+  // The content script reads job sites' pages like fill does
+  {
+    name: 'inline style in the content script',
+    file: 'packages/extension/src/content/x.ts',
+    code: "export const f = (el: HTMLElement) => { el.style.outline = '2px solid red'; };",
+    expect: /changes the page/,
+  },
+  {
+    name: 'remove() in the content script entrypoint',
+    file: 'packages/extension/src/entrypoints/x.content.ts',
+    code: 'export const f = (el: Element) => { el.remove(); };',
+    expect: /changes the page/,
+  },
+  {
+    name: 'value write in the content script',
+    file: 'packages/extension/src/content/x.ts',
+    code: "export const f = (el: HTMLInputElement) => { el.value = 'x'; };",
+    expect: /DOM write/,
+  },
+  {
+    name: 'computed call in the content script',
+    file: 'packages/extension/src/content/x.ts',
+    code: "export const f = (el: HTMLElement, name: 'click') => { el[name](); };",
+    expect: /computed key/,
+  },
+  {
+    name: 'the global object in the content script',
+    file: 'packages/extension/src/content/x.ts',
+    code: 'export const top = window.top === window;',
+    expect: /No window here/,
+  },
+  {
+    name: 'fetch in the content script',
+    file: 'packages/extension/src/content/x.ts',
+    code: "export const r = fetch('https://example.com/collect');",
+    expect: /Zero telemetry/,
+  },
+  {
+    name: 'the content script reaching the extension through the imported browser',
+    file: 'packages/extension/src/content/x.ts',
+    code: "import { browser } from 'wxt/browser';\nexport const id = browser.runtime.id;",
+    expect: null,
+  },
+  {
+    name: 'inline style on an extension page is React’s business, not lint’s',
+    file: 'packages/extension/src/ui/x.ts',
+    code: "export const f = (el: HTMLElement) => el.style.getPropertyValue('color');",
+    expect: null,
+  },
   {
     name: 'style.setProperty in fill outside act',
     file: 'packages/fill/src/outline/x.ts',

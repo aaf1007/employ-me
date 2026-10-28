@@ -29,9 +29,10 @@ Concrete rules a reviewer can check. Lint and types enforce many of them; the re
 - If the Provider is unavailable, the Fill still runs on rules. Fields that needed the AI get `couldNotFill: providerUnavailable` with the helper's fix.
 - Self-ID questions fill only from the user's Self-ID Answers ("decline" by default). Attestations get `couldNotFill: attestation`.
 
-## DOM (packages/fill)
+## DOM (packages/fill, and the extension's content script)
 
 - Read the DOM anywhere in fill. Write it, or dispatch events on it, only through `act/`. Extend `act/` with a new guarded operation when you need one.
+- The extension's content script (`src/content/`, `src/entrypoints/*.content.ts`) runs inside job sites' pages and follows the same rules as fill outside `act/`: it reads the page, writes nothing but through fill's `act`, has no network, and reaches the extension only through the imported `browser`, never the global object.
 - Outside `act/`, fill writes nothing through a computed key (`x[key] = v`): build objects with `Object.fromEntries` or a `Map`. Nowhere in fill is a method called through one (`x[name]()`).
 - `act/` dispatches only events built in place with a literal type (`el.dispatchEvent(new Event('input', …))`), and never presses Enter.
 - core and fill never touch the global object (`globalThis`, `window`, `self`, `top`, `parent`, `frames`, `opener`). Use the global you need by name, or the element's own document.
