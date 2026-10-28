@@ -383,3 +383,42 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 - Coinbase's board is behind a Cloudflare challenge ("Just a moment…"); it was skipped, since we never solve CAPTCHAs. Stripe's job-boards URL is a custom site with no `#first_name`.
 - In Playwright, a locator like `[data-status="yourDraft"]` re-resolves once the status changes. Pin a Draft card by its field id.
 - The debug report's field ids can't be joined back to the form while the over-scrub bug stands. `e2e/live/report.ts` joins by id and leaves the type empty when they differ.
+
+## 2026-10-28 · Last pass before real use: the live test's open items, and "Use it today" (core, fill, extension, helper, README)
+
+**Landed**
+- **core** (own commit, with the side panel's words for both so it typechecks): `CouldNotFillReason` `draftFailed` (the Provider answered the Fill but couldn't write this Draft) and `ReviewReason` `asksForMore` (filled from the Profile, but the question asks for more).
+- **fill:**
+  - Export-control questions (`answer/export-control.ts`). A list of sanctioned places with a "None of the above" picks it when none of your citizenships (from every Work Authorization) or your address country is named (Databricks). If one is, it's yours to answer. A list of the kinds of U.S. person picks "None" when the Profile says you aren't one. A list that excludes places ("a country other than Cuba…", Databricks' follow-up) is never read. "Are you a citizen of Cuba, Iran…?" asked as yes or no is answered from the same check, not from "U.S. person".
+  - "For export control, please list any countries of which you are a citizen" (Zoox) is `workAuth.citizenship`, not `usPerson` (`classify/rules.ts`). The text box gets your citizenships, flagged `asksForMore` when it also asks for residencies or dates.
+  - A yes/no answer that can't go in a text box is `notInProfile` ("Your Profile has only a yes or no for this…"), not "No option matches your Profile".
+  - A text or textarea question neither the rules nor the AI recognised is free text (design.md "Drafts"): a Draft when required, a Draft button when optional. Choices stay `unrecognizedField`. This covers the AI's `unknown`, a `fieldType` of unknown, and a field the mapping left out.
+  - A Draft that failed is `draftFailed`, not `providerUnavailable` ("The AI is unavailable").
+  - "Worked here before" for a company the Profile doesn't list is Couldn't fill (`notInProfile`) with "add <employer> under Profile → Screening answers", not "You asked to answer this one each time". Workday's expected outcomes changed with it.
+  - `execute()` checks for your edits again before it records the page. An edit made during a re-plan's settle waits used to be taken as the Fill's own: no "Changed by you", and a later re-plan with a different answer could write over it. That was the race behind side-panel's flaky "one Fill carries on … leaves your edits alone" (`replan.test.ts`).
+- **extension:** the debug report scrubs whole words, never inside field ids or the Posting key, and doesn't treat currency or country codes or answers that say nothing about you (Yes, No, decline wordings) as your words. Name, email, city, Drafts and other identifying values still go. `reasons.ts` has words for the two new reasons.
+- **helper:**
+  - Codex's `responseTooManyFailedAttempts`, and the other codexErrorInfo values that mean OpenAI's service failed, now say so: "This is on OpenAI's side, not your setup. Click Retry in a minute. If it keeps failing, switch to Claude in Settings." The stub has a `serviceFailed` mode.
+  - Resume extract: when the model leaves `degreeLevel` empty for a degree the prompt names (BASc, B.A.Sc., MSc, PhD…) or a spelled-out one, the level is read from the degree (`prompts/degree-level.ts`). A test keeps that table and the prompt's list the same. Unit tests only, no real calls.
+- **README:** status line, "Use it today" for a Mac with Chrome, the live test's per-ATS table next to the rules-only table (regenerated: it now counts all five Ashby fixtures), and ADR-0002's disclosure. A root script `pnpm employ-me <command>` runs the helper CLI from the checkout.
+- Every fix has a test that failed before it: `outcome.test.ts`, `export-control.test.ts`, `free-text.test.ts`, `plan.test.ts`, `replan.test.ts`, `debug-report.test.ts`, `codex/provider.test.ts`, `resume-extract.test.ts`.
+
+**README steps, as checked**
+- In a clean copy (`git archive HEAD`): `pnpm install` and `pnpm build` (the two halves of `pnpm setup:local`) ran with the real HOME; they write only the repo and pnpm's store.
+- `setup --extension packages/extension/.output/chrome-mv3`, setup again (the update path), `doctor`, `uninstall`, and `pnpm employ-me --help` / `setup --help` ran the built `dist/cli.mjs` with HOME pointed at a throwaway folder. The session's sandbox refuses shell commands that set HOME, so a small node script spawned the CLI with that env. Setup wrote only under the throwaway home (helper, extension, launcher, config, work, and Chrome's host manifest); doctor passed every check but the logins (none in a fresh HOME); uninstall removed both and kept the log. The real `~/Library/Application Support/employ-me` doesn't exist, and the real Chrome `NativeMessagingHosts` folder is unchanged.
+- Load unpacked, the dashboard setup and the first Fill weren't done by hand in real Chrome (that would touch the real profile). e2e covers them in a fresh Chromium profile: `dashboard-setup.spec.ts`, `milestone-1.spec.ts`.
+
+**Interface changes outside one package**
+- core: the two reasons above.
+- Root `package.json`: the `employ-me` script.
+
+**Left**
+- The CLI's status lines repeat themselves ("Claude isn't logged in. Claude isn't logged in: run `claude`…"): `providerLines` prints the message, then a fix that starts with the same words.
+- Messages in the extension and the CLI say `npx employ-me …`, which won't work until it's on npm. The README says to use `pnpm employ-me …` and `pnpm setup:local` meanwhile.
+- No retry in the helper for Codex's service failures; the user clicks Retry.
+- Export control: a U.S. person facing a list of the kinds of U.S. person still answers it themselves (the Profile doesn't say which kind). Places other than the usual sanctioned ones aren't in the list. Permanent residency in a sanctioned country isn't in the Profile, so "None of the above" rests on citizenships and your address.
+- "Worked here before" isn't remembered from what you answer on the page; you add the company in the Profile.
+
+**Gotchas**
+- `milestone-1` Lever polish still times out under heavy load: it failed while the machine's load average was ~60 and passed 24 of 24 (with side-panel, `--repeat-each 3`) once it settled. Not changed here; the e2e harness and its flaky specs belong to the agent fixing them.
+- The Palantir fixture's security-clearance questions are radios, so they stay "Not recognised"; the free-text change only reaches text boxes.

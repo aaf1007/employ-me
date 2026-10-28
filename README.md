@@ -43,7 +43,7 @@ Nothing else changes: not your shell, not your CLIs' settings, and in Chrome onl
 
 ### 4. Set up your Profile
 
-1. Click the employ-me icon on any page. The side panel opens; click **Dashboard**, then **Setup**.
+1. Click the employ-me icon on any web page. The side panel opens; click **Dashboard**, then **Setup**.
 2. If you only have Codex, first open **Settings** and choose Codex as the Provider (Claude is the default).
 3. Add your Resume (a PDF or DOCX with selectable text) and click **Read my Resume**. Your Provider reads it once.
 4. Check every field it read, then answer the questionnaire: where you apply, your Work Authorization for each country, preferences and salary, screening answers, and Self-ID Answers (they default to "decline", and are never sent to the AI).
@@ -52,10 +52,10 @@ Nothing else changes: not your shell, not your CLIs' settings, and in Chrome onl
 
 1. Open a job's application page on Greenhouse, Lever or Ashby (or a company site that embeds one).
 2. Click the employ-me icon. The side panel shows the Posting; click **Fill**.
-3. Fields are listed under **Filled**, **Needs your review** and **Couldn't fill**, each with its reason and a fix, and outlined on the page. Required free-text questions get Drafts: edit and accept them, or write your own. Attestations ("I certify…") are always left for you.
+3. Fields are listed under **Filled**, **Needs your review** and **Couldn't fill**, each with its reason (and for Couldn't fill, what to do), and outlined on the page. Required free-text questions get Drafts: edit and accept them, or write your own. Attestations ("I certify…") are always left for you.
 4. Check the whole form, then click Submit on the page yourself. employ-me never submits. When the site confirms, or you answer **Did you apply?**, the Application and its Snapshot are in the **Tracker**.
 
-On another company's site, click the icon on that page first: that click is what lets employ-me read it.
+On a company's own careers site (not one of those three), employ-me may read the page only after you click its icon on that page, so open the panel from there before you click Fill.
 
 ### Troubleshooting
 
@@ -83,7 +83,7 @@ Then click the reload arrow on employ-me's card in `chrome://extensions`. Your P
 ## How it works
 
 - **You stay in control.** You open an application form and click **Fill**, then review everything and click Submit yourself. It never submits for you.
-- **Rules first, AI second.** Built-in rules fill the fields they recognize. Your own `claude` or `codex` CLI, reached through a small local helper, handles unfamiliar fields and drafts free-text answers for you to accept. The AI sees field labels and options, never your Profile values, unless it's writing a Draft.
+- **Rules first, AI second.** Built-in rules fill the fields they recognize. Your own `claude` or `codex` CLI, reached through a small local helper, handles unfamiliar fields and drafts free-text answers for you to accept. To match fields, the AI sees their labels and options, never your Profile values. To write a Draft it gets the Profile facts a Draft can use (never Self-ID Answers), and setup gives it your Resume once.
 - **Your data stays on your machine.** No accounts, no server, no telemetry.
 - **Supported job sites, in order:** Greenhouse, Lever and Ashby first, then Workday. LinkedIn and Indeed are never supported.
 
@@ -105,8 +105,8 @@ Then click the reload arrow on employ-me's card in `chrome://extensions`. Your P
 |---|---|---|---|---|---|---|
 | Greenhouse | 5 | 126 | 90 | 4 | 32 | 71% |
 | Lever | 3 | 53 | 41 | 0 | 12 | 77% |
-| Ashby | 3 | 42 | 28 | 0 | 14 | 67% |
-| Workday (synthetic forms: unverified until a live pass) | 3 | 110 | 79 | 3 | 28 | 72% |
+| Ashby | 5 | 83 | 43 | 8 | 32 | 52% |
+| Workday (synthetic forms: unverified until a live pass) | 3 | 110 | 79 | 0 | 31 | 72% |
 | Generic fallback | 1 | 14 | 8 | 1 | 5 | 57% |
 <!-- fill-rate:end -->
 
