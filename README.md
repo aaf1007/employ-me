@@ -13,6 +13,7 @@ An open-source Chrome extension that fills in job applications from your own pro
 
 ## Docs
 
+- [Design (v1)](docs/design.md)
 - [Research](docs/research/2026-10-27-landscape.md)
 - [Glossary](GLOSSARY.md)
 - [Decisions](docs/adr/)

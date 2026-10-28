@@ -19,7 +19,7 @@ The form an ATS shows for applying to a Posting, possibly split across several s
 _Avoid_: application (that word means the record), page
 
 **Attestation**:
-A statement on an Application Form that you must affirm yourself, such as certifying it's true, giving consent, acknowledging an AI-use policy, or signing.
+A statement on an Application Form that you must affirm yourself, such as certifying it's true, giving consent, acknowledging an AI-use policy, or signing. A question about a fact, or about what you're willing to do, is not an Attestation.
 _Avoid_: checkbox, consent box
 
 ### Your side
@@ -41,7 +41,7 @@ An answer you accepted for a question, kept so it can be reused on later Applica
 _Avoid_: Q&A bank entry, snippet, template
 
 **Self-ID Answer**:
-Your answer to a voluntary self-identification question (gender, race/ethnicity, veteran status, disability), set by you for each question type.
+Your answer to a voluntary self-identification question, kept separately for each country. For the US these are sex, Hispanic/Latino, race, protected veteran and disability. For Canada they are gender identity, Indigenous identity, visible minority and disability.
 _Avoid_: EEO data, demographics
 
 ### Filling

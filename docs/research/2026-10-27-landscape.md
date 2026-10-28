@@ -359,3 +359,62 @@ Recommended pipeline:
 - Whether `activeTab` covers iframes.
 - Whether `claude`, started by Chrome's native host, can read the macOS Keychain (untested).
 - SuccessFactors' real share among tech employers, which is hidden behind custom domains.
+
+---
+
+## 11. Profile fields, and what US and Canadian forms ask (added 2026-10-27)
+
+### What incumbents store
+- **Jobright** doesn't publish its profile structure, so this comes from its [privacy notice (2026-06-15)](https://jobright.ai/legal/privacy), product pages and reviews.
+  - It is US-only, with a single work-authorization setting and an H-1B sponsorship checkbox. Work authorization is not stored per country.
+  - It also stores contact details, work history, education, links, "common screening questions", and optional gender, race/ethnicity, veteran and disability answers.
+  - Exact screens and required fields are **[unverified]**.
+- **Simplify** ([profile help](https://help.simplify.jobs/articles/8396475-edit-your-profile-after-onboarding), [privacy 2026-08-19](https://simplify.jobs/privacy)) has three areas:
+  - **Profile:** experience, education, projects, skills, links, documents.
+  - **Personal info:** contact details, demographics including LGBTQ+, and work authorization.
+  - **Preferences:** roles, locations, salary, industries.
+  - It also stores sponsorship and clearance status, and saved answers that are reused only when the question text matches exactly.
+  - Whether work authorization is stored per country is **[unverified]**.
+- **AIHawk** stored separate work-authorization answers for the US, Canada, EU and UK, plus notice period, relocation, background-check and drug-test willingness, and languages with proficiency.
+
+### US forms (live Greenhouse forms, 2026-10-27)
+- **Typical questions:**
+  - "Legally authorized to work in the country where this job is based?"
+  - "Will you now or in the future require sponsorship?"
+  - "Are you 18 or older?"
+  - "Have you worked here before?"
+  - Relocation and pronouns.
+- **Demographic questions:**
+  - Hispanic/Latino, then race in the EEO-1 categories. The labels differ between forms, so store one canonical answer and match it to each form's wording.
+  - Protected veteran status: three options before an offer ([41 CFR 60-300 App. B](https://www.law.cornell.edu/cfr/text/41/appendix-B_to_part_60-300)).
+  - The federal-contractor disability self-ID question (form CC-305) is no longer required **as of 2026-09-21** ([DLA Piper](https://www.dlapiper.com/en/insights/publications/2026/09/ofccp-eliminates-disability-self-identification-requirement-what-federal-contractors-need-to-know)), but forms will keep showing it for a while.
+- Some forms ask whether you are a **"U.S. person"** for export-control purposes.
+
+### Canadian forms
+- **Eligibility:** the permitted question is "Are you legally entitled to work in Canada?", not a citizenship question ([OHRC](https://www.ohrc.on.ca/en/iv-human-rights-issues-all-stages-employment/4-designing-application-forms)).
+- **Self-ID** follows the Employment Equity Act's four groups: women, Indigenous peoples, persons with disabilities and visible minorities ([GC](https://www.canada.ca/en/services/jobs/opportunities/government/self-declaring-government-canada-jobs.html)). Live forms vary:
+  - [EQ Bank](https://jobs.lever.co/eqbank/a20b80c5-53c4-4c34-b8de-c6d9208994a6/apply) offers Two-Spirit as a gender option.
+  - [Faire](https://boards-api.greenhouse.io/v1/boards/faire/jobs/8877587002?questions=true) asks province of residence and offers First Nations, Métis and Inuit options.
+  - Some employers ask about 2SLGBTQI+ identity.
+- **SIN:** employers don't need it until you are hired ([ESDC](https://www.canada.ca/content/dam/esdc-edsc/documents/services/sin/reports/code-of-practice/2.5_when-provide-sin_en.pdf)), so never store it.
+- **Language:** English/French ability matters for federal and Quebec roles.
+
+### TN status and the "sponsorship" question (facts only, not advice)
+- **How TN works:**
+  - Canadian citizens can get TN status at the border with a letter from the employer, or through an employer-filed I-129 ([USCIS](https://www.uscis.gov/working-in-the-united-states/temporary-workers/tn-usmca-professionals)).
+  - The status is tied to that one employer ([8 CFR 214.6](https://www.law.cornell.edu/cfr/text/8/214.6)).
+- **"Sponsorship" has no single legal definition:**
+  - Some firms say TN needs no formal sponsorship ([R&J](https://rjimmigrationlaw.com/resources/does-a-tn-visa-require-sponsorship/)).
+  - Others say it does ([UW–Madison](https://ifss.wisc.edu/tn-employees/)).
+  - Some employers explicitly count TN as sponsorship (University of Illinois template).
+  - "In the future" can also cover a later green card.
+
+### Job-application systems used by Canadian employers
+There is no credible share data for Canada. A spot check of about 30 large Canadian employers' career sites (2026-10-27) found:
+- **Workday:** RBC, TD, BMO, CIBC, Manulife, Sun Life, Desjardins, Intact, Suncor, Magna, UBC, McGill.
+- **SuccessFactors:** Scotiabank, Rogers, Bell, Hydro One, OPG, the Government of Alberta, the City of Toronto, U of T.
+- **Ashby:** Wealthsimple, Cohere.
+- **Lever:** Clio, EQ Bank.
+- **Greenhouse:** Geotab.
+- **Federal government:** its own GC Jobs site.
+- **Not seen:** Taleo and Dayforce.
