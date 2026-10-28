@@ -160,3 +160,41 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - Ashby autosaves every value as it's entered (`ApiSetFormValue`), Lever parses the Resume on attach, Helsing fetches an upload token: the specs answer these as side requests; any other write to the form's site fails the spec.
 - Playwright's HAR replay refuses `_file` paths outside the HAR's folder, so bodies live in `fixtures/<ats>/har/` (shared by that ATS's fixtures). Re-recording prunes unused bodies.
 - Node can't load core's extensionless imports, so `tools/fill-rate.ts` has its own small schema; the specs check the full one.
+
+## 2026-10-28 · Guardrail hardening (core, fill, lint)
+
+**Landed** (one commit each)
+- Saved Answers can't hold a Self-ID, Attestation or never-stored question. `detectSensitive` moved from fill/classify to core (`taxonomy/sensitive.ts`, plus `sensitiveQuestion()`), so the Fill and Saved Answers use the same rules; it now also finds a typed "Password" question. `savedAnswerSchema` refuses those questions (`savedQuestionSchema`, `SENSITIVE_QUESTION_MESSAGE` shown at the question), which covers typing, editing, accepted Drafts, backups, runtime messages and storage reads. Second line: `toDraftContext` leaves them out, `toProviderSavedQuestion` refuses them (new `BoundaryRefusal` `sensitiveQuestion`), and both input schemas refuse them on parse, so the helper does too.
+- A field the rules didn't recognise, mapped by the AI to `selfId.*`, `attestation.*` or `never.*`, is "Needs your review" (`providerMatched`, the mapped type, no suggestion) at any confidence. It is never written.
+- act/'s guard splits `_`, `-`, apostrophes, camelCase, acronyms and digits into words, and matches word stems with any ending, in English and French (`Page suivante`, `Postulez`, `Valider`, `Se connecter`, `Créer un compte`, `S'inscrire`, …).
+- `fireKey` refuses Enter anywhere (it throws: no act/ operation sends it). Inside a form it submits; Ashby's forms aren't a `<form>`.
+- ESLint and Prettier ignore `.claude/`, so agent worktrees no longer break `pnpm check` in the main checkout.
+
+**New lint rules** (`tools/eslint/boundaries.js`; every one has a firing case in `boundaries.test.ts`). Banned names now match on any object and by any spelling: `x.name`, `x['name']`, `` x[`name`] ``, `X.prototype.name.call(x)`, `const { name } = x`.
+- Everywhere but tests, act/ included:
+  - Submit: `submit`, `requestSubmit`, `SubmitEvent`, `createEvent`, `initEvent`, and `new AnyEvent('submit')`.
+  - Injection: `createElement(NS)`, `insertAdjacentHTML`, `createContextualFragment`, `setHTMLUnsafe`, `parseHTMLUnsafe`, assigning `innerHTML`/`outerHTML`/`srcdoc`, `document.write/writeln/open`, `dangerouslySetInnerHTML`.
+- Outside act/ (and tests), everywhere:
+  - DOM writes: `click`, `dispatchEvent`, `set/remove/toggleAttribute*`, `insertAdjacentElement/Text`, `execCommand`, `setRangeText`, `showPicker`, `stepUp/Down`, `attachShadow`, `__defineSetter__`, `__lookupSetter__`.
+  - Assigning `value`, `defaultValue`, `files`, `checked`, `defaultChecked`, `selected`, `defaultSelected`, `selectedIndex`, `indeterminate`, `textContent`, `innerText`, `outerText` or `nodeValue`, through any assignment target (`=`, `++`, destructuring, `for … of`).
+  - `Object.assign` only onto an object literal (or `globalThis`); `Object.defineProperty/ies`, `Object.getOwnPropertyDescriptor(s)` and `Reflect` are banned.
+- fill outside act/: no write through a computed key (`x[k] = v`; use `Object.fromEntries` or a `Map`), and no `focus`, `blur`, `select`, `append`, `prepend`, `appendChild`, `insertBefore`, `replace*`, `before`, `after`, `remove`, `removeChild`, `scrollIntoView`, `showModal`, `requestFullscreen`, `animate`, `style`, `classList`, `dataset`, `setProperty`.
+- All of fill: no method call through a computed key (`x[name]()`).
+- act/: `dispatchEvent` takes only `new X('literal-type', …)` built in place.
+- Network, everywhere (tests too): `fetch`, `XMLHttpRequest`, `WebSocket`, `WebSocketStream`, `EventSource`, `WebTransport`, `RTCPeerConnection`, `importScripts`, `sendBeacon`, as globals and on any object. The net module may now only `fetch()`.
+- Network in core, fill and the extension (not the helper): `import()`, `Image`, `Audio`, `Worker`, `SharedWorker`, global `open` and `window/globalThis/self/top/parent/frames/opener.open`, `location = …`, `location.assign/replace`, assigning `src`/`srcset`/`href`/`action`/`formAction`/`poster`/`ping`, and `setAttribute` with those names.
+- core and fill: no `globalThis`, `window`, `self`, `top`, `parent`, `frames` or `opener`; no `.chrome`, `.browser` or `.open` on any object. `el.ownerDocument.defaultView` stays usable for reads (`getComputedStyle`, `MutationObserver`, `DOMParser`).
+- `eval` is banned as a property too. `packages/*/src/test-support/**` counts as test code.
+
+**Code the rules caught**: `fireKey` (event built in place), `greenhouse()` in `fill/src/posting/api.ts` (`Object.fromEntries`). CODING_STANDARDS "DOM" lists the new conventions (own commit).
+
+**Interface changes for other packages**: core exports `detectSensitive`, `sensitiveQuestion`, `selfIdTopic`, `isSelfIdSection`, `SelfIdTopic`, `Sensitive`, `savedQuestionSchema` and `SENSITIVE_QUESTION_MESSAGE`; fill's classify still re-exports the old names. `BoundaryRefusal` has a new case.
+
+**Left**
+- A Saved Answer already stored with such a question now reads back as `corrupt`, and that fails the whole list and the backup export. Nothing released has written one; if one turns up, delete it from IndexedDB by hand or add a one-off cleanup.
+- The question check uses the Fill's English rules (and a little French), so it can be wrong both ways: "What does diversity mean to you?" is refused (the Fill already treats it as Self-ID), and another language gets through.
+- Lint can't see a name built at run time (`el['cl' + 'ick']()`) outside fill, where computed calls are still allowed. Extension content-script code isn't read-only like fill: `el.remove()` or `el.style.x =` there would pass. When the content script lands, give `*.content.ts` and its modules the fill read-only rules (`readOnlyDom`, `computedCalls`, `globalObject` in `scope()`).
+
+**Gotchas**
+- `no-restricted-properties` with only `property` also matches object patterns, parameters included (`({ submit }) => …`, renamed or not). Don't give your own objects a field with a banned name (`submit`, `click`, `remove`, `style`, and in core and fill `open`, `browser`).
+- In fill, `const x: Record<string, T> = {}; x[k] = v` fails lint. Build it with `Object.fromEntries`.
