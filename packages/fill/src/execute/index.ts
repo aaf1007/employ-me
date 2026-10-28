@@ -115,6 +115,9 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
     noteEdits(appeared);
     for (const planned of appeared) if (due(planned)) await write(planned);
   }
+  // You may have changed a field while this ran (its settle waits are long enough to type in).
+  // The report keeps what the page shows now, so see the edit before it's taken as the Fill's own.
+  noteEdits(current.fields.filter((f) => !outcomes.has(f.field.fieldId)));
   return buildReport({
     final: current,
     everyField: [...seen.values()],

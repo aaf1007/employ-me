@@ -70,6 +70,23 @@ describe('execute(plan, previous)', () => {
     expect(third.outcomes).toEqual(second.outcomes);
   });
 
+  // e2e side-panel "one Fill carries on" (flaky): you changed a field during a re-plan's settle wait,
+  // and the report took your text as the Fill's own, so "Changed by you" never showed.
+  it('still sees an edit you made while a re-plan was running', async () => {
+    form(`
+      <label for="n">Full name</label><input id="n" name="name">
+      <label for="u">Contact address for recruiters</label><input id="u" name="u">`);
+    const first = await execute(planWith());
+    const running = execute(planWith(emailMapping), first);
+    userTypes('#n', 'Samuel Lee');
+    const second = await running;
+    expect(second.userEdited).toEqual(new Set(['n']));
+    // So the next re-plan leaves it alone too.
+    const third = await execute(planWith(emailMapping), second);
+    expect(value('#n')).toBe('Samuel Lee');
+    expect(third.userEdited).toEqual(new Set(['n']));
+  });
+
   it('keeps an answer the user wrote while the Provider was still thinking', async () => {
     form(`<label for="u">Contact address for recruiters</label><input id="u" name="u">`);
     const first = await execute(planWith());
