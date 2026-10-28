@@ -52,11 +52,20 @@ export function fireBlur(el: Element): void {
   el.dispatchEvent(new FocusEvent('blur', { composed: true }));
 }
 
+/**
+ * Enter in a form control submits the form: the browser's implicit
+ * submission, or the page's own keydown handler. Ashby's forms aren't even
+ * a <form>, so act/ never presses Enter anywhere (design.md "What it is").
+ */
+const ENTER = /^(Enter|NumpadEnter|\r|\n)$/;
+
 export function fireKey(el: Element, type: 'keydown' | 'keyup', key: string): void {
+  if (ENTER.test(key)) throw new Error('act/ never presses Enter: it can submit the form');
   const code = key.length === 1 ? `Key${key.toUpperCase()}` : key;
-  const keyCode =
-    key === 'ArrowDown' ? 40 : key === 'Escape' ? 27 : key === 'Enter' ? 13 : key.toUpperCase().charCodeAt(0);
-  el.dispatchEvent(new KeyboardEvent(type, { ...BUBBLES, key, code, keyCode, which: keyCode }));
+  const keyCode = key === 'ArrowDown' ? 40 : key === 'Escape' ? 27 : key.toUpperCase().charCodeAt(0);
+  const init = { ...BUBBLES, key, code, keyCode, which: keyCode };
+  if (type === 'keydown') el.dispatchEvent(new KeyboardEvent('keydown', init));
+  else el.dispatchEvent(new KeyboardEvent('keyup', init));
 }
 
 /** pointerdown → mousedown → pointerup → mouseup → click (research §5 "Dropdowns"). */

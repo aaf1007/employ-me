@@ -89,17 +89,19 @@ export function parsePublicPosting(
 
 function greenhouse(job: Record<string, unknown>): PublicPostingDetails {
   const location = isRecord(job['location']) ? text(job['location']['name']) : undefined;
-  const fieldOptions: Record<string, string[]> = {};
-  for (const question of [...list(job['questions']), ...complianceQuestions(job)].filter(isRecord)) {
-    for (const field of list(question['fields']).filter(isRecord)) {
-      const name = text(field['name']);
-      const values = list(field['values'])
-        .filter(isRecord)
-        .map((v) => text(v['label']))
-        .filter((v): v is string => v !== undefined);
-      if (name !== undefined && values.length > 0) fieldOptions[name] = values;
-    }
-  }
+  const fieldOptions = Object.fromEntries(
+    [...list(job['questions']), ...complianceQuestions(job)]
+      .filter(isRecord)
+      .flatMap((question) => list(question['fields']).filter(isRecord))
+      .flatMap((field) => {
+        const name = text(field['name']);
+        const values = list(field['values'])
+          .filter(isRecord)
+          .map((v) => text(v['label']))
+          .filter((v): v is string => v !== undefined);
+        return name !== undefined && values.length > 0 ? [[name, values] as const] : [];
+      }),
+  );
   return compact({
     title: text(job['title']),
     company: text(job['company_name']),
