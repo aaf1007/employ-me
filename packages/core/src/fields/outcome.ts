@@ -21,6 +21,11 @@ export const REVIEW_REASONS = [
   'providerMatched',
   /** More than one option matched equally well. */
   'ambiguousOption',
+  /**
+   * You changed this field on the page after a Fill, and a later re-plan
+   * found an answer for it. Yours stays: a re-plan never writes over it.
+   */
+  'keptYourEdit',
 ] as const;
 
 export const COULD_NOT_FILL_REASONS = [
