@@ -16,6 +16,7 @@
     "test:live": "playwright test -c playwright.live.config.ts",
     "build": "pnpm -r build",
     "setup:local": "pnpm build && node packages/helper/dist/cli.mjs setup --extension packages/extension/.output/chrome-mv3",
+    "employ-me": "node packages/helper/dist/cli.mjs",
     "smoke:providers": "vitest run --config packages/helper/vitest.smoke.config.ts",
     "format": "prettier --write . && eslint . --fix",
     "fill-rate": "node tools/fill-rate.ts"
