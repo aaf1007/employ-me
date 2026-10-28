@@ -1,0 +1,177 @@
+/* The side panel. Colours come from ../styles.css; the page outlines use the same three (fill's act/outline.ts). */
+
+.panel {
+  padding: 12px 14px 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-header h1 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.panel .muted {
+  color: var(--muted);
+}
+
+.panel .small {
+  font-size: 12px;
+}
+
+.panel p {
+  margin: 0;
+}
+
+.panel button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.panel button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.panel button.primary {
+  background: #0969da;
+  border-color: #0969da;
+  color: #fff;
+  padding: 7px 14px;
+  font-weight: 600;
+}
+
+.posting h2 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.warning {
+  border-left: 3px solid var(--review);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--review) 10%, transparent);
+  border-radius: 4px;
+}
+
+.error {
+  border-left: 3px solid var(--failed);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--failed) 8%, transparent);
+  border-radius: 4px;
+  display: grid;
+  gap: 4px;
+}
+
+.success {
+  border-left: 3px solid var(--filled);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--filled) 10%, transparent);
+  border-radius: 4px;
+  display: grid;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.group h2 {
+  font-size: 13px;
+  margin: 8px 0 4px;
+}
+
+.group[data-group='filled'] h2 {
+  color: var(--filled);
+}
+
+.group[data-group='needsReview'] h2 {
+  color: var(--review);
+}
+
+.group[data-group='couldNotFill'] h2 {
+  color: var(--failed);
+}
+
+.group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.field {
+  border-left: 3px solid var(--border);
+  padding: 2px 0 2px 8px;
+  display: grid;
+  gap: 3px;
+}
+
+.group[data-group='filled'] .field {
+  border-color: var(--filled);
+}
+
+.group[data-group='needsReview'] .field {
+  border-color: var(--review);
+}
+
+.group[data-group='couldNotFill'] .field {
+  border-color: var(--failed);
+}
+
+.field-label {
+  font-weight: 600;
+}
+
+.tag {
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 6px;
+  color: var(--muted);
+}
+
+.draft textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 96px;
+  font: inherit;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+.draft ul.flagged {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--review);
+}
+
+.panel select {
+  font: inherit;
+  padding: 3px 6px;
+}

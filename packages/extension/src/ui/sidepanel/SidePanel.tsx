@@ -1,35 +1,36 @@
+import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
-import { styles } from './styles';
+import { FillPanel } from './FillPanel';
+import { followActiveTab, targetTabId } from './target-tab';
 
-const GROUPS = [
-  { id: 'filled', title: 'Filled', color: 'var(--filled)' },
-  { id: 'needsReview', title: 'Needs your review', color: 'var(--review)' },
-  { id: 'couldNotFill', title: "Couldn't fill", color: 'var(--failed)' },
-] as const;
-
-/** Stub. The side panel detects the Application Form, runs the Fill and lists every field's outcome. */
+/**
+ * The side panel (design.md "Starting a Fill"): opened from the toolbar
+ * icon, it works on the window's active tab and follows you to another tab.
+ */
 export function SidePanel() {
+  const [tabId, setTabId] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    void targetTabId().then(setTabId);
+    return followActiveTab(setTabId);
+  }, []);
+
   const openDashboard = () => {
     void browser.tabs.create({ url: browser.runtime.getURL('/dashboard.html') });
   };
 
   return (
-    <main data-testid="sidepanel" style={styles.main}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>employ-me</h1>
+    <main data-testid="sidepanel" className="panel">
+      <header className="panel-header">
+        <h1>employ-me</h1>
         <button type="button" onClick={openDashboard}>
           Dashboard
         </button>
       </header>
-      <button type="button" disabled style={styles.fill}>
-        Fill
-      </button>
-      {GROUPS.map((group) => (
-        <section key={group.id} data-testid={`outcome-${group.id}`}>
-          <h2 style={{ ...styles.groupTitle, color: group.color }}>{group.title}</h2>
-          <p style={styles.empty}>Nothing yet.</p>
-        </section>
-      ))}
+      {tabId === undefined ? null : tabId === null ? (
+        <p className="muted">Open a job’s application page, then click the employ-me icon.</p>
+      ) : (
+        <FillPanel key={tabId} tabId={tabId} />
+      )}
     </main>
   );
 }
