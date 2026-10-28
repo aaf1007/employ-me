@@ -1,13 +1,21 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { ToastProvider } from './common/ToastProvider';
+import { StoreProvider } from './data/StoreProvider';
+import { ProfileView } from './profile/ProfileView';
+import { ResumesView } from './resumes/ResumesView';
 import { ROUTES, routeFromHash, type RouteId } from './routes';
+import { SavedAnswersView } from './saved-answers/SavedAnswersView';
+import { SettingsView } from './settings/SettingsView';
+import { SetupView } from './setup/SetupView';
+import { TrackerView } from './tracker/TrackerView';
 
-// Each view is a stub owned by a later agent. Keep one component per file
-// under ui/dashboard/ when they grow.
-const VIEWS: Readonly<Record<RouteId, ReactNode>> = {
-  profile: <p>Your Profile: identity, contact, Work Authorization per country, Self-ID Answers, Resumes.</p>,
-  'saved-answers': <p>Answers you accepted, reused when a question matches word for word.</p>,
-  tracker: <p>Your Applications, with Status and Snapshot.</p>,
-  settings: <p>Provider, models, export and import.</p>,
+const VIEWS: Readonly<Record<RouteId, () => ReactNode>> = {
+  setup: () => <SetupView />,
+  profile: () => <ProfileView />,
+  resumes: () => <ResumesView />,
+  'saved-answers': () => <SavedAnswersView />,
+  tracker: () => <TrackerView />,
+  settings: () => <SettingsView />,
 };
 
 export function Dashboard() {
@@ -16,6 +24,7 @@ export function Dashboard() {
   useEffect(() => {
     const onHashChange = () => {
       setRoute(routeFromHash(location.hash));
+      window.scrollTo({ top: 0 });
     };
     window.addEventListener('hashchange', onHashChange);
     return () => {
@@ -23,34 +32,21 @@ export function Dashboard() {
     };
   }, []);
 
-  const current = ROUTES.find((r) => r.id === route) ?? ROUTES[0];
-
   return (
-    <div
-      data-testid="dashboard"
-      style={{ display: 'grid', gridTemplateColumns: '200px 1fr', minHeight: '100vh' }}
-    >
-      <nav aria-label="Dashboard" style={{ borderRight: '1px solid var(--border)', padding: 16 }}>
-        {ROUTES.map((r) => (
-          <a
-            key={r.id}
-            href={`#${r.id}`}
-            aria-current={r.id === route ? 'page' : undefined}
-            style={{
-              display: 'block',
-              padding: '6px 0',
-              color: 'inherit',
-              fontWeight: r.id === route ? 600 : 400,
-            }}
-          >
-            {r.title}
-          </a>
-        ))}
-      </nav>
-      <main data-testid={`view-${route}`} style={{ padding: 24 }}>
-        <h1 style={{ marginTop: 0 }}>{current.title}</h1>
-        {VIEWS[route]}
-      </main>
-    </div>
+    <ToastProvider>
+      <div data-testid="dashboard" className="shell">
+        <nav aria-label="Dashboard" className="nav">
+          <div className="nav-brand">employ-me</div>
+          {ROUTES.map((r) => (
+            <a key={r.id} href={`#${r.id}`} aria-current={r.id === route ? 'page' : undefined}>
+              {r.title}
+            </a>
+          ))}
+        </nav>
+        <main data-testid={`view-${route}`} className="main">
+          <StoreProvider>{VIEWS[route]()}</StoreProvider>
+        </main>
+      </div>
+    </ToastProvider>
   );
 }

@@ -32,6 +32,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
+  /* Chrome styles extension pages' body at 75% of system-ui; use :root's font instead. */
+  font: inherit;
 }
 
 button {
