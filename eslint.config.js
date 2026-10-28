@@ -51,5 +51,10 @@ export default defineConfig(
   {
     files: ['**/*.js', '**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
+    // Plain JS here is Node scripts (configs, lint tools, the helper's stub
+    // CLIs). TypeScript doesn't check them, so no-undef needs Node's globals.
+    languageOptions: {
+      globals: { process: 'readonly', Buffer: 'readonly', setTimeout: 'readonly', setInterval: 'readonly' },
+    },
   },
 );

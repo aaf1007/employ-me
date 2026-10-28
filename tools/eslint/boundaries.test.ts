@@ -147,6 +147,24 @@ const cases: Array<{ name: string; file: string; code: string; expect: RegExp | 
     code: "console.log('hello');",
     expect: /Native Messaging channel/,
   },
+  {
+    name: 'process.stdout in the host',
+    file: 'packages/helper/src/host/x.ts',
+    code: "process.stdout.write('hello');",
+    expect: /Native Messaging channel/,
+  },
+  {
+    name: 'process.stdout in a stub CLI for helper tests',
+    file: 'packages/helper/test/stubs/x.mjs',
+    code: "process.stdout.write('{}');",
+    expect: null,
+  },
+  {
+    name: 'network access in a stub CLI for helper tests',
+    file: 'packages/helper/test/stubs/x.mjs',
+    code: "import http from 'node:http';\nexport const h = http;",
+    expect: /Network library/,
+  },
   // The Provider boundary inside core
   {
     name: 'provider boundary importing self-id',

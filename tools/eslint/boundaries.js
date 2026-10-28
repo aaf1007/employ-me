@@ -147,7 +147,7 @@ const HELPER_STDOUT = [
     object: 'process',
     property: 'stdout',
     message:
-      'Only the entry points (src/host.ts, src/cli.ts) and src/host/framing.ts may touch stdout: it is the Native Messaging channel.',
+      'Only the entry points (src/host.ts, src/cli.ts) may touch process.stdout: it is the Native Messaging channel. The host writes frames to the stream runHost is given; CLI commands print through CliIo.',
   },
 ];
 
@@ -231,9 +231,11 @@ const ACT = ['packages/fill/src/act/**'];
 const CORE_BOUNDARY = ['packages/core/src/provider/**', 'packages/core/src/protocol/**'];
 const NET_MODULE = ['packages/extension/src/net/ats-public-api.ts'];
 const HELPER_STDOUT_ALLOWED = [
-  'packages/helper/src/host/framing.ts',
   'packages/helper/src/host.ts',
   'packages/helper/src/cli.ts',
+  // Stand-ins for the claude and codex CLIs in unit tests: separate
+  // programs whose stdout is their output, not the Native Messaging channel.
+  'packages/helper/test/stubs/**',
 ];
 
 const all = { domWrites: true, submit: true, network: true };
