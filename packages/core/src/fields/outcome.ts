@@ -26,6 +26,11 @@ export const REVIEW_REASONS = [
    * found an answer for it. Yours stays: a re-plan never writes over it.
    */
   'keptYourEdit',
+  /**
+   * Filled with what the Profile holds, but the question asks for more
+   * ("list your countries of citizenship, and when you obtained them").
+   */
+  'asksForMore',
 ] as const;
 
 export const COULD_NOT_FILL_REASONS = [
@@ -33,6 +38,8 @@ export const COULD_NOT_FILL_REASONS = [
   'unrecognizedField',
   'noMatchingOption',
   'providerUnavailable',
+  /** The Provider is available, but didn't write this one Draft. */
+  'draftFailed',
   'valueDidNotStick',
   'controlNotSupported',
   /** Attestations are never ticked automatically. */

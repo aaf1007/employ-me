@@ -18,6 +18,7 @@ const REVIEW: Readonly<Record<ReviewReason, string>> = {
   providerMatched: 'The AI matched this field. Check the answer.',
   ambiguousOption: 'More than one option fits. Choose one yourself.',
   keptYourEdit: 'You changed this on the page, so employ-me left your answer alone.',
+  asksForMore: 'Filled from your Profile, but the question asks for more. Add the rest yourself.',
 };
 
 const COULD_NOT_FILL: Readonly<Record<CouldNotFillReason, string>> = {
@@ -25,6 +26,7 @@ const COULD_NOT_FILL: Readonly<Record<CouldNotFillReason, string>> = {
   unrecognizedField: 'Not recognised',
   noMatchingOption: 'No option matches your Profile',
   providerUnavailable: 'The AI is unavailable',
+  draftFailed: "The AI couldn't write a Draft",
   valueDidNotStick: "The form didn't keep the value",
   controlNotSupported: "employ-me can't fill this control",
   attestation: 'Attestations are left for you',
