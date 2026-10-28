@@ -129,6 +129,48 @@ describe('plan', () => {
     });
   });
 
+  // design.md "Sensitive questions": Self-ID fills only from your Self-ID
+  // Answers, on questions the rules recognise; Attestations and never-stored
+  // fields never fill. An AI mapping can't change that.
+  it.each(['selfId.us.race', 'selfId.other', 'attestation.consent', 'never.dateOfBirth'] as const)(
+    'never writes a field the AI maps to %s, however sure it is: it goes to review',
+    async (fieldType) => {
+      form(`
+        <label for="u">Which of these describes you?</label>
+        <select id="u" name="u">
+          <option value="">Select...</option><option>Asian</option><option>White</option>
+          <option>Yes</option><option>I don't wish to answer</option>
+        </select>`);
+      const planned = plan(document, profile, [], {
+        url: URL_US,
+        provider: {
+          state: 'answered',
+          mappings: [
+            {
+              fieldId: 'u',
+              match: {
+                kind: 'fieldType',
+                fieldType,
+                options: [{ option: "I don't wish to answer", value: 'decline' }],
+              },
+              confidence: 1,
+            },
+          ],
+        },
+      });
+      expect(planned.fields[0]).toMatchObject({
+        fieldType,
+        step: { kind: 'review', reason: 'providerMatched' },
+      });
+      expect(planned.fields[0]?.step).not.toHaveProperty('suggestion');
+      const report = await execute(planned);
+      expect(report.outcomes).toEqual([
+        { kind: 'needsReview', fieldId: 'u', fieldType, reason: 'providerMatched' },
+      ]);
+      expect(document.querySelector<HTMLSelectElement>('#u')?.value).toBe('');
+    },
+  );
+
   it('marks fields the AI needed as unavailable, with the helper’s fix, when it is', () => {
     form(`<label for="u">Favourite colour</label><input id="u" name="u">`);
     const planned = plan(document, profile, [], {

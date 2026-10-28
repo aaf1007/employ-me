@@ -1,4 +1,10 @@
-import { sensitivityOf, type FieldMatch, type FieldType, type SavedAnswer } from '@employ-me/core';
+import {
+  isOrdinaryFieldType,
+  sensitivityOf,
+  type FieldMatch,
+  type FieldType,
+  type SavedAnswer,
+} from '@employ-me/core';
 import type { CountryClassification } from '../classify';
 import { textTarget } from '../match';
 import type { ExtractedField } from '../types';
@@ -107,6 +113,14 @@ function fromMapping(
       if (mapped === 'unknown' || mapped === 'freeText.question') {
         return { fieldType: ruleType, answer: draftAnswer(field, provider) };
       }
+      // The rules didn't see a Self-ID question, Attestation or never-stored
+      // field here, and the AI says it is one. Self-ID fills only from your
+      // own answers to questions the rules recognise, and the others never
+      // fill (design.md "Sensitive questions"): so it's yours to answer, and
+      // nothing is suggested.
+      if (!isOrdinaryFieldType(mapped)) {
+        return { fieldType: mapped, answer: { kind: 'review', reason: 'providerMatched' } };
+      }
       const inner = answerFor(
         field,
         { fieldType: mapped, source: 'provider', ...countryOf(classification) },
@@ -128,7 +142,7 @@ function fromMapping(
       const answer: Answer = {
         ...inner.answer,
         value: withProviderOptions(inner.answer.value, mapping.options),
-        source: inner.answer.source === 'selfId' ? 'selfId' : 'provider',
+        source: 'provider',
         review: 'providerMatched',
       };
       return { fieldType: mapped, answer };
