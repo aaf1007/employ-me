@@ -16,6 +16,8 @@ export async function loadHostRuntime(
   platform: HelperPlatform,
   home: string,
   env: ProviderEnv,
+  /** The node running the host (the launcher's absolute path). */
+  nodePath: string,
   onLogFailure: (error: unknown) => void,
 ): Promise<HostRuntime> {
   const layout = installLayout(platform, installRoot(platform, home, env));
@@ -28,6 +30,7 @@ export async function loadHostRuntime(
     platform,
     workDir: config.ok ? config.value.workDir : tmpdir(),
     logger,
+    nodePath,
     ...(config.ok ? { models: config.value.models } : {}),
   };
   return {

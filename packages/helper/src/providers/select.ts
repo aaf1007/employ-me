@@ -2,6 +2,7 @@ import { FAKE_PROVIDER_ENV, helperErrorReasonSchema, type ProviderId } from '@em
 import type { Logger } from '../log/logger';
 import type { HelperPlatform } from '../log/paths';
 import { createClaudeProvider } from './claude/provider';
+import { cliEnv } from './cli-env';
 import { createCodexProvider } from './codex/provider';
 import { createFakeProvider } from './fake';
 import type { HelperProvider } from './task';
@@ -20,6 +21,8 @@ export interface ProviderContext {
   readonly workDir: string;
   readonly logger: Logger;
   readonly models?: { readonly claude?: string; readonly codex?: string };
+  /** The node running the helper; its folder goes on the CLIs' PATH (see cli-env.ts). */
+  readonly nodePath?: string;
 }
 
 /**
@@ -40,7 +43,13 @@ export function selectProvider(
   }
   const cliPath = paths[id];
   if (cliPath === undefined) return null;
-  const options = { platform: context.platform, cliPath, cwd: context.workDir, env, logger: context.logger };
+  const options = {
+    platform: context.platform,
+    cliPath,
+    cwd: context.workDir,
+    env: cliEnv(context.platform, env, cliPath, context.nodePath),
+    logger: context.logger,
+  };
   const model = context.models?.[id];
   const withModel = model === undefined ? options : { ...options, model };
   return id === 'claude' ? createClaudeProvider(withModel) : createCodexProvider(withModel);

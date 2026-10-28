@@ -16,7 +16,7 @@ export interface CodexProviderOptions {
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
   readonly logger: Logger;
-  /** Unset: the user's default Codex model. */
+  /** Unset: the account's default model in Codex's catalog (`model/list`). */
   readonly model?: string;
   /** Overrides each task's own timeout. For tests. */
   readonly timeoutMs?: number;
@@ -66,7 +66,8 @@ export function createCodexProvider(options: CodexProviderOptions): HelperProvid
       const started = await connect();
       if (!started.ok) return started;
       const timed = options.timeoutMs === undefined ? task : { ...task, timeoutMs: options.timeoutMs };
-      return runCodexTurn(started.value, timed, { cwd: options.cwd, model: options.model ?? null }, signal);
+      const model = options.model ?? started.value.defaultModel;
+      return runCodexTurn(started.value, timed, { cwd: options.cwd, model }, signal);
     },
     async close() {
       await starting;

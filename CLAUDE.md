@@ -19,9 +19,11 @@ These are decided. Build to them; don't re-decide them.
 |---|---|
 | `pnpm check` | Typecheck, ESLint, Prettier check and unit tests across all packages. Green before every commit. |
 | `pnpm build` | Extension to `packages/extension/.output/chrome-mv3/`, helper to `packages/helper/dist/`. |
-| `pnpm test:e2e` | Builds the extension, then runs Playwright (see below). |
+| `pnpm test:e2e` | Builds the extension and the helper, then runs Playwright (see below). |
 | `pnpm format` | Prettier write, then `eslint --fix`. |
 | `pnpm vitest --project <core\|fill\|helper\|extension\|tools>` | Unit tests for one package, in watch mode. |
+| `pnpm setup:local` | Builds everything, then runs `employ-me setup` from the repo build: the way to install today, before any npm publish. Writes to the real browser profiles; `node packages/helper/dist/cli.mjs uninstall` undoes it. |
+| `pnpm smoke:providers` | Opt-in: one tiny real `mapFields` call to your own `claude` and `codex`, plus their status. Spends a trivial amount of your plan. Never part of `pnpm check`. |
 
 ## Packages
 
@@ -49,12 +51,13 @@ Contracts shared across packages (domain types, protocol messages, the Provider 
 
 ## End-to-end tests
 
-The main feedback loop. `pnpm test:e2e` builds the extension and launches Playwright's Chromium with it loaded unpacked, one fresh profile per test.
+The main feedback loop. `pnpm test:e2e` builds the extension (and the helper) and launches Playwright's Chromium with it loaded unpacked, one fresh profile per test.
 
 - Import `{ test, expect }` from `e2e/harness.ts`, not from `@playwright/test`.
 - `sites.serve(url, 'greenhouse/<file>.html')` answers a real ATS URL with a file from `fixtures/`, so content-script match patterns apply. Every other http(s) request is aborted and listed in `sites.blocked`.
 - `extension.openSidePanel({ forPage })` opens `sidepanel.html?tabId=<id>` in a tab: Playwright can't open Chrome's real side panel, so the page takes its target tab from the query. `extension.openDashboard('tracker')`, `extension.pingContentScripts()`, and `extension.errors` (console errors from extension pages and the service worker) cover the rest.
-- Chromium runs with `EMPLOY_ME_PROVIDER=fake`, which a helper started by Chrome inherits, so e2e never spends the user's plan. To e2e the helper, write its host manifest into `${userDataDir}/NativeMessagingHosts/` before the context starts (not yet exercised).
+- Chromium runs with `EMPLOY_ME_PROVIDER=fake`, which a helper started by Chrome inherits, so e2e never spends the user's plan.
+- **The real helper in e2e:** `test.use({ helper: 'fake' })` installs the built helper, with the fake Provider forced on, into that test's profile (`${userDataDir}/NativeMessagingHosts/`), so `browser.runtime.connectNative` / `sendNativeMessage` reach the real host. `test.use({ helper: 'fail:providerRateLimited' })` (any `HelperErrorReason`) makes every Provider call fail with that reason. Without it there is no helper: `helperNotInstalled`. Under the hood this runs `employ-me install-test-host --user-data-dir <dir> [--fail <reason>]` (also `installTestHost` in `packages/helper/src/install/test-host.ts`), which writes nothing outside the profile; its log is `${userDataDir}/employ-me-test-host/helper.log`. macOS and Linux only (Windows reads hosts from the registry). See `e2e/helper.spec.ts`.
 - Fast reruns: `E2E_SKIP_BUILD=1 pnpm exec playwright test e2e/<spec>.ts`. Watch it: `HEADED=1`.
 - On failure: `test-results/<test>/trace.zip` (`pnpm exec playwright show-trace <zip>`) and a `console.log` attachment.
 - Playwright is pinned to 1.63.0 because its Chromium (revision 1243) is cached on this Mac. Bumping it means `pnpm exec playwright install chromium`.
@@ -62,8 +65,9 @@ The main feedback loop. `pnpm test:e2e` builds the extension and launches Playwr
 
 ## Logs
 
-- **Helper:** `~/Library/Logs/employ-me/helper.log` on macOS; `$XDG_STATE_HOME/employ-me/helper.log` (default `~/.local/state/…`) on Linux; `%LOCALAPPDATA%\employ-me\Logs\helper.log` on Windows. Defined in `packages/helper/src/log/paths.ts`. JSON lines with the closed `LogEntry` shape: events, request ids, durations, sizes, error reasons. Profile values, Drafts, Resumes and job descriptions are never logged.
-- The helper's stdout is the Native Messaging channel, so `console` is lint-banned there. CLI output goes through `CliIo`.
+- **Helper:** `~/Library/Logs/employ-me/helper.log` on macOS; `$XDG_STATE_HOME/employ-me/helper.log` (default `~/.local/state/…`) on Linux; `%LOCALAPPDATA%\employ-me\Logs\helper.log` on Windows. Defined in `packages/helper/src/log/paths.ts`; `EMPLOY_ME_LOG_FILE` overrides it. JSON lines with the closed `LogEntry` shape: events, request ids and types, Provider, durations, sizes, exit codes, error reasons. Profile values, prompts, Drafts, Resumes and job descriptions are never logged, and neither is CLI output. Rotates at 5 MB.
+- `employ-me doctor` checks the install, the host manifests, the extension ID and both CLIs' logins, and prints the config and log paths. The installed helper lives in `~/Library/Application Support/employ-me/` on macOS (`$XDG_DATA_HOME/employ-me` on Linux, `%LOCALAPPDATA%\employ-me` on Windows), with `config.json`, `launcher.sh` and a copy of `dist/`.
+- The helper's stdout is the Native Messaging channel, so `console` is lint-banned there, and `host.ts` points the global console at stderr in case a dependency prints. CLI output goes through `CliIo`.
 - **Extension:** the service worker console is under chrome://extensions → employ-me → Inspect views. Right-click the side panel → Inspect. e2e captures both.
 - Chrome's own Native Messaging errors show when Chrome is started with `--enable-logging=stderr --v=1`.
 
@@ -74,4 +78,7 @@ The main feedback loop. `pnpm test:e2e` builds the extension and launches Playwr
 - TypeScript is pinned to 6.0.x: typescript-eslint supports `<6.1`, even though TS 7 is out.
 - pnpm enforces a minimum release age. If it refuses a brand-new version, pin an older one rather than adding an exclusion.
 - The extension ID is fixed by the `key` in `packages/extension/src/manifest-key.ts`, and a unit test checks it still matches `EXTENSION_ID`. The private key isn't needed and isn't in the repo.
-- core is consumed as TypeScript source (no build step). The helper bundles core and zod into `dist/*.mjs` with tsdown.
+- core is consumed as TypeScript source (no build step). The helper bundles core, zod and unpdf into `dist/*.mjs` with tsdown (pdf.js is its own chunk, so setup copies all of `dist/`). A new bundled dependency must be added to `deps.onlyBundle` in `packages/helper/tsdown.config.ts`.
+- Helper unit tests run stub `claude` and `codex` executables (`packages/helper/test/stubs/`), never the real CLIs. The Codex stub speaks the app-server protocol of codex-cli 0.158.0; when Codex changes, regenerate the types with `codex app-server generate-ts --out <dir>` and compare.
+- `codex app-server` has no `--ignore-user-config`, so the Codex Provider switches the user's tools, plugins, skills, hooks and enabled MCP servers off with `-c` overrides (`providers/codex/isolation.ts`) and refuses to run if one can't be. It uses the account's default model from `model/list`, not the one in `~/.codex/config.toml`, which a ChatGPT login may not be allowed to use.
+- On macOS `claude` finds its login in the Keychain under `$USER`; with no `USER` it reports "not logged in". The helper fills `USER` in when Chrome didn't pass it.

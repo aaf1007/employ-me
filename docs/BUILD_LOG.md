@@ -29,3 +29,36 @@ Every agent appends one short entry when it finishes: date, who/what, what lande
 - Playwright 1.63.0 matches the cached Chromium 1243.
 - tsdown 0.23.1: 0.23.3 was hours old and pnpm's release-age policy refused it.
 - Saved Answers carry no field type, so nothing in the types stops one from being created out of a Self-ID or Attestation field. The fill engine must never do that; consider recording the field type when saving.
+
+## 2026-10-28 · Helper (packages/helper)
+
+**Landed**
+- Native Messaging host: native-byte-order framing, Chrome's 1 MB cap (an oversized answer becomes `messageTooLarge`), concurrent requests by id, strict validation (smuggled keys are `boundaryViolation`, values never echoed), `health`/`mapFields`/`draftAnswer`/`parseResume`, every error with a reason and a Provider-specific fix. Closing the port cancels CLI processes and stops Codex.
+- Claude Provider: stock `claude -p` with the research §3.2 flags, `ANTHROPIC_API_KEY` stripped, `structured_output` read; not logged in / limit / missing / timeout mapped. Status from `claude --version` and `claude auth status` (only `loggedIn` read).
+- Codex Provider: one warm `codex app-server`, protocol checked against `generate-ts` on 0.158.0. Ephemeral read-only thread per task, our `baseInstructions`, `outputSchema` per turn, low effort for `mapFields`, server requests refused. Quota from `account/rateLimits/read` in `health`.
+- Provider-agnostic prompts (`src/prompts/`); PDF (unpdf), DOCX (own ZIP reader) and text Resume extraction in the helper.
+- `employ-me setup | doctor | uninstall | install-test-host`, `pnpm setup:local`, `pnpm smoke:providers`, the e2e `helper` option and `e2e/helper.spec.ts`.
+- Smoke on this Mac, 2026-10-28: claude 2.1.311 and codex 0.158.0 both ready, one-field `mapFields` → `contact.email` in ~5 s each.
+
+**Core changes** (own commit): `confidence` on every mapping; `userDraft` claim support (polish mode); optional `quota` on `ProviderStatus`; `resumeUnreadable` error reason. The fake Provider returns a confidence.
+
+**Lint change** (own commit): `packages/helper/test/stubs/**` may write stdout (they stand in for the CLIs); `framing.ts` no longer may; plain JS gets Node globals.
+
+**Decisions the docs didn't cover**
+- The prompt goes to `claude` on stdin, which is then closed, not in argv: argv is visible to other processes and capped in size.
+- Codex isolation is `-c` overrides (no `--ignore-user-config` for app-server); enabled MCP servers come from `codex mcp list --json`, and Codex refuses to run when one can't be switched off.
+- "Codex: the default model" means the account's catalog default (`model/list`), not `config.toml`'s: this Mac's config names a model a ChatGPT login can't use (`model_not_found`). `models.codex` / `models.claude` in the helper's `config.json` override.
+- The host puts the CLI's folder and its own node first on PATH (npm-installed CLIs are `#!/usr/bin/env node`) and fills in `USER` when missing.
+- Field mapping returns a flat wire shape (all keys, unused ones null) that both CLIs' structured output accept, converted to core's union; fields the model skipped or got wrong become `unknown`. A Resume extract keeps every valid piece and drops only invalid ones.
+- unpdf 1.9.1 added (bundled), for PDF Resume text.
+
+**Left**
+- Windows paths (registry, `.cmd` shims, launcher) are written and unit-tested but never run on Windows. Linux is untested beyond CI.
+- `npm publish`: ship the built extension in the package (setup looks in `<dist>/../extension`) and set `private: false`.
+- Saved Answer questions go to `mapFields` uncapped (up to 5000). Prefilter by word overlap if prompts get big.
+- No per-field cache of mappings yet (research §6 step 4, `labelCacheKey`); the extension or helper should add one.
+
+**Gotchas**
+- research §10's "can `claude` started by Chrome read the Keychain?": yes, given `USER`, which launchd passes to GUI apps.
+- pdf.js prints warnings with `console.log`: keep `verbosity: 0`; `host.ts` also points the console at stderr.
+- A `win32` layout of a POSIX temp path is a relative path: one test wrote files into the repo root before it was fixed. Use real local paths in install tests.

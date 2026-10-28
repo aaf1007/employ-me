@@ -138,17 +138,30 @@ describe('Codex Provider', () => {
   it('runs each task as an ephemeral read-only thread with our prompt and a per-turn outputSchema', async () => {
     const { codex, tmp } = provider({ STUB_OUTPUT: ANSWER });
     await codex.mapFields(input(), signal);
-    expect(messages(tmp, 'thread/start')[0]?.params).toMatchObject({
-      ephemeral: true,
-      sandbox: 'read-only',
-      approvalPolicy: 'never',
-      baseInstructions: expect.stringContaining('field types') as unknown,
-    });
+    const thread = z
+      .object({ baseInstructions: z.string() })
+      .loose()
+      .parse(messages(tmp, 'thread/start')[0]?.params);
+    expect(thread).toMatchObject({ ephemeral: true, sandbox: 'read-only', approvalPolicy: 'never' });
+    expect(thread.baseInstructions).toContain('field types');
     expect(messages(tmp, 'turn/start')[0]?.params).toMatchObject({
       effort: 'low',
       outputSchema: { type: 'object' },
     });
-    expect(messages(tmp, 'thread/unsubscribe')).toHaveLength(1);
+    // Sent after the answer, without waiting for Codex's reply.
+    await expect.poll(() => messages(tmp, 'thread/unsubscribe')).toHaveLength(1);
+  });
+
+  it("uses the account's default model from Codex's catalog, not the config.toml one", async () => {
+    const { codex, tmp } = provider({ STUB_OUTPUT: ANSWER });
+    await codex.mapFields(input(), signal);
+    expect(messages(tmp, 'thread/start')[0]?.params).toMatchObject({ model: 'stub-default' });
+  });
+
+  it('says so when the model is not available on the plan', async () => {
+    const result = await provider({ STUB_MODE: 'modelNotFound' }).codex.mapFields(input(), signal);
+    expect(result).toMatchObject({ ok: false, error: { reason: 'providerFailed' } });
+    expect(!result.ok && result.error.message).toMatch(/isn't available on your plan/);
   });
 
   it('refuses any request Codex sends back, such as a command approval', async () => {
@@ -172,8 +185,7 @@ describe('Codex Provider', () => {
       ok: false,
       error: { reason: 'providerTimeout' },
     });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(messages(tmp, 'turn/interrupt')).toHaveLength(1);
+    await expect.poll(() => messages(tmp, 'turn/interrupt')).toHaveLength(1);
   });
 
   it('fails a request when the app-server dies, and starts a new one next time', async () => {

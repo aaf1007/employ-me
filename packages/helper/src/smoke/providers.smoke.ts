@@ -56,7 +56,10 @@ describe.each(PROVIDER_IDS)('%s, for real', (id) => {
   it('maps one field with structured output', async () => {
     const started = performance.now();
     const result = await provider().mapFields(oneField(), new AbortController().signal);
-    process.stderr.write(`${id}: mapFields took ${Math.round(performance.now() - started)} ms\n`);
+    // The field is fake ("Email address"), so the whole answer is safe to print.
+    process.stderr.write(
+      `${id}: mapFields took ${Math.round(performance.now() - started)} ms: ${JSON.stringify(result)}\n`,
+    );
     expect(result).toMatchObject({
       ok: true,
       value: { mappings: [{ fieldId: 'email', match: { kind: 'fieldType', fieldType: 'contact.email' } }] },

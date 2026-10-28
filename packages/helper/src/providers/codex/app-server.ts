@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { err, ok, type HelperError, type Result } from '@employ-me/core/protocol';
+import { z } from 'zod';
 import type { Logger } from '../../log/logger';
 import type { HelperPlatform } from '../../log/paths';
 import { HELPER_VERSION } from '../../version';
@@ -23,6 +24,8 @@ export interface AppServer {
   readonly rpc: RpcClient;
   /** Resolves when the process exits, for whatever reason. */
   readonly exited: Promise<void>;
+  /** The account's default model from `model/list`, or null if unknown. */
+  readonly defaultModel: string | null;
   stop(): void;
 }
 
@@ -90,7 +93,21 @@ export async function startAppServer(options: AppServerOptions): Promise<Result<
     return err(providerError('codex', 'providerFailed', "codex app-server didn't start"));
   }
   rpc.notify('initialized');
-  return ok({ rpc, exited, stop });
+  return ok({ rpc, exited, stop, defaultModel: await accountDefaultModel(rpc) });
+}
+
+const modelListSchema = z.object({ data: z.array(z.object({ model: z.string(), isDefault: z.boolean() })) });
+
+/**
+ * The model Codex's catalog marks default for this account. The model in
+ * the user's config.toml may be one their plan can't use with a ChatGPT
+ * login (seen: "model_not_found"), and design.md asks for "the default
+ * model". Null if the catalog can't be read: then Codex picks.
+ */
+async function accountDefaultModel(rpc: RpcClient): Promise<string | null> {
+  const listed = await rpc.request('model/list', {}, STARTUP_TIMEOUT_MS);
+  const models = listed.ok ? modelListSchema.safeParse(listed.value).data?.data : undefined;
+  return models?.find((model) => model.isDefault)?.model ?? null;
 }
 
 /** Names of the user's enabled MCP servers, to switch off. Fails closed. */

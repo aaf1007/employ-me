@@ -3,7 +3,7 @@
 // the app-server's JSON-RPC lines as codex-cli 0.158.0 does (see
 // `codex app-server generate-ts`), with canned answers.
 //
-//   STUB_MODE    ok (default) | notLoggedIn | rateLimited | hang | askApproval | crash
+//   STUB_MODE    ok (default) | notLoggedIn | rateLimited | modelNotFound | hang | askApproval | crash
 //   STUB_OUTPUT  the final agent message text (default {})
 //   STUB_MCP     JSON printed by `mcp list --json` (default [])
 //   STUB_RECORD  file to append one JSON line per call and message to, for assertions
@@ -35,12 +35,18 @@ record({
 });
 const send = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
 let threads = 0;
+/** A turn waiting for the answer to our approval request, as real Codex waits. */
+let awaitingApproval = null;
 
 createInterface({ input: process.stdin }).on('line', (line) => {
   const message = JSON.parse(line);
   record({ call: 'message', message });
   const { id, method, params } = message;
-  if (method === undefined) return; // our answer to a server request
+  if (method === undefined) {
+    // The helper's answer to a server request: carry on with the turn.
+    if (id === 'server-1' && awaitingApproval !== null) answer(awaitingApproval);
+    return;
+  }
   const reply = (result) => send({ id, result });
   switch (method) {
     case 'initialize':
@@ -64,6 +70,14 @@ createInterface({ input: process.stdin }).on('line', (line) => {
           secondary: { usedPercent: 40, windowDurationMins: 10080, resetsAt: 1793774863 },
         },
       });
+    case 'model/list':
+      return reply({
+        data: [
+          { id: 'stub-big', model: 'stub-big', isDefault: false, hidden: false },
+          { id: 'stub-default', model: 'stub-default', isDefault: true, hidden: false },
+        ],
+        nextCursor: null,
+      });
     case 'thread/start':
       threads += 1;
       return reply({ thread: { id: `thread-${threads}` } });
@@ -79,9 +93,10 @@ createInterface({ input: process.stdin }).on('line', (line) => {
   }
 });
 
+const completed = (threadId, status, error = null) =>
+  send({ method: 'turn/completed', params: { threadId, turn: { id: 'turn', status, error } } });
+
 function finishTurn(threadId) {
-  const completed = (status, error = null) =>
-    send({ method: 'turn/completed', params: { threadId, turn: { id: 'turn', status, error } } });
   switch (mode) {
     case 'hang':
       return;
@@ -89,23 +104,30 @@ function finishTurn(threadId) {
       process.exit(1);
       return;
     case 'rateLimited':
-      return completed('failed', { message: 'limit', codexErrorInfo: 'usageLimitExceeded' });
-    case 'askApproval':
-      send({ id: 'server-1', method: 'item/commandExecution/requestApproval', params: { threadId } });
-    // falls through: Codex carries on once its request is refused
-    default:
-      send({
-        method: 'item/completed',
-        params: {
-          threadId,
-          item: {
-            type: 'agentMessage',
-            id: 'msg',
-            text: process.env.STUB_OUTPUT ?? '{}',
-            phase: 'final_answer',
-          },
-        },
+      return completed(threadId, 'failed', { message: 'limit', codexErrorInfo: 'usageLimitExceeded' });
+    case 'modelNotFound':
+      // What codex-cli 0.158.0 reports for a model a ChatGPT login can't use.
+      return completed(threadId, 'failed', {
+        message:
+          '{"type":"error","status":400,"error":{"type":"invalid_request_error","code":"model_not_found"}}',
+        codexErrorInfo: 'other',
       });
-      return completed('completed');
+    case 'askApproval':
+      awaitingApproval = threadId;
+      return send({ id: 'server-1', method: 'item/commandExecution/requestApproval', params: { threadId } });
+    default:
+      return answer(threadId);
   }
+}
+
+function answer(threadId) {
+  awaitingApproval = null;
+  send({
+    method: 'item/completed',
+    params: {
+      threadId,
+      item: { type: 'agentMessage', id: 'msg', text: process.env.STUB_OUTPUT ?? '{}', phase: 'final_answer' },
+    },
+  });
+  completed(threadId, 'completed');
 }

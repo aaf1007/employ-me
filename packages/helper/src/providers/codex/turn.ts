@@ -15,6 +15,8 @@ const threadStartSchema = z.object({ thread: z.object({ id: z.string() }) });
 const turnStartSchema = z.object({ turn: z.object({ id: z.string() }) });
 const turnErrorSchema = z
   .object({
+    /** Only matched against known codes below, never passed on. */
+    message: z.string().optional(),
     codexErrorInfo: z
       .union([z.string(), z.record(z.string(), z.unknown())])
       .nullable()
@@ -33,9 +35,11 @@ const itemCompletedSchema = z.object({
 
 export interface TurnOptions {
   readonly cwd: string;
-  /** Null: the user's default Codex model (design.md "Default models"). */
+  /** Null: whatever Codex picks. */
   readonly model: string | null;
 }
+
+const MODEL_NOT_FOUND = 'modelNotFound';
 
 type TurnEnd = { readonly status: string; readonly errorInfo: string | null } | 'timedOut' | 'aborted';
 
@@ -78,9 +82,15 @@ export async function runCodexTurn(
       const done = turnCompletedSchema.safeParse(params).data;
       if (done?.threadId !== threadId) return;
       const info = done.turn.error?.codexErrorInfo;
+      // The API's own code, for a model the plan can't use, arrives as "other".
+      const modelNotFound = done.turn.error?.message?.includes('model_not_found') === true;
       finish({
         status: done.turn.status,
-        errorInfo: info === undefined || info === null ? null : errorInfoName(info),
+        errorInfo: modelNotFound
+          ? MODEL_NOT_FOUND
+          : info === undefined || info === null
+            ? null
+            : errorInfoName(info),
       });
     }
   });
@@ -154,6 +164,13 @@ function turnError(status: string, errorInfo: string | null): HelperError {
   }
   if (errorInfo === 'unauthorized')
     return providerError('codex', 'providerNotLoggedIn', "Codex isn't logged in");
+  if (errorInfo === MODEL_NOT_FOUND) {
+    return {
+      reason: 'providerFailed',
+      message: "The Codex model employ-me asked for isn't available on your plan",
+      fix: 'Remove "codex" from "models" in employ-me\'s config.json (run `npx employ-me doctor` to find it) so your plan\'s default model is used, then click Retry.',
+    };
+  }
   if (status === 'closed')
     return providerError('codex', 'providerFailed', 'codex app-server stopped during the request');
   return providerError(

@@ -20,6 +20,7 @@ export async function providerStatuses(
       workDir: config.workDir,
       logger: silentLogger,
       models: config.models,
+      nodePath: context.nodePath,
     }),
   );
   try {

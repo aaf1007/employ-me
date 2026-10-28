@@ -62,6 +62,7 @@ export const doctor: Command = async (args, io, context) => {
   if (!anyReady) io.out(`  ${MARK.bad} Neither claude nor codex is ready, so Fills run on rules only.`);
 
   io.out('');
+  io.out(`Config: ${configFile}`);
   io.out(`Log: ${logFile}`);
   return failed.length === 0 && anyReady ? 0 : 1;
 };

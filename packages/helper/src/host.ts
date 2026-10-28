@@ -17,7 +17,7 @@ if (platform === null) {
   process.exit(1);
 }
 
-const runtime = await loadHostRuntime(platform, homedir(), process.env, (error) => {
+const runtime = await loadHostRuntime(platform, homedir(), process.env, process.execPath, (error) => {
   process.stderr.write(
     `employ-me: can't write the log: ${error instanceof Error ? error.message : 'unknown error'}\n`,
   );
