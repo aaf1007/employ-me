@@ -31,6 +31,10 @@ export const REVIEW_REASONS = [
    * ("list your countries of citizenship, and when you obtained them").
    */
   'asksForMore',
+  /** The Resume was attached, but the form still showed it uploading when the Fill ended. */
+  'fileUploading',
+  /** The form shows a file other than the Resume you chose. */
+  'otherFileShown',
 ] as const;
 
 export const COULD_NOT_FILL_REASONS = [

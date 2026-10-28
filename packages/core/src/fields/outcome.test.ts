@@ -38,6 +38,21 @@ describe('FieldOutcome', () => {
     ).toMatchObject({ reason: 'asksForMore' });
   });
 
+  // Live test, 2026-10-28: Greenhouse still showed "uploading" while the side panel said Filled.
+  it.each(['fileUploading', 'otherFileShown'])(
+    'has a review reason for a Resume the form shows as %s',
+    (reason) => {
+      expect(
+        fieldOutcomeSchema.parse({
+          kind: 'needsReview',
+          fieldId: 'resume',
+          fieldType: 'file.resume',
+          reason,
+        }),
+      ).toMatchObject({ reason });
+    },
+  );
+
   it('refuses a "Couldn\'t fill" without a fix', () => {
     expect(
       fieldOutcomeSchema.safeParse({
