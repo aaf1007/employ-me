@@ -95,6 +95,24 @@ describe('plan', () => {
     });
   });
 
+  // CodeRabbit on #4: the page named one country, so the Posting declared it,
+  // and the public API's location named another one too.
+  it('is unclear when the page names one country and the public API another', () => {
+    form(`
+      <div class="posting-categories"><div class="location">Toronto, ON</div></div>
+      <label for="a">Are you authorized to work in the country where this job is based?</label>
+      <select id="a" name="a"><option value="">Select...</option><option>Yes</option><option>No</option></select>`);
+    const planned = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Toronto, ON; New York, NY' },
+    });
+    expect(planned.country).toEqual({ kind: 'unclear', candidates: ['CA', 'US'] });
+    expect(planned.fields[0]?.step).toMatchObject({ kind: 'review', reason: 'countryUnclear' });
+    // The same location from both, or one that agrees, keeps the Posting's country.
+    const agrees = plan(document, profile, [], { url: URL_US, postingDetails: { location: 'Toronto, ON' } });
+    expect(agrees.country).toEqual({ kind: 'known', country: 'CA' });
+  });
+
   // Live, 2026-10-28: Zoox (Lever) got "Sam" alone, Wave (Lever) got "No" typed as a referrer's name.
   it('a preferred name asked as first and last gets both, and a referrer’s name is never "No"', () => {
     form(`

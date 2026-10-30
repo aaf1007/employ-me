@@ -76,14 +76,24 @@ export function plan(
   };
 }
 
-/** The Posting's country (design.md "Country-specific answers"): known only when exactly one is named. */
+/**
+ * The Posting's country (design.md "Country-specific answers"): known only
+ * when exactly one is named. A declared country (the page's own location, or
+ * the API's country field) stays known only while no location, the page's or
+ * the public API's, names another.
+ */
 function postingCountry(posting: Posting | null, options: PlanOptions): CountryChoice {
   const declared = posting?.country ?? options.postingDetails?.country;
-  if (declared !== undefined) return { kind: 'known', country: declared };
   const location = [posting?.location, options.postingDetails?.location]
     .filter((l) => l !== undefined)
     .join('; ');
   const named = countriesIn(location);
+  if (declared !== undefined) {
+    const others = named.filter((c) => c !== declared);
+    return others.length === 0
+      ? { kind: 'known', country: declared }
+      : { kind: 'unclear', candidates: named.includes(declared) ? named : [declared, ...named] };
+  }
   const [only] = named;
   return named.length === 1 && only !== undefined
     ? { kind: 'known', country: only }
