@@ -10,6 +10,7 @@ import { textTarget } from '../match';
 import type { ExtractedField } from '../types';
 import { countryAnswer } from './country';
 import { factAnswer } from './facts';
+import { selfIdFromMapping } from './self-id';
 import { countryOf, describeValue, withProviderOptions } from './values';
 import { isChoice, skip, type Answer, type AnswerContext } from './types';
 
@@ -119,10 +120,20 @@ function fromMapping(
         return unrecognized(field, ruleType, provider);
       }
       // The rules didn't see a Self-ID question, Attestation or never-stored
-      // field here, and the AI says it is one. Self-ID fills only from your
-      // own answers to questions the rules recognise, and the others never
-      // fill (design.md "Sensitive questions"): so it's yours to answer, and
-      // nothing is suggested.
+      // field here, and the AI says it is one (design.md "Sensitive
+      // questions"). A Self-ID question gets your own Self-ID Answer, always
+      // for review. Attestations and never-stored fields never fill: they're
+      // yours to answer, and nothing is suggested.
+      if (sensitivityOf(mapped) === 'selfId') {
+        const answer = selfIdFromMapping(
+          mapped,
+          field,
+          { options: mapping.options, sure },
+          classification.country,
+          ctx,
+        );
+        return { fieldType: mapped, answer };
+      }
       if (!isOrdinaryFieldType(mapped)) {
         return { fieldType: mapped, answer: { kind: 'review', reason: 'providerMatched' } };
       }

@@ -6,6 +6,7 @@ import {
   type HelperErrorReason,
   type HelperRequest,
   type HelperResponse,
+  type MapFieldsOutput,
   type ProviderStatus,
   type ResumeExtract,
 } from '@employ-me/core';
@@ -24,6 +25,8 @@ export interface InMemoryHelperScript {
   readonly failWith: HelperErrorReason | null;
   readonly resumeExtract: ResumeExtract;
   readonly providers: readonly ProviderStatus[];
+  /** mapFields answers by field id, in place of the fake Provider's, for the fields a request has. */
+  readonly mappings: MapFieldsOutput['mappings'];
 }
 
 export interface InMemoryHelper extends HelperTransport {
@@ -82,6 +85,7 @@ const DEFAULT_SCRIPT: InMemoryHelperScript = {
     { id: 'claude', state: 'ready', version: 'fake' },
     { id: 'codex', state: 'ready', version: 'fake' },
   ],
+  mappings: [],
 };
 
 export function createInMemoryHelper(): InMemoryHelper {
@@ -130,11 +134,13 @@ export function createInMemoryHelper(): InMemoryHelper {
           ...okBase,
           type: 'mapFields',
           result: {
-            // As the helper's fake Provider answers.
-            mappings: request.input.fields.map((field) =>
-              field.control === 'textarea'
-                ? { fieldId: field.fieldId, match: { kind: 'needsDraft' }, confidence: 1 }
-                : { fieldId: field.fieldId, match: { kind: 'unknown' }, confidence: 0 },
+            // As the helper's fake Provider answers, unless the test scripted the field.
+            mappings: request.input.fields.map(
+              (field) =>
+                script.mappings.find((m) => m.fieldId === field.fieldId) ??
+                (field.control === 'textarea'
+                  ? { fieldId: field.fieldId, match: { kind: 'needsDraft' }, confidence: 1 }
+                  : { fieldId: field.fieldId, match: { kind: 'unknown' }, confidence: 0 }),
             ),
           },
         };

@@ -1,5 +1,4 @@
 import {
-  FIELD_TYPES,
   normalizeLabel,
   type CountryCode,
   type FieldType,
@@ -23,7 +22,7 @@ import {
   type AnswerContext,
   type CountryAnswer,
 } from './types';
-import { DECLINE_TARGET, vocabTarget } from './vocab';
+import { selfIdAnswer } from './self-id';
 
 // Answers that depend on the country: Work Authorization, salary and Self-ID
 // Answers, each picked by the Posting's country. When the country is unclear
@@ -168,66 +167,4 @@ function salaryAnswer(field: ExtractedField, country: CountryCode, ctx: AnswerCo
 /** A salary-range option ("€60,000 - €70,000", "60k-70k") that contains the minimum. */
 function salaryTarget(words: string, min: number): OptionTarget {
   return { text: words, patterns: [], fuzzy: false, amount: min };
-}
-
-function selfIdAnswer(
-  fieldType: FieldType,
-  field: ExtractedField,
-  country: CountryChoice | undefined,
-  ctx: AnswerContext,
-): Answer {
-  if (!isChoice(field)) {
-    return skip(
-      'notInProfile',
-      'employ-me fills Self-ID questions only from your Self-ID Answers. Answer it yourself, or leave it blank.',
-    );
-  }
-  if (fieldType === 'selfId.other') {
-    if (country?.kind === 'unclear') return { kind: 'review', reason: 'countryUnclear' };
-    return { kind: 'answer', value: { kind: 'option', target: DECLINE_TARGET }, source: 'selfId' };
-  }
-  const value = selfIdValue(fieldType, ctx);
-  const spec = FIELD_TYPES[fieldType];
-  const vocab = 'vocab' in spec ? spec.vocab : undefined;
-  const target = value === undefined || vocab === undefined ? null : vocabTarget(vocab, value);
-  if (target === null)
-    return { kind: 'answer', value: { kind: 'option', target: DECLINE_TARGET }, source: 'selfId' };
-  return { kind: 'answer', value: { kind: 'option', target }, source: 'selfId' };
-}
-
-const SELF_ID_TYPES = [
-  'selfId.us.sex',
-  'selfId.us.hispanicLatino',
-  'selfId.us.race',
-  'selfId.us.veteran',
-  'selfId.us.disability',
-  'selfId.ca.genderIdentity',
-  'selfId.ca.indigenous',
-  'selfId.ca.visibleMinority',
-  'selfId.ca.disability',
-] as const satisfies readonly FieldType[];
-
-function selfIdValue(fieldType: FieldType, ctx: AnswerContext): string | undefined {
-  const { US: us, CA: ca } = ctx.profile.selfId;
-  if (!isOneOf(fieldType, SELF_ID_TYPES)) return undefined;
-  switch (fieldType) {
-    case 'selfId.us.sex':
-      return us.sex;
-    case 'selfId.us.hispanicLatino':
-      return us.hispanicLatino;
-    case 'selfId.us.race':
-      return us.race;
-    case 'selfId.us.veteran':
-      return us.veteran;
-    case 'selfId.us.disability':
-      return us.disability;
-    case 'selfId.ca.genderIdentity':
-      return ca.genderIdentity;
-    case 'selfId.ca.indigenous':
-      return ca.indigenous;
-    case 'selfId.ca.visibleMinority':
-      return ca.visibleMinority;
-    case 'selfId.ca.disability':
-      return ca.disability;
-  }
 }

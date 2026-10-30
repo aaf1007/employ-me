@@ -488,7 +488,7 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 Recommendation 1 of [the Jobright research](research/2026-10-28-jobright-autofill.md) §7.1. Before this, "Filled" for a Resume meant the input took the file; the live test saw Greenhouse still uploading while the side panel said Filled.
 
 **Landed**
-- core (own commit, 6ebfa8e): review reasons `fileUploading` and `otherFileShown`, with the side panel's words.
+- core (own commit, e90624a): review reasons `fileUploading` and `otherFileShown`, with the side panel's words.
 - fill: `AtsAdapter.shownFile(field)`, read-only: `uploading`, `failed`, `named` (the text the form shows) or `unknown`.
   - Greenhouse: its upload widget, found by `upload-label-<id>` (progress bar, `.file-upload__filename`, error classes). The input itself is gone by then.
   - Lever: `.has-file .filename`, "Analyzing resume..." while it reads, the size error. "Couldn't auto-read resume" is the parse failing; the file is still attached.
@@ -508,3 +508,27 @@ Recommendation 1 of [the Jobright research](research/2026-10-28-jobright-autofil
 - Workday's and Ashby's in-progress and error states are guesses from synthetic markup and Ashby's class names; check on a live pass.
 - On a stalled upload the Fill reports up to 5 s later than before. Only a re-plan re-checks a Resume left uploading; with the helper unavailable nothing does until the next Fill.
 - Showing which Resume (its label) on the outcome, also in §7.1, isn't done.
+
+## 2026-10-30 · A Self-ID question only the AI recognises gets your own answer, for review (fill; design.md in its own commit; e2e and the in-memory helper)
+
+Before this, `fromMapping` sent every field the AI mapped to a `selfId.*` type to review empty: Self-ID filled only on questions the rules recognised. [The Jobright research](research/2026-10-28-jobright-autofill.md) handles odd EEO wording by sending the whole profile to its server; this gets the same robustness locally. Nothing new goes to the Provider.
+
+**Landed**
+- design.md "Sensitive questions" (own commit, wording approved by the user): the AI may say which Self-ID question it is, and what each option means; the answer still comes from your Self-ID Answers, and the field always goes to Needs your review.
+- fill `answer/self-id.ts` (Self-ID code moved out of `country.ts`, which was over 200 lines): `selfIdFromMapping`. A `selfId.*` mapping with confidence ≥ `MIN_MAPPING_CONFIDENCE` is answered by `selfIdAnswer` (your answer, "decline" by default; `selfId.other` declines) and written with `review: 'providerMatched'`, source `selfId`. Left for review with nothing written: a weak match; a `selfId.us.*`/`selfId.ca.*` type whose country isn't the Posting's when that is known, or isn't among the candidates when the Posting names several. When it names none, the type's own country is taken: the field is in review either way. Text boxes stay `couldNotFill: notInProfile`. Attestations and never-stored mappings are unchanged (review, nothing suggested), and rule-classified Self-ID fields still never reach `toProviderField`.
+- `Canonical`'s option answers carry `vocabValue` (the canonical value, e.g. `decline`). `withProviderOptions` uses it to pick the form option the AI mapped to that value, keeping the vocab target's patterns as the fallback should the AI's option text not be the form's. Yes/no answers work as before.
+- Tests: `plan/self-id-mapping.test.ts` (confident match through the option map, decline by default, `selfId.other`, vocab fallback, weak match, both country mismatches, text box, and what `providerRequest` sends). The five new behaviours failed on the old code; the three guards (weak, country ×2) failed with the checks removed. plan.test.ts's "never writes a field the AI maps to" keeps its Attestation and never-stored cases.
+- e2e `self-id-mapping.spec.ts` on the synthetic `fixtures/greenhouse/self-id-wording.html` ("Which of these best describes your heritage?", options in words the vocab patterns don't know). It failed on the old code ("Select..." left chosen).
+- extension (test build only), for that spec: the in-memory helper takes `mappings` (by field id, core `mapFieldsOutputSchema` shape) that replace the fake Provider's answer for those fields; `InMemoryHelperScript` in `e2e/harness.ts` lists it.
+
+**Checked**
+- `pnpm check`; full `pnpm test:e2e` 55 of 55, and 61 of 61 after rebasing onto main ae6c3da (one earlier run hit the geotab flake below); the new spec `--repeat-each 10` plain and with the free cores busy (4-core Linux container, 2 workers, 2 `yes` loops): 20 of 20.
+- `--repeat-each 3/4` over self-id-mapping, generic-site, dashboard-setup, fill, fill-seam and side-panel: everything passed except `fill.spec` greenhouse/geotab, which failed 1 of 3 and 2 of 4 runs. It fails on the base commit too (1 of 4 runs with this change stashed), see Left.
+
+**Left**
+- `fill.spec` greenhouse/geotab is flaky on a busy 4-core machine: the GDPR demographic-data consent checkbox is sometimes read after the education fields instead of before, so the outcome order differs from `geotab-2026-10-28.expected.json`. Field order follows the page as replayed, so its React render order varies; the spec could compare in a stable order, or wait for the education block. Not this change: that spec runs with the Provider unavailable.
+- Facts with vocab options (phone type, degree level) could also use the AI's option map through `vocabValue`; only Self-ID sets it today.
+- The side panel shows the generic "The AI matched this field. Check the answer." for these. A Self-ID-specific line ("Filled from your Self-ID Answers; the AI said which question this is") might read better.
+
+**Gotchas**
+- A `selfId.other` mapping is answered with no country (it declines anywhere), unlike the rules path, where an unclear country sends `selfId.other` to `countryUnclear`.

@@ -308,10 +308,10 @@ describe('plan', () => {
     });
   });
 
-  // design.md "Sensitive questions": Self-ID fills only from your Self-ID
-  // Answers, on questions the rules recognise; Attestations and never-stored
-  // fields never fill. An AI mapping can't change that.
-  it.each(['selfId.us.race', 'selfId.other', 'attestation.consent', 'never.dateOfBirth'] as const)(
+  // design.md "Sensitive questions": Attestations and never-stored fields
+  // never fill. An AI mapping can't change that. (A Self-ID question the AI
+  // recognises fills from your Self-ID Answers: self-id-mapping.test.ts.)
+  it.each(['attestation.consent', 'never.dateOfBirth'] as const)(
     'never writes a field the AI maps to %s, however sure it is: it goes to review',
     async (fieldType) => {
       form(`
