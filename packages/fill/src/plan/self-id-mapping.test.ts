@@ -122,6 +122,21 @@ describe('a Self-ID question only the AI recognises', () => {
     },
   );
 
+  // CodeRabbit on #4: the question's own words name a country, which the
+  // field's country choice prefers. The Posting's country still has to agree.
+  it('a question naming another country than the Posting’s goes to review with nothing written', async () => {
+    form(`
+      <label for="u">Is your heritage one the Canadian census counts apart?</label>
+      <select id="u" name="u">
+        <option value="">Select...</option><option>Yes</option><option>No</option>
+        <option>Skip this question</option>
+      </select>`);
+    const planned = planWith('selfId.ca.visibleMinority', 0.95, { country: 'US' });
+    expect(planned.fields[0]?.step).toEqual({ kind: 'review', reason: 'providerMatched' });
+    await execute(planned);
+    expect(document.querySelector<HTMLSelectElement>('#u')?.value).toBe('');
+  });
+
   it('a text box is left for you: Self-ID fills only choices', () => {
     form(`<label for="u">Tell us about your heritage</label><input id="u" name="u">`);
     expect(planWith('selfId.us.race', 0.95).fields[0]?.step).toMatchObject({

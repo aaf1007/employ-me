@@ -42,6 +42,7 @@ export function plan(
     savedAnswers,
     employer: posting?.key.employer ?? null,
     hasResume: options.resume !== undefined && options.resume !== null,
+    postingCountry: country,
   };
   const knownOptions = options.postingDetails?.fieldOptions ?? {};
 

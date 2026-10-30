@@ -53,7 +53,10 @@ export function selfIdFromMapping(
   country: CountryChoice | undefined,
   ctx: AnswerContext,
 ): Answer {
-  if (!mapping.sure || !countryFits(fieldType, country)) return { kind: 'review', reason: 'providerMatched' };
+  // The question's country (one its words name, else the Posting's) and the
+  // Posting's own must both agree with the type's.
+  const fits = countryFits(fieldType, country) && countryFits(fieldType, ctx.postingCountry);
+  if (!mapping.sure || !fits) return { kind: 'review', reason: 'providerMatched' };
   // The type names its country, already checked against the Posting's: selfId.other declines anywhere.
   const answer = selfIdAnswer(fieldType, field, undefined, ctx);
   if (answer.kind !== 'answer') return answer;

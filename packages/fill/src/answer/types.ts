@@ -58,6 +58,8 @@ export interface AnswerContext {
   /** The Posting's employer, for Saved Answer overrides and "worked here before". */
   readonly employer: EmployerKey | null;
   readonly hasResume: boolean;
+  /** The Posting's own country, whatever a question's words name (design.md "Country-specific answers"). */
+  readonly postingCountry: CountryChoice;
 }
 
 export const skip = (reason: CouldNotFillReason, fix: string): Answer => ({ kind: 'skip', reason, fix });
