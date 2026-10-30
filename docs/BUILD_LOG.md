@@ -574,7 +574,7 @@ Recommendation 4 of [the Jobright research](research/2026-10-28-jobright-autofil
 
 **Checked** (4-core Linux container, 2 workers)
 - `pnpm check` green.
-- Full `pnpm test:e2e`: 60 of 61, the one failure the geotab ordering flake (below). No `expected.json` changed, so the README fill-rate table didn't move.
+- Full `pnpm test:e2e`: 61 of 61 on the final build; an earlier run was 60 of 61, the one failure the geotab ordering flake (below). No `expected.json` changed, so the README fill-rate table didn't move.
 - fill, fill-seam, milestone-1 and workday `--repeat-each 10`:
   - Idle: 247 of 250. All 3 failures are geotab's ordering flake: the GDPR consent box read after the education block.
   - With both free cores busy (2 `yes` loops): 249 of 250. No geotab failure; the one failure is milestone-1 "Greenhouse embedded in a company site" (see Left).
