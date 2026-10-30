@@ -2,6 +2,7 @@ import { profileSchema } from '@employ-me/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { execute } from '../execute';
 import { render } from '../test-support/dom';
+import { readPosting } from '../posting';
 import { plan } from './index';
 
 // plan() and execute() on small forms. The recorded forms are covered by
@@ -111,6 +112,29 @@ describe('plan', () => {
     // The same location from both, or one that agrees, keeps the Posting's country.
     const agrees = plan(document, profile, [], { url: URL_US, postingDetails: { location: 'Toronto, ON' } });
     expect(agrees.country).toEqual({ kind: 'known', country: 'CA' });
+  });
+
+  // CodeRabbit on #4: "Cambridge" is also a British city, and the API said US.
+  it('keeps a declared country against a bare city name, not against another declared country', () => {
+    form(`<label for="n">Full name</label><input id="n" name="name">`);
+    const cambridge = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Cambridge', country: 'US' },
+    });
+    expect(cambridge.country).toEqual({ kind: 'known', country: 'US' });
+    const named = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Cambridge, United Kingdom', country: 'US' },
+    });
+    expect(named.country).toEqual({ kind: 'unclear', candidates: ['US', 'GB'] });
+    const posting = readPosting(document, URL_US);
+    if (posting === null) throw new Error('no Posting');
+    const disagree = plan(document, profile, [], {
+      url: URL_US,
+      posting: { ...posting, country: 'US' },
+      postingDetails: { country: 'CA' },
+    });
+    expect(disagree.country).toEqual({ kind: 'unclear', candidates: ['US', 'CA'] });
   });
 
   // Live, 2026-10-28: Zoox (Lever) got "Sam" alone, Wave (Lever) got "No" typed as a referrer's name.

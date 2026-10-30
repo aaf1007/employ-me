@@ -149,16 +149,18 @@ const PROVINCE_NAME = boundary(CA_PROVINCES.map(([, name]) => name).join('|'));
 /**
  * Countries a location string names, e.g. "Toronto, ON" → [CA],
  * "New York City, NY; San Francisco, CA" → [US], "London, UK; Ontario, CAN" → [GB, CA].
+ * `byCity: false` leaves out countries known only from a bare city name,
+ * which another country can share ("Cambridge", "London").
  */
-export function countriesIn(location: string): CountryCode[] {
+export function countriesIn(location: string, { byCity = true }: { byCity?: boolean } = {}): CountryCode[] {
   const found = new Set<CountryCode>();
   for (const part of location.split(/[;|/]|\bor\b|\band\b|\s-\s/i)) {
-    for (const code of countriesInPart(part)) found.add(code);
+    for (const code of countriesInPart(part, byCity)) found.add(code);
   }
   return [...found];
 }
 
-function countriesInPart(part: string): CountryCode[] {
+function countriesInPart(part: string, byCity: boolean): CountryCode[] {
   const text = part.trim();
   if (text === '') return [];
   const named = COUNTRY_RES.filter(([, re]) => re.test(text)).map(([code]) => code);
@@ -171,6 +173,7 @@ function countriesInPart(part: string): CountryCode[] {
   }
   if (PROVINCE_NAME.test(text)) return ['CA'];
   if (STATE_NAME.test(text)) return ['US'];
+  if (!byCity) return [];
   const cities = CITY_RES.filter(([, re]) => re.test(text)).map(([code]) => code);
   return cities;
 }
