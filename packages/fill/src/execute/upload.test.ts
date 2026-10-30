@@ -245,5 +245,9 @@ describe('confirmUploads on other forms', () => {
       <div data-automation-id="file-upload-item-name">sam-lee-resume.pdf</div>
       <div data-automation-id="file-upload-successful">Successfully Uploaded!</div></div>`;
     expect(await check(WORKDAY)).toMatchObject({ kind: 'filled' });
+    // CodeRabbit on #4: uploaded, but under no name the form shows: nothing to check it by.
+    uploads.innerHTML = `<div data-automation-id="file-upload-item">
+      <div data-automation-id="file-upload-successful">Successfully Uploaded!</div></div>`;
+    expect(await check(WORKDAY)).toMatchObject({ kind: 'needsReview', reason: 'fileUploadUnknown' });
   });
 });

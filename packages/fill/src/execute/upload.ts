@@ -68,7 +68,10 @@ function fromShown(planned: PlannedField, shown: ShownFile, resume: File): Field
     case 'failed':
       return { kind: 'couldNotFill', fieldId, fieldType, reason: 'fileRejected', fix: FILE_REJECTED_FIX };
     case 'named':
-      if (shown.text.trim() !== '' && !showsName(shown.text, resume.name)) {
+      if (shown.text.trim() === '') {
+        return { kind: 'needsReview', fieldId, fieldType, reason: 'fileUploadUnknown' };
+      }
+      if (!showsName(shown.text, resume.name)) {
         return { kind: 'needsReview', fieldId, fieldType, reason: 'otherFileShown' };
       }
       return writeOutcome(planned, { kind: 'done' });
