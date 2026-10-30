@@ -4,7 +4,7 @@ import type { FillPlan, PlannedField } from '../plan';
 import { fieldFingerprint } from '../read';
 import { writeOutcome } from './outcome';
 import { buildReport, writeKey } from './report';
-import { replan, settle } from './step';
+import { readyStep, replan, settle } from './step';
 import { confirmUploads } from './upload';
 import { performWrite, type WriteContext } from './write';
 
@@ -48,7 +48,8 @@ const CONDITIONAL_ROUNDS = 2;
  * newly resolved, or resolved differently, are written, and a field the user
  * changed on the page since the last execute is never written again.
  */
-export async function execute(plan: FillPlan, previous?: FillReport): Promise<FillReport> {
+export async function execute(given: FillPlan, previous?: FillReport): Promise<FillReport> {
+  const plan = await readyStep(given, previous);
   const { adapter, doc } = plan.context;
   const resume = plan.context.options.resume?.file ?? null;
   const ctx: WriteContext = { adapter, resume };
