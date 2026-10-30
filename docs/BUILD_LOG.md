@@ -554,3 +554,49 @@ Before this, `fromMapping` sent every field the AI mapped to a `selfId.*` type t
 **Left**
 - The geotab ordering flake (entry above) showed in 2 of 3 full local runs on this 4-core container; CI has been green.
 - One full local run failed `milestone-1` "Greenhouse embedded in a company site" (First Name left empty within 5 s); it then passed 5 of 5 alone and in the next full run. Not explained: nothing in this change touches that field.
+
+## 2026-10-30 · The Fill waits for the form to go quiet, and for a Workday step's fields (fill)
+
+Recommendation 4 of [the Jobright research](research/2026-10-28-jobright-autofill.md) §7.4. Before this, `settle()` was a fixed 250 ms: a question a slow site rendered later was left out of the Fill's report, and got filled only if `page-watch.ts` noticed it while the panel was open.
+
+**Landed**
+- `execute/quiet.ts`: `waitForQuiet(root)` resolves once the form (`adapter.findForm`, else the body) has had no change for `QUIET_MS` (150 ms), or at `QUIET_CAP_MS` (1.5 s). It uses the page's own `MutationObserver` with `childList`, `subtree`, and the attributes that show, hide or enable a question (`hidden`, `style`, `class`, `disabled`, `aria-hidden`, `aria-disabled`, `open`); `value` and `aria-activedescendant` are left out because typing changes them. It always disconnects and clears both timers. Read-only, not through `act`. Used after each "Add another" and before each conditional re-plan (`execute/step.ts` `settle`, beside `replan`, both moved out of `index.ts`).
+- **The Fill's own writes are not ignored**, by choice: what the page does in reply to a write (a spinner, a re-render, the follow-up question) is what the wait is for. Telling the page's reply apart from the write itself isn't reliable, and the 1.5 s cap bounds the cost.
+- `AtsAdapter.waitForStepReady(form)`, read-only and shaped like `waitForResumeParse`; the default resolves at once. Workday's (`adapters/workday/step-ready.ts`) resolves once the step shows fields and the count is the same on two polls `STEP_POLL_MS` (250 ms) apart, or at `STEP_READY_CAP_MS` (3 s). An empty step isn't ready. Its extract hooks moved to a `hooks` const so it counts what `extract` would.
+- `execute()` (`readyStep` in `execute/step.ts`) waits for it before carrying out a step's first plan: the first Fill, a plan with nothing in it, or one with fields no earlier execute saw. It plans again if the fields changed meanwhile. Re-plans of a step already seen don't wait. Other adapters pay one extra `extract` on a step's first execute, and no wait.
+- `noteEdits` and `userEdited` are unchanged.
+
+**Tests**
+- `late-question.test.ts` (fake timers): a question rendered 600 ms after the answer that brings it, behind a ticking spinner, is found and filled within the same `execute()`. It failed on the 250 ms code. Second case: an edit you make 500 ms into a re-plan's wait (the page still busy) is in `userEdited`, and the next re-plan leaves it alone.
+- `quiet.test.ts`: resolves after quiet; changes (nodes, `hidden`) push it back; `value` doesn't; resolves at the cap under constant change; one `disconnect` and no timers left; the page unchanged.
+- `workday/step-ready.test.ts`: two batches (ready at the second steady poll), an already whole step, an empty step, the cap, and an `execute()` on a step whose sections arrive at 300 and 600 ms. Both sections are filled, and the test fails with the wait removed.
+- `replan.test.ts` passes unchanged.
+
+**Checked** (4-core Linux container, 2 workers)
+- `pnpm check` green.
+- Full `pnpm test:e2e`: 61 of 61 on the final build; an earlier run was 60 of 61, the one failure the geotab ordering flake (below). No `expected.json` changed, so the README fill-rate table didn't move.
+- fill, fill-seam, milestone-1 and workday `--repeat-each 10`:
+  - Idle: 247 of 250. All 3 failures are geotab's ordering flake: the GDPR consent box read after the education block.
+  - With both free cores busy (2 `yes` loops): 249 of 250. No geotab failure; the one failure is milestone-1 "Greenhouse embedded in a company site" (see Left).
+- That embed test alone ×10 under the same load: 1 of 10 failed on this branch, 2 of 10 on the base commit 47c4378, both times with the same symptom.
+
+**Left**
+- milestone-1 "Greenhouse embedded in a company site" fails now and then under load, on main too: the panel says First Name is filled (the Fill read it back), then the frame shows it empty for 5 s. The page clears it after the Fill wrote it (a late React render of the embedded board?). Seen once in the previous entry as well. Worth a look on its own.
+- geotab's ordering flake as in the earlier entries; still not chased.
+- If you edit a field the same execute wrote while its wait is running, the edit isn't flagged as "Changed by you": the end-of-execute `noteEdits` checks only fields it didn't write. Nothing overwrites the edit unless a later re-plan resolves that field differently. This was true with 250 ms too; the window is now up to 1.5 s per round. Spotting it reliably would need trusted `input` events, which jsdom can't make.
+- On Workday, text you type into a new step during its step-ready wait (up to 3 s) is overwritten by the Fill, as a pre-filled value always was on a first Fill.
+- The step-ready check is built against the synthetic Workday fixtures, like the rest of the adapter: unverified until a live pass.
+- A step whose second batch arrives more than one poll after a steady pair is still missed by step-ready; the quiet wait after the writes catches it if the page is still changing then.
+
+**Gotchas**
+- Every act write waits 60 ms to read back (`act/read-back.ts`). A unit test meant to show a question the quiet wait misses must put it later than the writes plus `QUIET_MS`.
+- Under fake timers, `vi.runAllTimersAsync()` drives a whole `execute()`: jsdom's MutationObserver callbacks are microtasks.
+
+**Review of #5** (a test that failed first for each)
+- `execute/quiet.ts`: `waitForQuiet(doc, findRoot)`.
+  - It now observes the document, which an ATS can't swap out, and counts only changes inside the current form. If the form leaves the page (re-rendered whole), it asks `findRoot` again. Before, it watched a detached form and ended early.
+  - It also observes every open shadow root in the form, including ones added during the wait. It is still one observer, disconnected at the end.
+  - Changes elsewhere on the page no longer count, which they did when there was no form and the body was watched.
+  - `dom` gains `shadowHost(node)`, which `parentElement` now uses.
+- `execute/step.ts` `readyStep`: after the step-ready wait, it plans again unless every field is the same control on the page (element and choice elements), with the same label, widget, and options when the page shows any. Before, it compared ids only, so a control Workday re-rendered under the same id was written through its detached element. It also looks the form up again after the wait.
+- Checked: `pnpm check`. Full `pnpm test:e2e` 59 of 61: geotab's ordering flake, and getyourguide First Name `valueDidNotStick`, which then passed 10 of 10 alone. The four specs `--repeat-each 10`: idle 249 of 250 (geotab); busy 245 of 250 (geotab, and four of Greenhouse's First Name cleared after the write: milestone-1 embedded ×3, mongodb ×1). The embedded test alone under load: 2 of 20 here, against 2 of 10 on main and 1 of 10 before this review. No worse than main; see Left.

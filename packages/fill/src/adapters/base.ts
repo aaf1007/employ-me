@@ -18,6 +18,7 @@ export function adapter(
     classify: (field) => (map === undefined ? null : mapLookup(map, field)),
     parsesResume: false,
     waitForResumeParse: () => Promise.resolve(),
+    waitForStepReady: () => Promise.resolve(),
     repeatingSections: () => [],
     checkStrategy: 'click',
     typeaheadSuggestions: () => [],

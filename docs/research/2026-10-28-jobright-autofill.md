@@ -38,7 +38,7 @@ Anything marked **[unverified]** came from one secondary source, or couldn't be 
    1. Read back that the Resume actually uploaded, and that it's the Resume you chose.
    2. Turn your own edits on the form into Saved Answers, locally and opt-in. Jobright does this server-side, at the Submit click.
    3. Searchable lists (schools, cities): try several search terms. Map field of study to Greenhouse's fixed list. Moved up from 5th.
-   4. Wait for the page to go quiet, not a fixed 250 ms, before looking for conditional questions. New.
+   4. Wait for the page to go quiet, not a fixed 250 ms, before looking for conditional questions. New. Done 2026-10-30.
    5. Remember the Provider's field mappings locally.
    6. Check a Draft's claims against your Profile locally.
    7. For fields with no label, let the Provider choose among nearby page texts by id, never write a label. New, from Jobright's unused field finder.
@@ -339,7 +339,8 @@ Ranked by expected gain in accuracy. Each item gives the evidence, where it land
   - Add a `discipline` vocab in `answer/vocab.ts`, like `degreeLevel`: synonym patterns from common majors to Greenhouse's fixed field-of-study names. Use it in `edu.discipline` when the field is a choice. Keep the exact text first, so a form whose list has your exact major still gets it.
 - **Fit:** act stays the only writer. Typing into a search box is already allowed by the guard. Jobright's server-side search is out: it sends your school name to a server, and our Provider sees labels and options only (hard rule 2). Everything here runs locally.
 
-### 7.4 Wait for the page to go quiet before looking for conditional questions (new)
+### 7.4 Wait for the page to go quiet before looking for conditional questions (new; done 2026-10-30)
+- **Done** (2026-10-30, [BUILD_LOG](../BUILD_LOG.md)): `execute/quiet.ts` (`QUIET_MS` 150, `QUIET_CAP_MS` 1500) replaces the fixed wait after "Add another" and before each conditional re-plan; the Workday adapter's `waitForStepReady` (`adapters/workday/step-ready.ts`) runs before a step's first plan.
 - **Evidence:**
   - **Shipped code:** Jobright waits for a `MutationObserver` quiet period, with a maximum wait, before looking for conditional questions (`waitForComboQuestionsToSettle`). On Workday it waits until the field count is the same on two polls before reading a step (§3.4).
   - Our `settle()` in `packages/fill/src/execute/index.ts` is a fixed 250 ms. A slow ATS (Workday, a remote option list) can render a follow-up question after that, and the Fill then reports without it. The question gets filled only when `page-watch.ts` notices it later, if the panel is still open.

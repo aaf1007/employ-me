@@ -1,10 +1,12 @@
 import { deepQueryAll, isHidden, readableText, textOfIds } from '../../dom';
+import { extractFields, type ExtractHooks } from '../../extract';
 import { postingKeyFromUrl } from '../../posting';
 import type { ExtractedField } from '../../types';
 import { adapter, shownByInput } from '../base';
 import type { RepeatingSection, ShownFile } from '../types';
 import { describe, entryNumbers } from './fields';
 import { classify } from './map';
+import { waitForStepReady } from './step-ready';
 
 // Workday (research §4): every employer has its own sign-in, then 5–7 steps
 // (My Information, My Experience, Application Questions, Voluntary
@@ -85,19 +87,22 @@ function shownFile(field: ExtractedField): ShownFile {
   };
 }
 
+const hooks: ExtractHooks = {
+  describe,
+  ignore: (el) =>
+    // The text input that mirrors a "Select One" button's value, and the page's own navigation.
+    (el.localName === 'input' &&
+      el.previousElementSibling?.matches('button[aria-haspopup="listbox"]') === true) ||
+    el.closest('[data-automation-id="pageFooter"], [data-automation-id="progressBar"]') !== null,
+};
+
 export const workdayAdapter = adapter({
   ats: 'workday',
   findForm,
   postingKey: postingKeyFromUrl,
   classify,
-  hooks: {
-    describe,
-    ignore: (el) =>
-      // The text input that mirrors a "Select One" button's value, and the page's own navigation.
-      (el.localName === 'input' &&
-        el.previousElementSibling?.matches('button[aria-haspopup="listbox"]') === true) ||
-      el.closest('[data-automation-id="pageFooter"], [data-automation-id="progressBar"]') !== null,
-  },
+  hooks,
+  waitForStepReady: (form) => waitForStepReady(form, (f) => extractFields(f, hooks)),
   repeatingSections,
   typeToSearch: true,
   comboboxChoices,
