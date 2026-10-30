@@ -532,3 +532,20 @@ Before this, `fromMapping` sent every field the AI mapped to a `selfId.*` type t
 
 **Gotchas**
 - A `selfId.other` mapping is answered with no country (it declines anywhere), unlike the rules path, where an unclear country sends `selfId.other` to `countryUnclear`.
+
+## 2026-10-30 · CodeRabbit's review of #4: Resume upload checks, the Self-ID country guard, research §7.9 (core, fill, extension side panel, docs)
+
+**Landed** (a test that failed first for each)
+- core (own commit, with the side panel's words): review reason `fileUploadUnknown`.
+- fill `execute/upload.ts`:
+  - A Resume whose form shows no name and no upload status (`ShownFile` `unknown`) is now needs review (`fileUploadUnknown`), not Filled. This reverses the earlier "stays Filled when the form shows nothing either way": "Filled" means the form shows the file uploaded. No recorded fixture reaches `unknown`, so none changed.
+  - The shown name must be the Resume's whole name, first, followed only by a size or a button's text: `old-sam-lee-resume.pdf` and `sam-lee-resume.pdf.zip` are other files (was a substring match).
+  - A re-check of a Resume an earlier execute left uploading looks once, as the entry above says, instead of starting a new 5 s wait.
+- fill `answer/self-id.ts`: an AI-mapped Self-ID type must fit both the question's country (the one its words name, else the Posting's) and the Posting's own. Before, a label naming Canada on a US Posting could fill the Canadian answer. `AnswerContext` gains `postingCountry`.
+- research §7.9 and its summary: only the React-handler and file-picker techniques are `act`; the Submit watcher is a `detect-submission` signal.
+
+**Checked**
+- `pnpm check`; full `pnpm test:e2e` 61 of 61 (one earlier run hit the geotab flake).
+
+**Left**
+- The geotab ordering flake (entry above) showed in 2 of 3 full local runs on this 4-core container; CI has been green.

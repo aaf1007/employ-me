@@ -43,7 +43,7 @@ Anything marked **[unverified]** came from one secondary source, or couldn't be 
    6. Check a Draft's claims against your Profile locally.
    7. For fields with no label, let the Provider choose among nearby page texts by id, never write a label. New, from Jobright's unused field finder.
 
-   **What to avoid:** handling sign-in, ticking consent boxes, clicking the site's Next or Submit, sending a site's cookies or your answers to a server, downloading site rules from a server, and claiming coverage you can't show. Writing through React's own handlers, watching the Submit request, and answering a file picker are adopted as techniques, inside `act` (§7.9).
+   **What to avoid:** handling sign-in, ticking consent boxes, clicking the site's Next or Submit, sending a site's cookies or your answers to a server, downloading site rules from a server, and claiming coverage you can't show. Writing through React's own handlers and answering a file picker are adopted as techniques inside `act`, and watching the Submit request as a signal in `detect-submission` (§7.9).
 
 ---
 
@@ -396,7 +396,7 @@ Ranked by expected gain in accuracy. Each item gives the evidence, where it land
 - **Prepare before the click, locally.** The FAQ says Jobright starts preparing when it detects a form, though the code shows it asks the server only once a Fill starts. The side panel already starts its loads before the Fill button shows (BUILD_LOG 2026-10-28). Running `plan()` locally at that point (rules only, no Provider) would make Fill feel instant. Calling the Provider before you click would spend your plan unasked, so don't.
 
 ### 7.9 Techniques from Jobright's code to adopt (decided 2026-10-28)
-The first draft listed these as "not recommended". The decision is to adopt them as techniques, rebuilt in our own code. Jobright's code carries no licence, so none of it is copied. Each one stays inside `act` and the hard rules, as follows.
+The first draft listed these as "not recommended". The decision is to adopt them as techniques, rebuilt in our own code. Jobright's code carries no licence, so none of it is copied. Each one stays within the hard rules, and the two that write to the page (React handlers, file picker) stay inside `act`, as follows.
 - **Write through the component's own React handlers when events don't stick** (§3.4: `injectReactSelectFiber`, `injectWorkdayFiber`).
   - Fallback only: use it when an event-driven write ends in `valueDidNotStick` on react-select (Greenhouse) or Workday.
   - It stays part of `act`. `act` runs `checkTarget` on the element first, then asks a page-world script to call that component's own `onChange` / `setValue` / `onOptionSelection` with the chosen option, then reads back as usual.
