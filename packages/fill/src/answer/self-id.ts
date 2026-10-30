@@ -43,8 +43,9 @@ export function selfIdAnswer(
  * (design.md "Sensitive questions"). The AI only says which question it is
  * and what each option means; the answer is still yours, and it always goes
  * to Needs your review. A weak match, or a question for another country
- * than the Posting's, is left for you with nothing written: misreading which
- * question it is would put your answer to one in another.
+ * than the Posting's or one it isn't clear about, is left for you with
+ * nothing written: misreading which question it is would put your answer to
+ * one in another.
  */
 export function selfIdFromMapping(
   fieldType: FieldType,
@@ -63,12 +64,15 @@ export function selfIdFromMapping(
   return { ...answer, value: withProviderOptions(answer.value, mapping.options), review: 'providerMatched' };
 }
 
-/** A US question on a US Posting, a Canadian one on a Canadian Posting; anything when the country isn't known. */
+/**
+ * A US question on a US Posting, a Canadian one on a Canadian Posting. When
+ * the country is unclear nothing is written (design.md "Country-specific
+ * answers"): a written answer is one the site can read before you review it.
+ */
 function countryFits(fieldType: FieldType, country: CountryChoice | undefined): boolean {
   const asked = countryOfType(fieldType);
-  if (asked === null || country === undefined) return true;
-  if (country.kind === 'known') return country.country === asked;
-  return country.candidates.length === 0 || country.candidates.includes(asked);
+  if (asked === null) return true;
+  return country?.kind === 'known' && country.country === asked;
 }
 
 function countryOfType(fieldType: FieldType): CountryCode | null {

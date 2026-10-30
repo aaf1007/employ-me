@@ -137,6 +137,32 @@ describe('a Self-ID question only the AI recognises', () => {
     expect(document.querySelector<HTMLSelectElement>('#u')?.value).toBe('');
   });
 
+  // CodeRabbit on #4: an unclear country goes to review (design.md "Country-specific
+  // answers"), and a written answer is one the site can read before you review it.
+  it.each([
+    ['names none', undefined],
+    ['names the US and Canada', 'New York, NY; Toronto, ON'],
+  ] as const)('writes nothing when the Posting %s', async (_what, location) => {
+    form(HERITAGE);
+    const planned = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: location === undefined ? {} : { location },
+      provider: {
+        state: 'answered',
+        mappings: [
+          {
+            fieldId: 'u',
+            match: { kind: 'fieldType', fieldType: 'selfId.us.race', options: OPTION_MAP },
+            confidence: 0.95,
+          },
+        ],
+      },
+    });
+    expect(planned.fields[0]?.step).toEqual({ kind: 'review', reason: 'providerMatched' });
+    await execute(planned);
+    expect(document.querySelector<HTMLSelectElement>('#u')?.value).toBe('');
+  });
+
   it('a text box is left for you: Self-ID fills only choices', () => {
     form(`<label for="u">Tell us about your heritage</label><input id="u" name="u">`);
     expect(planWith('selfId.us.race', 0.95).fields[0]?.step).toMatchObject({
