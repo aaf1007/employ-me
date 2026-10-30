@@ -1,8 +1,9 @@
 import type { FieldType } from '@employ-me/core';
+import { readableText } from '../../dom';
 import { postingKeyFromUrl } from '../../posting';
 import type { ExtractedField } from '../../types';
-import { adapter } from '../base';
-import type { RepeatingSection } from '../types';
+import { adapter, shownByInput } from '../base';
+import type { RepeatingSection, ShownFile } from '../types';
 
 // Single page, field ids match API names (first_name, question_{id}); every
 // dropdown is a react-select; often embedded as iframe#grnhse_iframe
@@ -46,11 +47,29 @@ function classify(field: ExtractedField): FieldType | null {
   return REPEATED.find(([re]) => re.test(field.fieldId))?.[1] ?? null;
 }
 
+/**
+ * Once a file is attached, Greenhouse swaps the input for its upload widget:
+ * a progress bar while it uploads, then the file's name with "Remove file",
+ * or an error under the label.
+ */
+function shownFile(field: ExtractedField): ShownFile {
+  const labelId = `upload-label-${field.element.id}`;
+  const widget = [...field.element.ownerDocument.querySelectorAll('[role="group"][aria-labelledby]')].find(
+    (group) => group.getAttribute('aria-labelledby') === labelId,
+  );
+  if (widget === undefined) return shownByInput(field);
+  if (widget.querySelector('.helper-text--error, .upload-label--error') !== null) return { kind: 'failed' };
+  if (widget.querySelector('[role="progressbar"]') !== null) return { kind: 'uploading' };
+  const name = readableText(widget.querySelector('.file-upload__filename'));
+  return name === '' ? shownByInput(field) : { kind: 'named', text: name };
+}
+
 export const greenhouseAdapter = adapter({
   ats: 'greenhouse',
   findForm: (doc) => doc.querySelector('#application-form, form.application--form, #application_form'),
   postingKey: postingKeyFromUrl,
   classify,
+  shownFile,
   hooks: { headings: '.education--header, .employment--header' },
   repeatingSections(form) {
     const sections: RepeatingSection[] = [];

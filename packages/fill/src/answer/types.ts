@@ -18,7 +18,12 @@ export type ProfileView = Omit<Profile, 'schemaVersion' | 'savedAnswers'>;
 export type Canonical =
   | { readonly kind: 'text'; readonly text: string }
   | { readonly kind: 'yesNo'; readonly yes: boolean }
-  | { readonly kind: 'option'; readonly target: OptionTarget }
+  | {
+      readonly kind: 'option';
+      readonly target: OptionTarget;
+      /** The canonical vocab value it stands for ("decline"), to find it in the Provider's option map. */
+      readonly vocabValue?: string;
+    }
   | { readonly kind: 'options'; readonly targets: readonly OptionTarget[] }
   | { readonly kind: 'date'; readonly iso: string }
   | { readonly kind: 'file' };
@@ -53,6 +58,8 @@ export interface AnswerContext {
   /** The Posting's employer, for Saved Answer overrides and "worked here before". */
   readonly employer: EmployerKey | null;
   readonly hasResume: boolean;
+  /** The Posting's own country, whatever a question's words name (design.md "Country-specific answers"). */
+  readonly postingCountry: CountryChoice;
 }
 
 export const skip = (reason: CouldNotFillReason, fix: string): Answer => ({ kind: 'skip', reason, fix });

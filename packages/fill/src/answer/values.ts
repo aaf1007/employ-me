@@ -25,16 +25,29 @@ export function countryOf(classification: CountryClassification): Pick<CountryCl
   return classification.country === undefined ? {} : { country: classification.country };
 }
 
-/** The Provider's mapping of this form's options to canonical values ("Yes, I am" → yes). */
+/**
+ * The Provider's mapping of this form's options to canonical values ("Yes,
+ * I am" → yes, "I don't wish to answer" → decline). The option it maps to
+ * your value wins; a vocab answer keeps its own patterns should the AI's
+ * option text not be quite the form's.
+ */
 export function withProviderOptions(
   value: Extract<Answer, { kind: 'answer' }>['value'],
   options: readonly { option: string; value: string }[],
 ): Extract<Answer, { kind: 'answer' }>['value'] {
   if (options.length === 0) return value;
-  const wanted = value.kind === 'yesNo' ? (value.yes ? 'yes' : 'no') : null;
-  if (wanted === null) return value;
-  const matching = options.filter((o) => o.value === wanted).map((o) => o.option);
-  if (matching.length === 0) return value;
-  const target: OptionTarget = { text: matching[0] ?? wanted, patterns: [], fuzzy: false };
-  return { kind: 'option', target };
+  const wanted =
+    value.kind === 'yesNo'
+      ? value.yes
+        ? 'yes'
+        : 'no'
+      : value.kind === 'option'
+        ? value.vocabValue
+        : undefined;
+  if (wanted === undefined) return value;
+  const [option] = options.filter((o) => o.value === wanted);
+  if (option === undefined) return value;
+  const patterns = value.kind === 'option' ? value.target.patterns : [];
+  const target: OptionTarget = { text: option.option, patterns, fuzzy: false };
+  return { kind: 'option', target, vocabValue: wanted };
 }

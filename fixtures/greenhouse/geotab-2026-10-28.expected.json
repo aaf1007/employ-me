@@ -62,7 +62,7 @@
       "fieldType": "file.resume",
       "outcome": "filled",
       "reason": "rules",
-      "value": "<uploading>"
+      "value": "sam-lee-resume.pdf"
     },
     {
       "fieldId": "cover_letter",

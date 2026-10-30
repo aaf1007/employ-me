@@ -10,6 +10,15 @@ export interface RepeatingSection {
   readonly addButton: Element | null;
 }
 
+/** What the form shows for a file field after an attach (research 2026-10-28 §7.1). */
+export type ShownFile =
+  | { readonly kind: 'uploading' }
+  | { readonly kind: 'failed' }
+  /** The form shows a file under this text (its name, sometimes with a size or a "Remove" label). */
+  | { readonly kind: 'named'; readonly text: string }
+  /** Nothing to go on: the form keeps the file somewhere it doesn't show. */
+  | { readonly kind: 'unknown' };
+
 /**
  * Per-ATS knowledge. Every adapter ships with saved real forms in
  * fixtures/<ats>/ and e2e tests over them (CODING_STANDARDS.md "Adapters").
@@ -41,4 +50,10 @@ export interface AtsAdapter {
   readonly typeToSearch: boolean;
   /** What a combobox shows as chosen outside its own text, e.g. Workday's selected-item pills. Read-only. */
   comboboxChoices(combobox: Element): readonly string[];
+  /**
+   * What the form shows for a file attached to this field: the input taking
+   * the file isn't the upload. Read-only. `field.element` may have left the
+   * page (Greenhouse swaps the input for its own widget).
+   */
+  shownFile(field: ExtractedField): ShownFile;
 }

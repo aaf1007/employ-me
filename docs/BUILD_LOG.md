@@ -482,3 +482,75 @@ Results, every bug and the Drafts' grounding: [docs/live-test/2026-10-28.md](liv
 **Gotchas**
 - `sites.serve(url)` matches the exact URL; a page opened with a query needs a RegExp.
 - Specs that open a form must answer its public job API (`servePublicApi`): a blocked fetch logs `ERR_BLOCKED_BY_CLIENT` in the panel, and `extension.errors` catches it.
+
+## 2026-10-28 · A Resume is Filled only once the form shows it uploaded (fill, e2e; core reasons in their own commit)
+
+Recommendation 1 of [the Jobright research](research/2026-10-28-jobright-autofill.md) §7.1. Before this, "Filled" for a Resume meant the input took the file; the live test saw Greenhouse still uploading while the side panel said Filled.
+
+**Landed**
+- core (own commit, e90624a): review reasons `fileUploading` and `otherFileShown`, with the side panel's words.
+- fill: `AtsAdapter.shownFile(field)`, read-only: `uploading`, `failed`, `named` (the text the form shows) or `unknown`.
+  - Greenhouse: its upload widget, found by `upload-label-<id>` (progress bar, `.file-upload__filename`, error classes). The input itself is gone by then.
+  - Lever: `.has-file .filename`, "Analyzing resume..." while it reads, the size error. "Couldn't auto-read resume" is the parse failing; the file is still attached.
+  - Ashby: `.ashby-application-form-input-file-item-name` under the question.
+  - Workday: the newest `file-upload-item` and its "Successfully Uploaded!" / failed marker (synthetic fixture: unverified).
+  - Everyone else (`shownByInput` in `adapters/base.ts`): `aria-invalid="true"` on the input after the attach is a refusal.
+- `execute/upload.ts`: after the report is built, each Resume this execute attached is checked against what the form shows, waiting up to 5 s from the attach while it says uploading (the rest of the Fill runs meanwhile). Still uploading → needs review; refused → Couldn't fill (`fileRejected`); a different name → needs review (`otherFileShown`). A later execute (a re-plan) checks a `fileUploading` Resume again, without waiting.
+- e2e: the S3 stub now fires the upload progress event a real upload sends. Chromium sends none for a request Playwright answers, and Greenhouse leaves "uploading" only at 100%: every Greenhouse fixture used to read `<uploading>` and now shows the file name. The value reader reads `.file-upload__filename`.
+- Fixtures: helsing (generic) is now Couldn't fill: its upload token request (`/api/application-document-token`) isn't answered offline, and the form says "An error occurred while uploading". It was Filled before, which is the bug this fixes. README table regenerated, with a sentence on why.
+
+**Checked**
+- `pnpm check`; full e2e 54 of 54 (twice); fill, milestone-1 and side-panel `--repeat-each 3` with every free core busy: 66 of 66.
+- Without the progress stub, milestone-1's Greenhouse Draft spec failed every time: the first execute waited its 5 s for an upload that never finished, and the AI's re-plans queued behind it.
+
+**Left**
+- Answering helsing's upload token offline would need its response shape, which the HAR doesn't have (it's a POST).
+- Workday's and Ashby's in-progress and error states are guesses from synthetic markup and Ashby's class names; check on a live pass.
+- On a stalled upload the Fill reports up to 5 s later than before. Only a re-plan re-checks a Resume left uploading; with the helper unavailable nothing does until the next Fill.
+- Showing which Resume (its label) on the outcome, also in §7.1, isn't done.
+
+## 2026-10-30 · A Self-ID question only the AI recognises gets your own answer, for review (fill; design.md in its own commit; e2e and the in-memory helper)
+
+Before this, `fromMapping` sent every field the AI mapped to a `selfId.*` type to review empty: Self-ID filled only on questions the rules recognised. [The Jobright research](research/2026-10-28-jobright-autofill.md) handles odd EEO wording by sending the whole profile to its server; this gets the same robustness locally. Nothing new goes to the Provider.
+
+**Landed**
+- design.md "Sensitive questions" (own commit, wording approved by the user): the AI may say which Self-ID question it is, and what each option means; the answer still comes from your Self-ID Answers, and the field always goes to Needs your review.
+- fill `answer/self-id.ts` (Self-ID code moved out of `country.ts`, which was over 200 lines): `selfIdFromMapping`. A `selfId.*` mapping with confidence ≥ `MIN_MAPPING_CONFIDENCE` is answered by `selfIdAnswer` (your answer, "decline" by default; `selfId.other` declines) and written with `review: 'providerMatched'`, source `selfId`. Left for review with nothing written: a weak match; a `selfId.us.*`/`selfId.ca.*` type whose country isn't the Posting's, or when the Posting's country is unclear (see the review entry below). Text boxes stay `couldNotFill: notInProfile`. Attestations and never-stored mappings are unchanged (review, nothing suggested), and rule-classified Self-ID fields still never reach `toProviderField`.
+- `Canonical`'s option answers carry `vocabValue` (the canonical value, e.g. `decline`). `withProviderOptions` uses it to pick the form option the AI mapped to that value, keeping the vocab target's patterns as the fallback should the AI's option text not be the form's. Yes/no answers work as before.
+- Tests: `plan/self-id-mapping.test.ts` (confident match through the option map, decline by default, `selfId.other`, vocab fallback, weak match, both country mismatches, text box, and what `providerRequest` sends). The five new behaviours failed on the old code; the three guards (weak, country ×2) failed with the checks removed. plan.test.ts's "never writes a field the AI maps to" keeps its Attestation and never-stored cases.
+- e2e `self-id-mapping.spec.ts` on the synthetic `fixtures/greenhouse/self-id-wording.html` ("Which of these best describes your heritage?", options in words the vocab patterns don't know). It failed on the old code ("Select..." left chosen).
+- extension (test build only), for that spec: the in-memory helper takes `mappings` (by field id, core `mapFieldsOutputSchema` shape) that replace the fake Provider's answer for those fields; `InMemoryHelperScript` in `e2e/harness.ts` lists it.
+
+**Checked**
+- `pnpm check`; full `pnpm test:e2e` 55 of 55, and 61 of 61 after rebasing onto main ae6c3da (one earlier run hit the geotab flake below); the new spec `--repeat-each 10` plain and with the free cores busy (4-core Linux container, 2 workers, 2 `yes` loops): 20 of 20.
+- `--repeat-each 3/4` over self-id-mapping, generic-site, dashboard-setup, fill, fill-seam and side-panel: everything passed except `fill.spec` greenhouse/geotab, which failed 1 of 3 and 2 of 4 runs. It fails on the base commit too (1 of 4 runs with this change stashed), see Left.
+
+**Left**
+- `fill.spec` greenhouse/geotab is flaky on a busy 4-core machine: the GDPR demographic-data consent checkbox is sometimes read after the education fields instead of before, so the outcome order differs from `geotab-2026-10-28.expected.json`. Field order follows the page as replayed, so its React render order varies; the spec could compare in a stable order, or wait for the education block. Not this change: that spec runs with the Provider unavailable.
+- Facts with vocab options (phone type, degree level) could also use the AI's option map through `vocabValue`; only Self-ID sets it today.
+- The side panel shows the generic "The AI matched this field. Check the answer." for these. A Self-ID-specific line ("Filled from your Self-ID Answers; the AI said which question this is") might read better.
+
+**Gotchas**
+- A `selfId.other` mapping is answered with no country (it declines anywhere), unlike the rules path, where an unclear country sends `selfId.other` to `countryUnclear`.
+
+## 2026-10-30 · CodeRabbit's review of #4: Resume upload checks, the Self-ID country guard, research §7.9 (core, fill, extension side panel, docs)
+
+**Landed** (a test that failed first for each)
+- core (own commit, with the side panel's words): review reason `fileUploadUnknown`.
+- fill `execute/upload.ts`:
+  - A Resume whose form shows no name and no upload status (`ShownFile` `unknown`) is now needs review (`fileUploadUnknown`), not Filled. This reverses the earlier "stays Filled when the form shows nothing either way": "Filled" means the form shows the file uploaded. No recorded fixture reaches `unknown`, so none changed.
+  - The shown name must be the Resume's whole name, first, followed only by a size or a button's text: `old-sam-lee-resume.pdf` and `sam-lee-resume.pdf.zip` are other files (was a substring match).
+  - A re-check of a Resume an earlier execute left uploading looks once, as the entry above says, instead of starting a new 5 s wait.
+- fill `answer/self-id.ts`: an AI-mapped Self-ID type must fit both the question's country (the one its words name, else the Posting's) and the Posting's own. Before, a label naming Canada on a US Posting could fill the Canadian answer. `AnswerContext` gains `postingCountry`.
+- fill `answer/self-id.ts`, CodeRabbit's second pass: a country-specific AI-mapped Self-ID type is written only when both of those are known and match. An unclear country (none named, or several) goes to review with nothing written, as design.md "Country-specific answers" says; a written value is one the site can read before you review it. Before, an unclear country whose candidates were empty or included the type's country was filled.
+- fill `execute/upload.ts`, same pass: a form that shows the upload as done under no name it shows (Workday's success marker with no name row) is `fileUploadUnknown`, not Filled.
+- fill `plan/index.ts` (`postingCountry`), CodeRabbit's third pass: a declared country (the page's single location, or an API country field) stays known only while no location, the page's or the public API's, names another; otherwise the country is unclear with every country named. Before, the page's "Toronto, ON" beside the API's "Toronto, ON; New York, NY" gave a known Canada. This also decides Work Authorization, salary and rule-recognised Self-ID answers; no recorded fixture's outcome or Posting country changed.
+- Same function, CodeRabbit's fourth pass: the page's declared country and the API's are compared (disagreeing is unclear), and only a named country, US state or Canadian province counts against a declared one, not a bare city name (`countriesIn(location, { byCity: false })`): an API saying US with location "Cambridge" stays US. Left: a page country that itself came from a bare city ("Toronto") beside an API location of bare cities ("Toronto; New York") stays known. Fifth pass: `countriesIn` also counts a trailing state or province code beside a country name ("Toronto, ON, United States" → US and CA), so a declared US is unclear there. Only the two-letter code: a region name beside a country ("Tbilisi, Georgia") isn't read as a US state.
+- research §7.9 and its summary: only the React-handler and file-picker techniques are `act`; the Submit watcher is a `detect-submission` signal.
+
+**Checked**
+- `pnpm check`; full `pnpm test:e2e` 61 of 61 (one earlier run hit the geotab flake).
+
+**Left**
+- The geotab ordering flake (entry above) showed in 2 of 3 full local runs on this 4-core container; CI has been green.
+- One full local run failed `milestone-1` "Greenhouse embedded in a company site" (First Name left empty within 5 s); it then passed 5 of 5 alone and in the next full run. Not explained: nothing in this change touches that field.

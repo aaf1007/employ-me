@@ -42,6 +42,7 @@ export function plan(
     savedAnswers,
     employer: posting?.key.employer ?? null,
     hasResume: options.resume !== undefined && options.resume !== null,
+    postingCountry: country,
   };
   const knownOptions = options.postingDetails?.fieldOptions ?? {};
 
@@ -75,13 +76,23 @@ export function plan(
   };
 }
 
-/** The Posting's country (design.md "Country-specific answers"): known only when exactly one is named. */
+/**
+ * The Posting's country (design.md "Country-specific answers"): known only
+ * when exactly one is named. A declared country (the page's own, or the
+ * public API's country field) stays known only while the other declared
+ * country agrees and no location names another country, state or province.
+ * A bare city name doesn't count against it: "Cambridge" is also British.
+ */
 function postingCountry(posting: Posting | null, options: PlanOptions): CountryChoice {
-  const declared = posting?.country ?? options.postingDetails?.country;
-  if (declared !== undefined) return { kind: 'known', country: declared };
+  const declaredBy = [posting?.country, options.postingDetails?.country].filter((c) => c !== undefined);
   const location = [posting?.location, options.postingDetails?.location]
     .filter((l) => l !== undefined)
     .join('; ');
+  const [declared] = declaredBy;
+  if (declared !== undefined) {
+    const named = [...new Set([...declaredBy, ...countriesIn(location, { byCity: false })])];
+    return named.length === 1 ? { kind: 'known', country: declared } : { kind: 'unclear', candidates: named };
+  }
   const named = countriesIn(location);
   const [only] = named;
   return named.length === 1 && only !== undefined

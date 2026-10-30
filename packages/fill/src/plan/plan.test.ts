@@ -2,6 +2,7 @@ import { profileSchema } from '@employ-me/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { execute } from '../execute';
 import { render } from '../test-support/dom';
+import { readPosting } from '../posting';
 import { plan } from './index';
 
 // plan() and execute() on small forms. The recorded forms are covered by
@@ -93,6 +94,52 @@ describe('plan', () => {
         { country: 'US', text: 'No' },
       ],
     });
+  });
+
+  // CodeRabbit on #4: the page named one country, so the Posting declared it,
+  // and the public API's location named another one too.
+  it('is unclear when the page names one country and the public API another', () => {
+    form(`
+      <div class="posting-categories"><div class="location">Toronto, ON</div></div>
+      <label for="a">Are you authorized to work in the country where this job is based?</label>
+      <select id="a" name="a"><option value="">Select...</option><option>Yes</option><option>No</option></select>`);
+    const planned = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Toronto, ON; New York, NY' },
+    });
+    expect(planned.country).toEqual({ kind: 'unclear', candidates: ['CA', 'US'] });
+    expect(planned.fields[0]?.step).toMatchObject({ kind: 'review', reason: 'countryUnclear' });
+    // The same location from both, or one that agrees, keeps the Posting's country.
+    const agrees = plan(document, profile, [], { url: URL_US, postingDetails: { location: 'Toronto, ON' } });
+    expect(agrees.country).toEqual({ kind: 'known', country: 'CA' });
+  });
+
+  // CodeRabbit on #4: "Cambridge" is also a British city, and the API said US.
+  it('keeps a declared country against a bare city name, not against another declared country', () => {
+    form(`<label for="n">Full name</label><input id="n" name="name">`);
+    const cambridge = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Cambridge', country: 'US' },
+    });
+    expect(cambridge.country).toEqual({ kind: 'known', country: 'US' });
+    const named = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Cambridge, United Kingdom', country: 'US' },
+    });
+    expect(named.country).toEqual({ kind: 'unclear', candidates: ['US', 'GB'] });
+    const province = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Toronto, ON, United States', country: 'US' },
+    });
+    expect(province.country).toEqual({ kind: 'unclear', candidates: ['US', 'CA'] });
+    const posting = readPosting(document, URL_US);
+    if (posting === null) throw new Error('no Posting');
+    const disagree = plan(document, profile, [], {
+      url: URL_US,
+      posting: { ...posting, country: 'US' },
+      postingDetails: { country: 'CA' },
+    });
+    expect(disagree.country).toEqual({ kind: 'unclear', candidates: ['US', 'CA'] });
   });
 
   // Live, 2026-10-28: Zoox (Lever) got "Sam" alone, Wave (Lever) got "No" typed as a referrer's name.
@@ -308,10 +355,10 @@ describe('plan', () => {
     });
   });
 
-  // design.md "Sensitive questions": Self-ID fills only from your Self-ID
-  // Answers, on questions the rules recognise; Attestations and never-stored
-  // fields never fill. An AI mapping can't change that.
-  it.each(['selfId.us.race', 'selfId.other', 'attestation.consent', 'never.dateOfBirth'] as const)(
+  // design.md "Sensitive questions": Attestations and never-stored fields
+  // never fill. An AI mapping can't change that. (A Self-ID question the AI
+  // recognises fills from your Self-ID Answers: self-id-mapping.test.ts.)
+  it.each(['attestation.consent', 'never.dateOfBirth'] as const)(
     'never writes a field the AI maps to %s, however sure it is: it goes to review',
     async (fieldType) => {
       form(`

@@ -149,28 +149,31 @@ const PROVINCE_NAME = boundary(CA_PROVINCES.map(([, name]) => name).join('|'));
 /**
  * Countries a location string names, e.g. "Toronto, ON" → [CA],
  * "New York City, NY; San Francisco, CA" → [US], "London, UK; Ontario, CAN" → [GB, CA].
+ * `byCity: false` leaves out countries known only from a bare city name,
+ * which another country can share ("Cambridge", "London").
  */
-export function countriesIn(location: string): CountryCode[] {
+export function countriesIn(location: string, { byCity = true }: { byCity?: boolean } = {}): CountryCode[] {
   const found = new Set<CountryCode>();
   for (const part of location.split(/[;|/]|\bor\b|\band\b|\s-\s/i)) {
-    for (const code of countriesInPart(part)) found.add(code);
+    for (const code of countriesInPart(part, byCity)) found.add(code);
   }
   return [...found];
 }
 
-function countriesInPart(part: string): CountryCode[] {
+function countriesInPart(part: string, byCity: boolean): CountryCode[] {
   const text = part.trim();
   if (text === '') return [];
   const named = COUNTRY_RES.filter(([, re]) => re.test(text)).map(([code]) => code);
-  if (named.length > 0) return named;
   // "City, ST": a trailing two-letter code. "CA" is California here, not Canada.
   const tail = /,\s*([A-Z]{2})\b/.exec(text)?.[1];
-  if (tail !== undefined) {
-    if (STATE_CODE.has(tail)) return ['US'];
-    if (PROVINCE_CODE.has(tail)) return ['CA'];
-  }
+  const region: CountryCode | undefined =
+    tail === undefined ? undefined : STATE_CODE.has(tail) ? 'US' : PROVINCE_CODE.has(tail) ? 'CA' : undefined;
+  // A region code beside a country name counts too: "Toronto, ON, United States" names both.
+  if (named.length > 0) return region === undefined || named.includes(region) ? named : [...named, region];
+  if (region !== undefined) return [region];
   if (PROVINCE_NAME.test(text)) return ['CA'];
   if (STATE_NAME.test(text)) return ['US'];
+  if (!byCity) return [];
   const cities = CITY_RES.filter(([, re]) => re.test(text)).map(([code]) => code);
   return cities;
 }

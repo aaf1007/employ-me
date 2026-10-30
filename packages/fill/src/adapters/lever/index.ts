@@ -1,10 +1,11 @@
 import type { FieldType } from '@employ-me/core';
-import { byName, isHidden } from '../../dom';
+import { byName, isHidden, readableText } from '../../dom';
 import type { Candidate, FieldOverrides } from '../../extract';
 import { postingKeyFromUrl } from '../../posting';
 import { bool, isRecord, list, parseJsonText, text } from '../../json';
 import type { ExtractedField } from '../../types';
-import { adapter } from '../base';
+import { adapter, shownByInput } from '../base';
+import type { ShownFile } from '../types';
 
 // Server-rendered with stable field names; a hidden cards[...][baseTemplate]
 // input holds each question as JSON; resume upload triggers a parse that
@@ -75,6 +76,24 @@ function classify(field: ExtractedField): FieldType | null {
 
 const PARSE_TIMEOUT_MS = 20_000;
 
+/**
+ * Lever shows the attached file's name on its button, and a status beside
+ * it: "Analyzing resume..." while it reads it, or a size error. "Couldn't
+ * auto-read resume" is about the parse; the file is still attached.
+ */
+function shownFile(field: ExtractedField): ShownFile {
+  const row = field.element.closest('li');
+  if (row === null) return shownByInput(field);
+  const shown = (selector: string) => {
+    const el = row.querySelector(selector);
+    return el !== null && !isHidden(el);
+  };
+  if (shown('.resume-upload-oversize')) return { kind: 'failed' };
+  if (shown('.resume-upload-working')) return { kind: 'uploading' };
+  const name = readableText(row.querySelector('.has-file .filename'));
+  return name === '' ? shownByInput(field) : { kind: 'named', text: name };
+}
+
 export const leverAdapter = adapter({
   ats: 'lever',
   findForm: (doc) => doc.querySelector('#application-form, form.application-form, form[action*="apply"]'),
@@ -99,6 +118,7 @@ export const leverAdapter = adapter({
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
   },
+  shownFile,
   checkStrategy: 'events',
   typeaheadSuggestions: (input) => [
     ...input.ownerDocument.querySelectorAll('.dropdown-results .dropdown-location'),

@@ -32,6 +32,8 @@ export interface InMemoryHelperScript {
   readonly resumeExtract?: unknown;
   /** What health reports for each Provider, as core ProviderStatus values. */
   readonly providers?: readonly unknown[];
+  /** What mapFields answers for these field ids, as core `mapFieldsOutputSchema` mappings. */
+  readonly mappings?: readonly unknown[];
 }
 
 /** The content script's answer to a ping (packages/extension/src/messaging/content.ts). */

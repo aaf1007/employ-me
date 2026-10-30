@@ -19,6 +19,10 @@ const REVIEW: Readonly<Record<ReviewReason, string>> = {
   ambiguousOption: 'More than one option fits. Choose one yourself.',
   keptYourEdit: 'You changed this on the page, so employ-me left your answer alone.',
   asksForMore: 'Filled from your Profile, but the question asks for more. Add the rest yourself.',
+  fileUploading: 'Your Resume is attached, but the form was still uploading it. Check it finished.',
+  otherFileShown: "The form shows a different file from the Resume you chose. Check it's the right one.",
+  fileUploadUnknown:
+    "Your Resume is attached, but the form doesn't show whether it uploaded. Check it before you submit.",
 };
 
 const COULD_NOT_FILL: Readonly<Record<CouldNotFillReason, string>> = {
