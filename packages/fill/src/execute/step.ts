@@ -9,7 +9,7 @@ export function replan(previous: FillPlan): FillPlan {
 
 /** Lets the page's own scripts react (render new sections, conditional questions) before the Fill looks again. */
 export function settle({ context: { adapter, doc } }: FillPlan): Promise<void> {
-  return waitForQuiet(adapter.findForm(doc) ?? doc.body);
+  return waitForQuiet(doc, () => adapter.findForm(doc) ?? doc.body);
 }
 
 /**
