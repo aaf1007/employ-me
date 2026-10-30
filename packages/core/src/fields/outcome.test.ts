@@ -39,7 +39,7 @@ describe('FieldOutcome', () => {
   });
 
   // Live test, 2026-10-28: Greenhouse still showed "uploading" while the side panel said Filled.
-  it.each(['fileUploading', 'otherFileShown'])(
+  it.each(['fileUploading', 'otherFileShown', 'fileUploadUnknown'])(
     'has a review reason for a Resume the form shows as %s',
     (reason) => {
       expect(

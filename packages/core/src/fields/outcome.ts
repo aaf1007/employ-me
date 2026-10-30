@@ -35,6 +35,8 @@ export const REVIEW_REASONS = [
   'fileUploading',
   /** The form shows a file other than the Resume you chose. */
   'otherFileShown',
+  /** The Resume was attached, but the form shows no file name or upload status to check it by. */
+  'fileUploadUnknown',
 ] as const;
 
 export const COULD_NOT_FILL_REASONS = [
