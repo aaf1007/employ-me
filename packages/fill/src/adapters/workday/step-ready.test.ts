@@ -113,4 +113,19 @@ describe('workdayAdapter.waitForStepReady', () => {
       ['emailAddress--emailAddress', 'filled'],
     ]);
   });
+
+  it('writes to the control the step shows after the wait, when the page re-rendered it under the same id', async () => {
+    batchAt(0, '#first', FIRST_NAME);
+    await vi.advanceTimersByTimeAsync(0);
+    const planned = plan(document, profile, [], { url: APPLY, provider: { state: 'unavailable' } });
+    // Workday re-renders the section while the step loads: same field, new input.
+    batchAt(100, '#first', FIRST_NAME);
+    const running = execute(planned);
+    await vi.runAllTimersAsync();
+    const report = await running;
+    expect(document.querySelector<HTMLInputElement>('#name--legalName--firstName')?.value).toBe('Sam');
+    expect(report.outcomes.map((o) => [o.fieldId, o.kind])).toEqual([
+      ['name--legalName--firstName', 'filled'],
+    ]);
+  });
 });
