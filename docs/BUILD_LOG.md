@@ -591,3 +591,12 @@ Recommendation 4 of [the Jobright research](research/2026-10-28-jobright-autofil
 **Gotchas**
 - Every act write waits 60 ms to read back (`act/read-back.ts`). A unit test meant to show a question the quiet wait misses must put it later than the writes plus `QUIET_MS`.
 - Under fake timers, `vi.runAllTimersAsync()` drives a whole `execute()`: jsdom's MutationObserver callbacks are microtasks.
+
+**Review of #5** (a test that failed first for each)
+- `execute/quiet.ts`: `waitForQuiet(doc, findRoot)`.
+  - It now observes the document, which an ATS can't swap out, and counts only changes inside the current form. If the form leaves the page (re-rendered whole), it asks `findRoot` again. Before, it watched a detached form and ended early.
+  - It also observes every open shadow root in the form, including ones added during the wait. It is still one observer, disconnected at the end.
+  - Changes elsewhere on the page no longer count, which they did when there was no form and the body was watched.
+  - `dom` gains `shadowHost(node)`, which `parentElement` now uses.
+- `execute/step.ts` `readyStep`: after the step-ready wait, it plans again unless every field is the same control on the page (element and choice elements), with the same label, widget, and options when the page shows any. Before, it compared ids only, so a control Workday re-rendered under the same id was written through its detached element. It also looks the form up again after the wait.
+- Checked: `pnpm check`. Full `pnpm test:e2e` 59 of 61: geotab's ordering flake, and getyourguide First Name `valueDidNotStick`, which then passed 10 of 10 alone. The four specs `--repeat-each 10`: idle 249 of 250 (geotab); busy 245 of 250 (geotab, and four of Greenhouse's First Name cleared after the write: milestone-1 embedded ×3, mongodb ×1). The embedded test alone under load: 2 of 20 here, against 2 of 10 on main and 1 of 10 before this review. No worse than main; see Left.
