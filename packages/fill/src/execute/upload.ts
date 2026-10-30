@@ -40,7 +40,11 @@ export async function confirmUploads(
       confirmed.push(outcome);
       continue;
     }
-    const shown = await settled(planned, check.adapter, attachedAt ?? Date.now());
+    // A Resume an earlier execute left uploading had its wait then: look once.
+    const shown =
+      attachedAt === undefined
+        ? check.adapter.shownFile(planned.field)
+        : await settled(planned, check.adapter, attachedAt);
     confirmed.push(fromShown(planned, shown, check.resume));
   }
   return confirmed;
@@ -64,11 +68,23 @@ function fromShown(planned: PlannedField, shown: ShownFile, resume: File): Field
     case 'failed':
       return { kind: 'couldNotFill', fieldId, fieldType, reason: 'fileRejected', fix: FILE_REJECTED_FIX };
     case 'named':
-      if (shown.text.trim() !== '' && !shown.text.includes(resume.name)) {
+      if (shown.text.trim() !== '' && !showsName(shown.text, resume.name)) {
         return { kind: 'needsReview', fieldId, fieldType, reason: 'otherFileShown' };
       }
       return writeOutcome(planned, { kind: 'done' });
     case 'unknown':
-      return writeOutcome(planned, { kind: 'done' });
+      return { kind: 'needsReview', fieldId, fieldType, reason: 'fileUploadUnknown' };
   }
+}
+
+/**
+ * The form shows this file name first, whole: "sam-lee-resume.pdf (320 KB)"
+ * is it, "old-sam-lee-resume.pdf" isn't. What follows it is a size or a
+ * button's text.
+ */
+function showsName(text: string, name: string): boolean {
+  const shown = text.trim();
+  if (!shown.startsWith(name)) return false;
+  const rest = shown.slice(name.length);
+  return rest === '' || /^[\s(·|,]/.test(rest);
 }

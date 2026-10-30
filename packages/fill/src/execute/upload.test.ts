@@ -120,15 +120,26 @@ describe('confirmUploads on Greenhouse', () => {
     expect(await check(GREENHOUSE, show, 0)).toMatchObject({ kind: 'filled' });
   });
 
-  it('goes to review when the widget shows another file', async () => {
+  it.each(['old-resume-2024.pdf', 'old-sam-lee-resume.pdf', 'sam-lee-resume.pdf.zip'])(
+    'goes to review when the widget shows another file (%s)',
+    async (name) => {
+      expect(
+        await check(GREENHOUSE, () => {
+          greenhouseShows(filename(name));
+        }),
+      ).toMatchObject({
+        kind: 'needsReview',
+        reason: 'otherFileShown',
+      });
+    },
+  );
+
+  it('is Filled when the widget shows the name with its size', async () => {
     expect(
       await check(GREENHOUSE, () => {
-        greenhouseShows(filename('old-resume-2024.pdf'));
+        greenhouseShows(filename('sam-lee-resume.pdf (320 B)'));
       }),
-    ).toMatchObject({
-      kind: 'needsReview',
-      reason: 'otherFileShown',
-    });
+    ).toMatchObject({ kind: 'filled' });
   });
 
   it("is Couldn't fill when the form refused the file", async () => {
@@ -158,6 +169,27 @@ describe('confirmUploads on Greenhouse', () => {
       attachedAt: new Map(),
     });
     expect(outcome).toMatchObject({ kind: 'filled' });
+  });
+
+  // CodeRabbit on #4: a re-check started a new 5 s wait for the same stalled upload.
+  it('checks a Resume still uploading from an earlier execute once, without a new wait', async () => {
+    const planned = plan(document, profile, [], { url: GREENHOUSE, resume });
+    greenhouseShows(PROGRESS);
+    const uploading: FieldOutcome = {
+      kind: 'needsReview',
+      fieldId: 'resume',
+      fieldType: 'file.resume',
+      reason: 'fileUploading',
+    };
+    const started = Date.now();
+    const [outcome] = await confirmUploads([uploading], {
+      adapter: planned.context.adapter,
+      resume: resume.file,
+      planned: planned.fields,
+      attachedAt: new Map(),
+    });
+    expect(outcome).toMatchObject({ kind: 'needsReview', reason: 'fileUploading' });
+    expect(Date.now() - started).toBeLessThan(1_000);
   });
 });
 
@@ -193,10 +225,11 @@ describe('confirmUploads on other forms', () => {
     expect(await check(GENERIC)).toMatchObject({ kind: 'couldNotFill', reason: 'fileRejected' });
   });
 
-  it('stays Filled when the form shows nothing either way', async () => {
+  // CodeRabbit on #4: "Filled" means the form shows the file uploaded; here it shows nothing.
+  it('goes to review when the form shows nothing either way', async () => {
     render(`<form><label><span>Resume*</span><input type="file" name="resume_file"></label>
       <label>Email<input type="email" name="email"></label><button type="submit">Submit</button></form>`);
-    expect(await check(GENERIC)).toMatchObject({ kind: 'filled' });
+    expect(await check(GENERIC)).toMatchObject({ kind: 'needsReview', reason: 'fileUploadUnknown' });
   });
 
   it('reads Workday’s newest upload row', async () => {
