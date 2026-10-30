@@ -62,6 +62,7 @@ Agreed 2026-10-27. Terms in **bold** are defined in [GLOSSARY.md](../GLOSSARY.md
 **Sensitive questions**
 - **Self-ID Answers** and **Attestations** are never sent to the AI.
 - Self-ID questions are filled only from your own answers, which default to "decline".
+- When the rules don't recognise a Self-ID question, the AI may say which one it is, and what each option means, from the question's wording and options alone. The answer still comes from your Self-ID Answers, and the field always goes to Needs your review.
 - Attestations are never ticked automatically.
 - Questions about facts or willingness ("Willing to do a background check?") are filled from your Profile.
 
