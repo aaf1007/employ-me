@@ -164,13 +164,13 @@ function countriesInPart(part: string, byCity: boolean): CountryCode[] {
   const text = part.trim();
   if (text === '') return [];
   const named = COUNTRY_RES.filter(([, re]) => re.test(text)).map(([code]) => code);
-  if (named.length > 0) return named;
   // "City, ST": a trailing two-letter code. "CA" is California here, not Canada.
   const tail = /,\s*([A-Z]{2})\b/.exec(text)?.[1];
-  if (tail !== undefined) {
-    if (STATE_CODE.has(tail)) return ['US'];
-    if (PROVINCE_CODE.has(tail)) return ['CA'];
-  }
+  const region: CountryCode | undefined =
+    tail === undefined ? undefined : STATE_CODE.has(tail) ? 'US' : PROVINCE_CODE.has(tail) ? 'CA' : undefined;
+  // A region code beside a country name counts too: "Toronto, ON, United States" names both.
+  if (named.length > 0) return region === undefined || named.includes(region) ? named : [...named, region];
+  if (region !== undefined) return [region];
   if (PROVINCE_NAME.test(text)) return ['CA'];
   if (STATE_NAME.test(text)) return ['US'];
   if (!byCity) return [];

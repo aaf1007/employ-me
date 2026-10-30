@@ -85,6 +85,10 @@ describe('countriesIn', () => {
     ['London, UK; Ontario, CAN', ['GB', 'CA']],
     ['Munich - London', ['DE', 'GB']],
     ['Remote', []],
+    // CodeRabbit on #4: a region code beside a country name counts too, even when they disagree.
+    ['Toronto, ON, United States', ['US', 'CA']],
+    ['San Francisco, CA, United States', ['US']],
+    ['Vancouver, BC, Canada', ['CA']],
   ])('%s → %o', (location, countries) => {
     expect(countriesIn(location)).toEqual(countries);
   });

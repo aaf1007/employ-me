@@ -127,6 +127,11 @@ describe('plan', () => {
       postingDetails: { location: 'Cambridge, United Kingdom', country: 'US' },
     });
     expect(named.country).toEqual({ kind: 'unclear', candidates: ['US', 'GB'] });
+    const province = plan(document, profile, [], {
+      url: URL_US,
+      postingDetails: { location: 'Toronto, ON, United States', country: 'US' },
+    });
+    expect(province.country).toEqual({ kind: 'unclear', candidates: ['US', 'CA'] });
     const posting = readPosting(document, URL_US);
     if (posting === null) throw new Error('no Posting');
     const disagree = plan(document, profile, [], {
