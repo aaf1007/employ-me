@@ -4,6 +4,11 @@ import type { PanelDeps } from './deps';
 import { offeredAnswers } from './offered-answers';
 import type { PanelState, Store } from './state';
 
+export interface PendingOffer {
+  readonly generation: number;
+  readonly fields: readonly FieldView[];
+}
+
 /**
  * The offer to keep the answers you gave on the form, once an Application is
  * created (design.md "Keeping answers you gave on the form"). Opt-in per
@@ -34,16 +39,25 @@ export class AnswerOffer {
   }
 
   /**
-   * Offers what the Fill's fields, across its pages, and the form's last
-   * answers hold. Nothing shows when there is nothing to keep.
+   * What the offer is made from, taken when recording the Application starts:
+   * the Fill's fields across its pages, with your edits. A page you leave
+   * before the offer opens cancels it.
    */
-  async open(answers: readonly SubmittedAnswer[], employer: string | null): Promise<void> {
-    const generation = this.generation;
-    const fields = [...this.carried, ...this.withEdits()];
+  pending(): PendingOffer {
+    return { generation: this.generation, fields: [...this.carried, ...this.withEdits()] };
+  }
+
+  /** Offers what `pending` and the form's last answers hold. Nothing shows when there is nothing to keep. */
+  async open(
+    pending: PendingOffer,
+    answers: readonly SubmittedAnswer[],
+    employer: string | null,
+  ): Promise<void> {
+    if (pending.generation !== this.generation) return;
     // Your Saved Answers now, not when the form loaded: Drafts you accepted since are already kept.
     const profile = await this.deps.call('profile.get', {});
-    if (!profile.ok || generation !== this.generation) return;
-    const offered = offeredAnswers(fields, answers, profile.value.savedAnswers, employer);
+    if (!profile.ok || pending.generation !== this.generation) return;
+    const offered = offeredAnswers(pending.fields, answers, profile.value.savedAnswers, employer);
     this.store.set({
       offer:
         offered.length === 0

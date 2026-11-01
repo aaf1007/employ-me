@@ -63,7 +63,7 @@ function viewWith(): PanelState['view'] {
 describe('AnswerOffer', () => {
   it('keeps the employer with the offer it was made for', async () => {
     const { store, bg, offer } = setup('helper.health');
-    await offer.open(ANSWERS, 'acme');
+    await offer.open(offer.pending(), ANSWERS, 'acme');
     const open = store.get().offer;
     if (open.state !== 'open') expect.fail('no offer');
     offer.toggle(open.answers[0]?.key ?? '');
@@ -77,7 +77,7 @@ describe('AnswerOffer', () => {
     'a save that ends after you left the page changes nothing (save fails: %s)',
     async (saveFails) => {
       const { store, bg, offer } = setup('savedAnswers.saveFormAnswers', saveFails);
-      await offer.open(ANSWERS, 'acme');
+      await offer.open(offer.pending(), ANSWERS, 'acme');
       const open = store.get().offer;
       if (open.state !== 'open') expect.fail('no offer');
       offer.toggle(open.answers[0]?.key ?? '');
@@ -92,9 +92,20 @@ describe('AnswerOffer', () => {
     },
   );
 
+  // The offer is taken when recording starts: a page you leave while the Application is recorded cancels it.
+  it('an offer for a page you left while its Application was recorded doesn’t open', async () => {
+    const { store, offer } = setup('helper.health');
+    const pending = offer.pending();
+    offer.reset();
+    // The next page's Fill ran meanwhile, with the same question.
+    store.set({ view: viewWith() });
+    await offer.open(pending, ANSWERS, 'acme');
+    expect(store.get().offer).toEqual({ state: 'none' });
+  });
+
   it('an offer that would open after you left the page doesn’t', async () => {
     const { store, bg, offer } = setup('profile.get');
-    const opening = offer.open(ANSWERS, 'acme');
+    const opening = offer.open(offer.pending(), ANSWERS, 'acme');
     await settle();
     offer.reset();
     bg.release();

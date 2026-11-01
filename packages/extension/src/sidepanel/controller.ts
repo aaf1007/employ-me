@@ -361,6 +361,8 @@ export class PanelController {
   private async record(source: 'confirmation' | 'didYouApply'): Promise<void> {
     const { posting, view, submission, answers } = this.store.get();
     if (posting === null || submission.state === 'recording' || submission.state === 'recorded') return;
+    // Taken now: a page that loads while the Application is recorded must not get this form's offer.
+    const offer = this.answerOffer.pending();
     this.store.set({ submission: { state: 'recording' } });
     const details = await this.details;
     const submitted = mergeAnswers(this.carried, answers);
@@ -381,7 +383,10 @@ export class PanelController {
     }
     this.store.set({ submission: { state: 'recorded', application: application.value } });
     this.endSession();
-    await Promise.all([this.loadApplied(posting), this.answerOffer.open(submitted, posting.key.employer)]);
+    await Promise.all([
+      this.loadApplied(posting),
+      this.answerOffer.open(offer, submitted, posting.key.employer),
+    ]);
   }
 }
 
