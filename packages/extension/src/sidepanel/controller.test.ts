@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PanelController } from './controller';
+import type { BackgroundCall } from './deps';
 import { DETECTED, deps, fakeBackground, fakeTab, POSTING, PROFILE, settle } from './test-fakes';
 
 const application = {
@@ -282,6 +283,43 @@ describe('PanelController', () => {
           edited.length === 0 ? { state: 'none' } : { state: 'open', answers: [{ answer: 'My own words.' }] },
         );
       }
+    });
+
+    it('makes no offer on a form you moved to while the Application was being recorded', async () => {
+      const bg = background();
+      const waiting: (() => void)[] = [];
+      const recordingHeld = new Promise<void>((resolve) => {
+        waiting.push(resolve);
+      });
+      const call: BackgroundCall = async (type, payload) => {
+        if (type === 'applications.recordSubmission') await recordingHeld;
+        return bg.call(type, payload);
+      };
+      const { controller, tab, state } = await started(fakeTab(), { call, calls: bg.calls });
+      await controller.fill();
+      tab.emit({
+        type: 'answers',
+        answers: [{ label: 'why', fieldType: 'freeText.question', value: 'My own words.' }],
+        edited: [],
+      });
+      tab.emit({ type: 'submission', signal: 'confirmed' });
+      await settle();
+      expect(state().submission.state).toBe('recording');
+
+      // You move on to another form that asks the same question, and Fill it, before recording ends.
+      tab.navigate(DETECTED);
+      await vi.waitFor(() => {
+        expect(state().phase).toBe('ready');
+      });
+      await controller.fill();
+      expect(state().view?.fields.some((f) => f.fieldId === 'why')).toBe(true);
+
+      for (const resolve of waiting) resolve();
+      await vi.waitFor(() => {
+        expect(state().submission.state).toBe('recorded');
+      });
+      await settle();
+      expect(state().offer).toEqual({ state: 'none' });
     });
 
     it('saves nothing when you close it', async () => {
