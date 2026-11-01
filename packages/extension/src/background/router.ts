@@ -75,6 +75,7 @@ export function createRouter(deps: RouterDeps): Router {
     'applications.recordSubmission': (submission) =>
       withStore((store) => store.createApplication(submission)),
     'savedAnswers.saveAcceptedDraft': (draft) => withStore((store) => store.saveAcceptedDraft(draft)),
+    'savedAnswers.saveFormAnswers': (input) => withStore((store) => store.saveFormAnswers(input)),
 
     'helper.health': () => deps.helper.request('health', {}),
     'helper.parseResume': ({ resumeId }) =>

@@ -47,7 +47,7 @@ Agreed 2026-10-27. Terms in **bold** are defined in [GLOSSARY.md](../GLOSSARY.md
 **Who fills what**
 - Built-in rules fill the fields they recognize.
 - The AI sees field labels and options only, never your data. It uses them to match unfamiliar fields, and to choose an option when the rules can't.
-- **Saved Answers**: if a question matches word for word (ignoring case and punctuation), the answer fills automatically. If the AI only finds a similar one, it goes to review.
+- **Saved Answers**: if a question matches word for word (ignoring case and punctuation), the answer fills automatically. If the AI only finds a similar one, it goes to review. Your Profile comes first: a Saved Answer fills a question the rules recognise only when your Profile has no answer for it, and never one your Profile keeps per country or per company (Work Authorization, salary, whether you've worked there before), or your work history and education.
 
 **Drafts**
 - Required free-text questions are drafted during the Fill, all at once. Optional ones get a Draft button.
@@ -58,6 +58,15 @@ Agreed 2026-10-27. Terms in **bold** are defined in [GLOSSARY.md](../GLOSSARY.md
 - **Special cases:**
   - **AI-use policy questions:** if the form has one, drafting switches to "polish my draft".
   - **Cover-letter fields:** left empty and flagged, but the Draft button still works on them.
+
+**Keeping answers you gave on the form**
+- When an Application is created (the job site's confirmation, or yes to "Did you apply?"), the side panel offers: "Save N answers you typed or changed for next time?"
+- It lists the question and the answer you left in the form for each field that ended in Needs your review or Couldn't fill, or that you changed after the Fill. It skips fields your Profile answers; change those in your Profile.
+- It's opt-in, one answer at a time: each one has its own checkbox, unticked. Nothing is saved until you tick it and click Save, and closing the offer saves nothing.
+- A question that already has the same Saved Answer isn't listed. One with a different answer shows as an update, with the old answer beside it. If that employer has its own override, the override is what changes.
+- For a choice question ("How did you hear about us?"), the option's text is kept. A later form picks its closest option.
+- Never offered: Self-ID questions, Attestations, anything never stored, files and Resumes, cover letters, answers your Profile keeps per country or per company, your work history and education, and questions with several options ticked.
+- Saved Answers stay on your machine. Saving one sends nothing anywhere. Like any Saved Answer, it can later be used to write Drafts.
 
 **Sensitive questions**
 - **Self-ID Answers** and **Attestations** are never sent to the AI.
@@ -100,7 +109,7 @@ Agreed 2026-10-27. Terms in **bold** are defined in [GLOSSARY.md](../GLOSSARY.md
 - **Files:** labelled Resumes.
 - **Self-ID Answers** for each country.
 - **Common screening answers:** how you heard about the job, whether you were referred, whether you've worked there before (remembered per company), background-check willingness, non-compete.
-- **Saved Answers.**
+- **Saved Answers**: from Drafts you accepted, answers you kept from a form, or ones you typed in.
 
 **Never stored:** SIN/SSN, passwords, references, signatures, date of birth.
 

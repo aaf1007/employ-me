@@ -1,5 +1,7 @@
 import {
+  formAnswerFieldTypeSchema,
   isOrdinaryFieldType,
+  labelsMatch,
   sensitivityOf,
   type FieldMatch,
   type FieldType,
@@ -74,7 +76,11 @@ export function answerFor(
   if (fieldType !== 'unknown' && fieldType !== 'freeText.question') {
     const answer =
       countryAnswer(fieldType, field, classification.country, ctx) ?? factAnswer(fieldType, field, ctx);
-    return { fieldType, answer: answer ?? skip('unrecognizedField', 'Answer this one yourself.') };
+    const fallback = answer === null || answer.kind === 'skip' ? savedInstead(field, fieldType, ctx) : null;
+    return {
+      fieldType,
+      answer: fallback ?? answer ?? skip('unrecognizedField', 'Answer this one yourself.'),
+    };
   }
 
   const saved = savedAnswerFor(classification.savedAnswerId, ctx);
@@ -86,6 +92,18 @@ export function answerFor(
   // The AI has answered the field mapping and left this one out.
   if (provider.state === 'answered') return unrecognized(field, fieldType, provider);
   return { fieldType, answer: providerNeeded('mapping', provider) };
+}
+
+/**
+ * Your Profile comes first; a word-for-word Saved Answer fills a question the
+ * rules recognise only when the Profile has no answer for it (design.md "Who
+ * fills what"). Never one the Profile keeps per country or per company, a file
+ * or a cover letter: the types core refuses to keep from a form.
+ */
+function savedInstead(field: ExtractedField, fieldType: FieldType, ctx: AnswerContext): Answer | null {
+  if (!formAnswerFieldTypeSchema.safeParse(fieldType).success) return null;
+  const saved = ctx.savedAnswers.find((s) => labelsMatch(s.question, field.label));
+  return saved === undefined ? null : savedText(field, saved, ctx);
 }
 
 function acceptedAnswer(field: ExtractedField, accepted: string): Answer {

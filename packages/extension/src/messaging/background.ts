@@ -3,6 +3,7 @@ import {
   draftAnswerOutputSchema,
   draftContextSchema,
   employerKeySchema,
+  formAnswerSchema,
   healthResultSchema,
   helperErrorSchema,
   idSchema,
@@ -77,6 +78,21 @@ export const BACKGROUND_API = {
       employer: employerKeySchema.optional(),
     }),
     savedAnswerSchema,
+  ),
+  /**
+   * The answers you ticked in the side panel's offer once an Application was
+   * created (design.md "Keeping answers you gave on the form"). Each is
+   * parsed by core's formAnswerSchema, which refuses Self-ID, Attestation,
+   * never-stored, per-Posting, file and cover-letter fields and questions.
+   * Extension pages only: a job site's page must not write your Saved Answers.
+   */
+  'savedAnswers.saveFormAnswers': message(
+    'extensionPages',
+    z.strictObject({
+      answers: z.array(formAnswerSchema).min(1).max(500),
+      employer: employerKeySchema.optional(),
+    }),
+    z.array(savedAnswerSchema),
   ),
 
   // The helper. Extension pages only: a job site's page must not be able to

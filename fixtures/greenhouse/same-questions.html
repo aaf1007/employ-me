@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- Synthetic, for e2e/answer-offer.spec.ts: a Greenhouse-shaped form at
+     another employer that asks two of Geotab's questions word for word.
+     Not a recorded form. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Job Application for Backend Engineer at Northwind</title>
+  </head>
+  <body>
+    <h1>Backend Engineer</h1>
+    <form id="application-form" method="post" action="/northwind/jobs/7654330">
+      <label for="first_name">First Name *</label>
+      <input id="first_name" name="first_name" type="text" required />
+      <label for="email">Email *</label>
+      <input id="email" name="email" type="email" required />
+      <label for="question_4001">How many years of C# development experience do you have?</label>
+      <input id="question_4001" name="question_4001" type="text" maxlength="255" />
+      <label for="question_4002">What frameworks/libraries are you most proficient in?</label>
+      <textarea id="question_4002" name="question_4002" rows="4"></textarea>
+      <button type="submit">Submit application</button>
+    </form>
+  </body>
+</html>

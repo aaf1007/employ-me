@@ -83,6 +83,37 @@ describe('background router', () => {
     expect(value(await store.listSavedAnswers())).toHaveLength(1);
   });
 
+  // design.md "Keeping answers you gave on the form": the side panel's offer, never a job site's page.
+  it('keeps the answers you ticked from a form, and refuses sensitive ones or a content script', async () => {
+    const { send, store } = await setup();
+    const answer = { question: 'Which time zone are you in?', answer: 'Eastern', fieldType: 'unknown' };
+    expect(await send('savedAnswers.saveFormAnswers', { answers: [answer], employer: 'acme' })).toMatchObject(
+      {
+        ok: true,
+        value: [{ source: 'form', fieldType: 'unknown', answer: 'Eastern' }],
+      },
+    );
+    expect(await send('savedAnswers.saveFormAnswers', { answers: [answer] }, 'contentScript')).toMatchObject({
+      ok: false,
+      error: { reason: 'forbidden' },
+    });
+    for (const refused of [
+      { ...answer, fieldType: 'selfId.us.race' },
+      { ...answer, fieldType: 'attestation.consent' },
+      { ...answer, fieldType: 'never.dateOfBirth' },
+      { ...answer, fieldType: 'file.resume' },
+      { ...answer, fieldType: 'workAuth.sponsorship' },
+      { ...answer, question: 'Are you a protected veteran?' },
+      { ...answer, answer: ' ' },
+    ]) {
+      expect(
+        await send('savedAnswers.saveFormAnswers', { answers: [refused] }),
+        JSON.stringify(refused),
+      ).toMatchObject({ ok: false, error: { reason: 'invalidMessage' } });
+    }
+    expect(value(await store.listSavedAnswers())).toHaveLength(1);
+  });
+
   it('runs the helper with the Provider and model from Settings', async () => {
     const { send, store, helper } = await setup();
     value(await store.saveSettings({ provider: 'codex', models: { codex: 'gpt-5-codex' } }));
@@ -114,12 +145,13 @@ describe('background router', () => {
     expect(await send('helper.parseResume', {})).toMatchObject({ ok: false, error: { reason: 'notFound' } });
   });
 
-  it('lets only extension pages reach the helper: a job site must not spend your plan', async () => {
+  it('lets only extension pages reach the helper (a job site must not spend your plan) or keep answers from a form', async () => {
     const { send, helper } = await setup();
     const helperMessages = BACKGROUND_MESSAGE_TYPES.filter(
       (type) => BACKGROUND_API[type].audience === 'extensionPages',
     );
     expect(helperMessages).toEqual([
+      'savedAnswers.saveFormAnswers',
       'helper.health',
       'helper.parseResume',
       'helper.mapFields',

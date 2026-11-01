@@ -168,7 +168,12 @@ export const SESSION_PORT = 'employ-me/fill-session';
 
 export const sessionEventSchema = z.discriminatedUnion('type', [
   /** What the form shows now, sent as you edit it and when you press its buttons (before Submit navigates away). */
-  z.strictObject({ type: z.literal('answers'), answers: z.array(submittedAnswerSchema) }),
+  z.strictObject({
+    type: z.literal('answers'),
+    answers: z.array(submittedAnswerSchema),
+    /** Ids of the fields you changed on the page since the Fill wrote them: the answer offer lists them. */
+    edited: z.array(z.string()),
+  }),
   /** fill's watchForSubmission: the ATS confirmed, or you submitted and no confirmation came. */
   z.strictObject({ type: z.literal('submission'), signal: z.enum(['confirmed', 'unclear']) }),
   /** New fields appeared: the form's next step, or questions that follow from an answer. */

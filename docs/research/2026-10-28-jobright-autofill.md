@@ -36,7 +36,7 @@ Anything marked **[unverified]** came from one secondary source, or couldn't be 
    - The code fits these: answers come with no confidence, and coverage depends on a per-site list.
 7. **What employ-me should take** (§7, ranked by accuracy gain):
    1. Read back that the Resume actually uploaded, and that it's the Resume you chose.
-   2. Turn your own edits on the form into Saved Answers, locally and opt-in. Jobright does this server-side, at the Submit click.
+   2. Turn your own edits on the form into Saved Answers, locally and opt-in. Jobright does this server-side, at the Submit click. Done 2026-11-01.
    3. Searchable lists (schools, cities): try several search terms. Map field of study to Greenhouse's fixed list. Moved up from 5th.
    4. Wait for the page to go quiet, not a fixed 250 ms, before looking for conditional questions. New. Done 2026-10-30.
    5. Remember the Provider's field mappings locally.
@@ -310,6 +310,7 @@ Ranked by expected gain in accuracy. Each item gives the evidence, where it land
 - **Fit:** reads the page only. Act stays the only writer, and no network is added.
 
 ### 7.2 Your own edits become Saved Answers (opt-in, local)
+- **Done 2026-11-01** ([BUILD_LOG](../BUILD_LOG.md), design.md "Keeping answers you gave on the form"). What changed from the sketch below: the offer leaves out fields your Profile answers, since a later Fill fills those from the Profile, and a word-for-word Saved Answer now also fills a question the rules recognise when the Profile has no answer for it. Answers the Profile keeps per country or per company (Work Authorization, salary, worked here before), work history and education, files and cover letters are never kept this way. Each answer starts unticked.
 - **Evidence:**
   - Jobright users want "predetermined answers" so that autofill is "more predictable", and get wrong custom answers "all the time" (§4, §5).
   - **Shipped code:** Jobright's learning loop is exactly this comparison: what it filled against what you submit, taken at your Submit click (§3.6). It runs on its server, without asking, and with Self-ID answers included.

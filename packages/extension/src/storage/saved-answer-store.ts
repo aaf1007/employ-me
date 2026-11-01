@@ -188,7 +188,8 @@ function write(
   });
 }
 
-async function readAll(t: IDBTransaction): Promise<DataResult<SavedAnswer[]>> {
+/** The usable Saved Answers, read in transaction `t`. */
+export async function readAll(t: IDBTransaction): Promise<DataResult<SavedAnswer[]>> {
   const records = await readRecords(t);
   return records.ok ? ok(records.value.usable) : records;
 }
