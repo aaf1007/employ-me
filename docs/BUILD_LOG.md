@@ -596,9 +596,10 @@ Recommendation 2 of [the Jobright research](research/2026-10-28-jobright-autofil
 
 **Landed** (a test that failed first for each)
 - `sidepanel/answer-offer.ts`, from CodeRabbit's security summary: a save that failed after you navigated away restored the old offer with its ticks, while `reset()` had already cleared the employer, so a retry would have replaced the shared answer instead of that employer's override. An `open()` that finished after you left showed the old form's offer on the new page, and a late successful save showed "Kept" there. The employer now lives in the open offer's state, and `reset()` bumps a generation that `open()` and `save()` check after their await. `answer-offer.test.ts` covers the employer, both save outcomes, and a late open.
+- Same file, CodeRabbit's second pass: a page that loaded while the Application was being recorded reset the offer before `record()` called `open()`, so `open()` took the new page's generation and fields, with the old form's answers and employer. `AnswerOffer.pending()` now takes the generation and the fields when recording starts, and `open(pending, …)` does nothing once that page is gone. The new test fails when the generation is taken at `open()` instead.
 
 **Not changed**
 - CodeRabbit's docstring coverage warning (60% of touched functions, threshold 80%): CODING_STANDARDS.md "Comments" asks for sparse comments that explain why, so no docstrings were added to reach a number.
 
 **Checked**
-- `pnpm check`; e2e answer-offer, milestone-1 and side-panel: 9 of 9.
+- `pnpm check`; e2e answer-offer, milestone-1 and side-panel: 9 of 9; after the second pass, with generic-site too: 11 of 11.
