@@ -88,9 +88,12 @@ export function isHidden(el: Element): boolean {
 
 /** The parent element, stepping out of shadow roots to their host. */
 export function parentElement(el: Element): Element | null {
-  if (el.parentElement !== null) return el.parentElement;
-  const root = el.getRootNode();
-  return root.nodeType === 11 && 'host' in root && isElement(root.host) ? root.host : null;
+  return el.parentElement ?? shadowHost(el.getRootNode());
+}
+
+/** The host of `node` when it is a shadow root, else null. */
+export function shadowHost(node: Node): Element | null {
+  return node.nodeType === 11 && 'host' in node && isElement(node.host) ? node.host : null;
 }
 
 function isElement(value: unknown): value is Element {

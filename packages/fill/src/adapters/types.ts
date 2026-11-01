@@ -36,6 +36,11 @@ export interface AtsAdapter {
   readonly parsesResume: boolean;
   /** Resolves once the ATS has finished reading the Resume (or after a timeout). Read-only. */
   waitForResumeParse(form: Element): Promise<void>;
+  /**
+   * Resolves once a step that renders in batches has all its fields (or after
+   * a cap), before the Fill carries out the step's first plan. Read-only.
+   */
+  waitForStepReady(form: Element): Promise<void>;
   repeatingSections(form: Element): readonly RepeatingSection[];
   /** How radios and checkboxes are ticked on this ATS. */
   readonly checkStrategy: NonNullable<ActIntent['strategy']>;

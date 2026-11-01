@@ -1,9 +1,10 @@
 import type { FieldDescriptor, FieldOutcome, FieldType } from '@employ-me/core';
 import * as act from '../act';
-import { plan as planForm, type FillPlan, type PlannedField } from '../plan';
+import type { FillPlan, PlannedField } from '../plan';
 import { fieldFingerprint } from '../read';
 import { writeOutcome } from './outcome';
 import { buildReport, writeKey } from './report';
+import { readyStep, replan, settle } from './step';
 import { confirmUploads } from './upload';
 import { performWrite, type WriteContext } from './write';
 
@@ -47,7 +48,8 @@ const CONDITIONAL_ROUNDS = 2;
  * newly resolved, or resolved differently, are written, and a field the user
  * changed on the page since the last execute is never written again.
  */
-export async function execute(plan: FillPlan, previous?: FillReport): Promise<FillReport> {
+export async function execute(given: FillPlan, previous?: FillReport): Promise<FillReport> {
+  const plan = await readyStep(given, previous);
   const { adapter, doc } = plan.context;
   const resume = plan.context.options.resume?.file ?? null;
   const ctx: WriteContext = { adapter, resume };
@@ -91,7 +93,7 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
     for (const repeat of plan.repeats) {
       for (let entries = repeat.have; entries < repeat.want; entries++) {
         if (!(await act.pressAddAnother(repeat.button)).ok) break;
-        await settle();
+        await settle(current);
       }
     }
     current = replan(current);
@@ -110,7 +112,7 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
 
   for (const planned of current.fields) if (due(planned)) await write(planned);
   for (let round = 0; round < CONDITIONAL_ROUNDS; round++) {
-    await settle();
+    await settle(current);
     const next = replan(current);
     const appeared = next.fields.filter((f) => !seen.has(f.field.fieldId));
     current = next;
@@ -119,7 +121,7 @@ export async function execute(plan: FillPlan, previous?: FillReport): Promise<Fi
     noteEdits(appeared);
     for (const planned of appeared) if (due(planned)) await write(planned);
   }
-  // You may have changed a field while this ran (its settle waits are long enough to type in).
+  // You may have changed a field while this ran (each settle wait, up to QUIET_CAP_MS, is long enough to type in).
   // The report keeps what the page shows now, so see the edit before it's taken as the Fill's own.
   noteEdits(current.fields.filter((f) => !outcomes.has(f.field.fieldId)));
   const report = buildReport({
@@ -143,14 +145,4 @@ async function run(planned: PlannedField, ctx: WriteContext): Promise<FieldOutco
   if (step.kind !== 'write') throw new Error('run() needs a write step');
   const result = await performWrite(field, fieldType, step.write, ctx);
   return writeOutcome(planned, result);
-}
-
-function replan(previous: FillPlan): FillPlan {
-  const { doc, profile, savedAnswers, options } = previous.context;
-  return planForm(doc, profile, savedAnswers, options);
-}
-
-/** Lets the page's own scripts react (render new sections, conditional questions). */
-function settle(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 250));
 }
