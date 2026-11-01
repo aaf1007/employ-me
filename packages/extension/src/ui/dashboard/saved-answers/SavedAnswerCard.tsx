@@ -8,6 +8,7 @@ import { SavedAnswerEditor } from './SavedAnswerEditor';
 
 const SOURCE: Readonly<Record<SavedAnswer['source'], string>> = {
   draft: 'From a Draft you accepted',
+  form: 'Kept from an answer you gave on a form',
   manual: 'Added by you',
   import: 'Imported',
 };
