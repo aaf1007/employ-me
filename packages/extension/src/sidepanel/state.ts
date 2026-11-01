@@ -50,6 +50,8 @@ export type AnswerOfferState =
   | { readonly state: 'none' }
   | {
       readonly state: 'open';
+      /** The employer whose form it was: an update changes their override when they have one. */
+      readonly employer: string | null;
       readonly answers: readonly OfferedAnswer[];
       /** Keys of the answers you ticked. None are ticked to start with. */
       readonly ticked: readonly string[];

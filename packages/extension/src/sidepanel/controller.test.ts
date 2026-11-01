@@ -242,6 +242,7 @@ describe('PanelController', () => {
       const { controller, bg, state, offer } = await confirmed();
       expect({ ...offer, answers: offer.answers.map(({ key: _key, ...rest }) => rest) }).toEqual({
         state: 'open',
+        employer: POSTING.key.employer,
         answers: [
           {
             question: 'why',

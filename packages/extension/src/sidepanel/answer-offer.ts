@@ -11,7 +11,8 @@ import type { PanelState, Store } from './state';
  * Saving stays on the machine, through the background's Saved Answers.
  */
 export class AnswerOffer {
-  private employer: string | null = null;
+  /** Bumped when you leave the page: what an earlier page started then shows and changes nothing. */
+  private generation = 0;
   /** The Fill's fields on earlier pages of a form whose steps are separate pages. */
   private carried: readonly FieldView[] = [];
   /** Fields on this page you changed since the Fill wrote them (the content script's EditLog). */
@@ -37,17 +38,17 @@ export class AnswerOffer {
    * answers hold. Nothing shows when there is nothing to keep.
    */
   async open(answers: readonly SubmittedAnswer[], employer: string | null): Promise<void> {
+    const generation = this.generation;
     const fields = [...this.carried, ...this.withEdits()];
     // Your Saved Answers now, not when the form loaded: Drafts you accepted since are already kept.
     const profile = await this.deps.call('profile.get', {});
-    if (!profile.ok) return;
+    if (!profile.ok || generation !== this.generation) return;
     const offered = offeredAnswers(fields, answers, profile.value.savedAnswers, employer);
-    this.employer = employer;
     this.store.set({
       offer:
         offered.length === 0
           ? { state: 'none' }
-          : { state: 'open', answers: offered, ticked: [], saving: false },
+          : { state: 'open', employer, answers: offered, ticked: [], saving: false },
     });
   }
 
@@ -65,11 +66,13 @@ export class AnswerOffer {
     if (offer.state !== 'open' || offer.saving) return;
     const chosen = offer.answers.filter((a) => offer.ticked.includes(a.key));
     if (chosen.length === 0) return;
+    const generation = this.generation;
     this.store.set({ offer: { ...offer, saving: true }, notice: null });
     const saved = await this.deps.call('savedAnswers.saveFormAnswers', {
       answers: chosen.map(({ question, answer, fieldType }) => ({ question, answer, fieldType })),
-      ...(this.employer === null ? {} : { employer: this.employer }),
+      ...(offer.employer === null ? {} : { employer: offer.employer }),
     });
+    if (generation !== this.generation) return;
     if (!saved.ok) {
       this.store.set({
         offer: { ...offer, saving: false },
@@ -87,7 +90,7 @@ export class AnswerOffer {
 
   /** A new Fill, or another Posting. */
   reset(): void {
-    this.employer = null;
+    this.generation++;
     this.carried = [];
     this.edited = new Set();
     this.store.set({ offer: { state: 'none' } });
