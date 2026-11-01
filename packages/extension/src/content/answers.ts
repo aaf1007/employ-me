@@ -1,5 +1,11 @@
 import type { SubmittedAnswer } from '@employ-me/core';
-import { keptInSnapshot, readFieldValue, type PlannedField } from '@employ-me/fill';
+import {
+  fieldFingerprint,
+  keptInSnapshot,
+  readFieldValue,
+  type FillReport,
+  type PlannedField,
+} from '@employ-me/fill';
 
 /**
  * The answers a Snapshot keeps, across every step of the form: what each
@@ -25,5 +31,26 @@ export class AnswerLog {
       });
     }
     return planned.flatMap(({ field }) => this.byField.get(field.fieldId) ?? []);
+  }
+}
+
+/**
+ * The fields you changed on the page since the Fill wrote them, across every
+ * step of the form. The report only learns of an edit when the Fill plans
+ * again; this compares what each field shows now with what it showed when
+ * the Fill finished.
+ */
+export class EditLog {
+  private readonly edited = new Set<string>();
+
+  read(report: FillReport): string[] {
+    for (const id of report.userEdited) this.edited.add(id);
+    for (const { field } of report.planned) {
+      const before = report.values.get(field.fieldId);
+      // Gone from the page (an earlier step): keep what was seen then.
+      if (before === undefined || !field.element.isConnected) continue;
+      if (fieldFingerprint(field) !== before) this.edited.add(field.fieldId);
+    }
+    return [...this.edited];
   }
 }

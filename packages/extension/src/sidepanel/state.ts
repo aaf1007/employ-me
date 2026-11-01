@@ -1,6 +1,7 @@
 import type { Application, Posting, ResumeMeta, SubmittedAnswer } from '@employ-me/core';
 import type { Detected, DraftRequest, FillView } from '../messaging/content';
 import type { ApplicationSummary } from '../storage';
+import type { OfferedAnswer } from './offered-answers';
 
 /** A reason and a fix, as every error that reaches you carries (CODING_STANDARDS.md "Errors"). */
 export interface Notice {
@@ -44,6 +45,19 @@ export type SubmissionState =
   | { readonly state: 'recorded'; readonly application: Application }
   | { readonly state: 'declined' };
 
+/** "Save N answers you typed or changed for next time?" (design.md "Keeping answers you gave on the form"). */
+export type AnswerOfferState =
+  | { readonly state: 'none' }
+  | {
+      readonly state: 'open';
+      readonly answers: readonly OfferedAnswer[];
+      /** Keys of the answers you ticked. None are ticked to start with. */
+      readonly ticked: readonly string[];
+      readonly saving: boolean;
+    }
+  | { readonly state: 'saved'; readonly count: number }
+  | { readonly state: 'closed' };
+
 export interface PanelState {
   /** `unknownSite`: no content script on this page; Fill runs the generic fallback (design.md "Job sites"). */
   readonly phase: 'detecting' | 'noForm' | 'unknownSite' | 'ready';
@@ -66,6 +80,7 @@ export interface PanelState {
   readonly provider: ProviderState;
   readonly drafts: Readonly<Record<string, DraftState>>;
   readonly submission: SubmissionState;
+  readonly offer: AnswerOfferState;
   /** What the form last showed, across its steps: the Snapshot's answers. */
   readonly answers: readonly SubmittedAnswer[];
   readonly notice: Notice | null;
@@ -86,6 +101,7 @@ export const INITIAL_STATE: PanelState = {
   provider: { state: 'pending' },
   drafts: {},
   submission: { state: 'none' },
+  offer: { state: 'none' },
   answers: [],
   notice: null,
 };

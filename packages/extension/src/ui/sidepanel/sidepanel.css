@@ -193,3 +193,23 @@
   background: var(--filled);
   transition: width 0.2s ease-out;
 }
+
+.offered {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offered li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+
+.offered li > .small {
+  padding-left: 22px;
+}

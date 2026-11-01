@@ -14,7 +14,7 @@ import {
 import { callBackground } from '../messaging/background-client';
 import type { ContentError, FillView, ProviderFeedbackMessage, SessionEvent } from '../messaging/content';
 import { base64ToBytes } from '../storage';
-import { AnswerLog } from './answers';
+import { AnswerLog, EditLog } from './answers';
 import { watchPage } from './page-watch';
 import { toFillView } from './view';
 
@@ -42,6 +42,7 @@ export class FillSession {
   private inputs: FillInputs = { posting: null };
   private feedback: ProviderFeedback = {};
   private readonly answers = new AnswerLog();
+  private readonly edits = new EditLog();
   private stopWatching: (() => void) | null = null;
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -99,12 +100,10 @@ export class FillSession {
     let busy = false;
     this.stopWatching = watchPage(this.doc, adapter, () => this.knownFieldIds(), {
       onEdit: () => {
-        const report = this.report;
-        if (report !== null) this.emit({ type: 'answers', answers: this.answers.read(report.planned) });
+        this.emitAnswers();
       },
       onSubmission: (signal) => {
-        const report = this.report;
-        if (report !== null) this.emit({ type: 'answers', answers: this.answers.read(report.planned) });
+        this.emitAnswers();
         this.emit({ type: 'submission', signal: signal.kind });
       },
       onNewFields: () => {
@@ -116,6 +115,17 @@ export class FillSession {
           if (this.hasUnseenFields(adapter)) this.emit({ type: 'formChanged' });
         });
       },
+    });
+  }
+
+  /** What the form shows now, and which fields you changed: sent as you edit and before Submit navigates away. */
+  private emitAnswers(): void {
+    const report = this.report;
+    if (report === null) return;
+    this.emit({
+      type: 'answers',
+      answers: this.answers.read(report.planned),
+      edited: this.edits.read(report),
     });
   }
 

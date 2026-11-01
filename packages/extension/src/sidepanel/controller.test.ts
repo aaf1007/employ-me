@@ -172,7 +172,11 @@ describe('PanelController', () => {
   it('records the Application with its Snapshot when the job site confirms', async () => {
     const { controller, tab, bg, state } = await started();
     await controller.fill();
-    tab.emit({ type: 'answers', answers: [{ label: 'Name', fieldType: 'name.full', value: 'Sam Lee' }] });
+    tab.emit({
+      type: 'answers',
+      answers: [{ label: 'Name', fieldType: 'name.full', value: 'Sam Lee' }],
+      edited: [],
+    });
     tab.emit({ type: 'submission', signal: 'confirmed' });
     await settle();
 
@@ -189,6 +193,110 @@ describe('PanelController', () => {
     });
     expect(state().submission.state).toBe('recorded');
     expect(tab.sent.at(-1)?.type).toBe('endSession');
+  });
+
+  // design.md "Keeping answers you gave on the form".
+  describe('once the Application is created, offers the answers you gave', () => {
+    const kept = {
+      id: 's9',
+      question: 'why',
+      answer: 'My own words.',
+      fieldType: 'freeText.question',
+      source: 'form',
+      employerOverrides: {},
+      createdAt: '2026-10-28T12:00:00Z',
+      updatedAt: '2026-10-28T12:00:00Z',
+    };
+
+    async function confirmed(saveFails = false) {
+      const run = await started(
+        fakeTab(),
+        background({
+          'savedAnswers.saveFormAnswers': () =>
+            saveFails
+              ? {
+                  ok: false,
+                  error: { reason: 'storageFailed', message: 'Disk full', fix: 'Free some space.' },
+                }
+              : { ok: true, value: [kept] },
+        }),
+      );
+      await run.controller.fill();
+      // The Draft for "why" is ready (Needs your review), and you typed your own answer instead.
+      run.tab.emit({
+        type: 'answers',
+        answers: [
+          { label: 'name', fieldType: 'name.full', value: 'Sam Lee' },
+          { label: 'why', fieldType: 'freeText.question', value: 'My own words.' },
+        ],
+        edited: [],
+      });
+      run.tab.emit({ type: 'submission', signal: 'confirmed' });
+      await settle();
+      const offer = run.state().offer;
+      if (offer.state !== 'open') expect.fail(`no offer: ${offer.state}`);
+      return { ...run, offer };
+    }
+
+    it('lists them unticked, and keeps only the ones you tick', async () => {
+      const { controller, bg, state, offer } = await confirmed();
+      expect({ ...offer, answers: offer.answers.map(({ key: _key, ...rest }) => rest) }).toEqual({
+        state: 'open',
+        answers: [
+          {
+            question: 'why',
+            answer: 'My own words.',
+            fieldType: 'freeText.question',
+          },
+        ],
+        ticked: [],
+        saving: false,
+      });
+      await controller.answerOffer.save();
+      expect(bg.calls.some((c) => c.type === 'savedAnswers.saveFormAnswers')).toBe(false);
+
+      controller.answerOffer.toggle(offer.answers[0]?.key ?? '');
+      await controller.answerOffer.save();
+      expect(bg.calls.find((c) => c.type === 'savedAnswers.saveFormAnswers')?.payload).toEqual({
+        answers: [{ question: 'why', answer: 'My own words.', fieldType: 'freeText.question' }],
+        employer: POSTING.key.employer,
+      });
+      expect(state().offer).toEqual({ state: 'saved', count: 1 });
+    });
+
+    it('lists a field the Fill filled only once you changed it on the page', async () => {
+      for (const edited of [[], ['why']]) {
+        const run = await started(fakeTab(), background());
+        await run.controller.fill();
+        run.controller.drafts.setText('why', 'Because.');
+        await run.controller.drafts.accept('why');
+        run.tab.emit({
+          type: 'answers',
+          answers: [{ label: 'why', fieldType: 'freeText.question', value: 'My own words.' }],
+          edited,
+        });
+        run.tab.emit({ type: 'submission', signal: 'confirmed' });
+        await settle();
+        expect(run.state().offer, edited.join()).toMatchObject(
+          edited.length === 0 ? { state: 'none' } : { state: 'open', answers: [{ answer: 'My own words.' }] },
+        );
+      }
+    });
+
+    it('saves nothing when you close it', async () => {
+      const { controller, bg, state } = await confirmed();
+      controller.answerOffer.close();
+      expect(state().offer).toEqual({ state: 'closed' });
+      expect(bg.calls.some((c) => c.type === 'savedAnswers.saveFormAnswers')).toBe(false);
+    });
+
+    it('keeps the offer open, with the fix, when saving fails', async () => {
+      const { controller, state, offer } = await confirmed(true);
+      controller.answerOffer.toggle(offer.answers[0]?.key ?? '');
+      await controller.answerOffer.save();
+      expect(state().offer).toMatchObject({ state: 'open', saving: false, ticked: [offer.answers[0]?.key] });
+      expect(state().notice).toMatchObject({ fix: 'Free some space.' });
+    });
   });
 
   it('records the confirmation page a form submit loads (Lever /thanks)', async () => {

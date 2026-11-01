@@ -4,6 +4,7 @@ import { callBackground } from '../../messaging/background-client';
 import { fetchPublicPosting } from '../../net/ats-public-api';
 import { PanelController } from '../../sidepanel/controller';
 import { tabLink } from '../../sidepanel/tab-link';
+import { AnswerOfferCard } from './AnswerOfferCard';
 import { DebugReportButton } from './DebugReportButton';
 import { FillProgressBar } from './FillProgressBar';
 import { FrameAccessCard } from './FrameAccessCard';
@@ -54,6 +55,13 @@ export function FillPanel({ tabId }: { readonly tabId: number }) {
         controller={controller}
         openTracker={() => {
           openDashboard('tracker');
+        }}
+      />
+      <AnswerOfferCard
+        offer={state.offer}
+        controller={controller}
+        openSavedAnswers={() => {
+          openDashboard('saved-answers');
         }}
       />
       {notice === null ? null : (

@@ -1,6 +1,7 @@
 import { postingKeyId, type Posting, type Profile, type SubmittedAnswer } from '@employ-me/core';
 import type { PublicPostingDetails } from '@employ-me/fill';
 import type { Detected, SessionEvent } from '../messaging/content';
+import { AnswerOffer } from './answer-offer';
 import { buildDebugReport } from './debug-report';
 import type { PanelDeps } from './deps';
 import { FillFlow } from './fill-flow';
@@ -15,6 +16,8 @@ import { INITIAL_STATE, Store, type PanelState } from './state';
  */
 export class PanelController {
   readonly store = new Store<PanelState>(INITIAL_STATE);
+  /** Once the Application is created: keep the answers you gave on the form? */
+  readonly answerOffer: AnswerOffer;
   private readonly flow: FillFlow;
   private profile: Profile | null = null;
   private details: Promise<PublicPostingDetails | null> = Promise.resolve(null);
@@ -35,6 +38,7 @@ export class PanelController {
 
   constructor(private readonly deps: PanelDeps) {
     this.flow = new FillFlow(this.store, deps, () => this.profile);
+    this.answerOffer = new AnswerOffer(this.store, deps);
   }
 
   start(): void {
@@ -265,6 +269,7 @@ export class PanelController {
         this.closeSession = null;
         this.documentGone = true;
         this.carried = mergeAnswers(this.carried, this.store.get().answers);
+        this.answerOffer.carry();
       },
     );
   }
@@ -278,6 +283,7 @@ export class PanelController {
   private async onSessionEvent(event: SessionEvent): Promise<void> {
     switch (event.type) {
       case 'answers':
+        this.answerOffer.noteEdited(event.edited);
         this.store.set({ answers: event.answers });
         return;
       case 'submission':
@@ -311,6 +317,7 @@ export class PanelController {
     const open = view !== null && submission.state === 'none';
     if (!open) {
       this.flow.reset();
+      this.answerOffer.reset();
       this.carried = [];
       // A new page of a site employ-me doesn't know: it waits for your Fill click again.
       this.reached = false;
@@ -356,9 +363,10 @@ export class PanelController {
     if (posting === null || submission.state === 'recording' || submission.state === 'recorded') return;
     this.store.set({ submission: { state: 'recording' } });
     const details = await this.details;
+    const submitted = mergeAnswers(this.carried, answers);
     const { posting: recorded, snapshot } = submissionOf(
       withPageText(withPublicDetails(posting, details), this.store.get().detected?.pageText),
-      mergeAnswers(this.carried, answers),
+      submitted,
       view?.resume ?? null,
       this.deps.now(),
     );
@@ -373,7 +381,7 @@ export class PanelController {
     }
     this.store.set({ submission: { state: 'recorded', application: application.value } });
     this.endSession();
-    await this.loadApplied(posting);
+    await Promise.all([this.loadApplied(posting), this.answerOffer.open(submitted, posting.key.employer)]);
   }
 }
 
