@@ -591,3 +591,14 @@ Recommendation 2 of [the Jobright research](research/2026-10-28-jobright-autofil
 **Gotchas**
 - `FieldView.userEdited` is the report's, which only learns of an edit when the Fill plans again. Anything that needs "you changed it" at Submit time needs `edited` from the `answers` session event.
 - `expect.any(String)` inside an object literal fails `no-unsafe-assignment`; compare the objects with the key stripped instead of casting.
+
+## 2026-11-01 · CodeRabbit's review of #6: the answer offer and leaving its page (extension side panel)
+
+**Landed** (a test that failed first for each)
+- `sidepanel/answer-offer.ts`, from CodeRabbit's security summary: a save that failed after you navigated away restored the old offer with its ticks, while `reset()` had already cleared the employer, so a retry would have replaced the shared answer instead of that employer's override. An `open()` that finished after you left showed the old form's offer on the new page, and a late successful save showed "Kept" there. The employer now lives in the open offer's state, and `reset()` bumps a generation that `open()` and `save()` check after their await. `answer-offer.test.ts` covers the employer, both save outcomes, and a late open.
+
+**Not changed**
+- CodeRabbit's docstring coverage warning (60% of touched functions, threshold 80%): CODING_STANDARDS.md "Comments" asks for sparse comments that explain why, so no docstrings were added to reach a number.
+
+**Checked**
+- `pnpm check`; e2e answer-offer, milestone-1 and side-panel: 9 of 9.
