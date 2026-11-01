@@ -8,6 +8,7 @@ import { openDb } from './idb';
 import * as profile from './profile-store';
 import * as resumes from './resume-store';
 import type { RefusedSavedAnswer } from './saved-answer-records';
+import { saveFormAnswers, type FormAnswers } from './saved-answer-form';
 import * as savedAnswers from './saved-answer-store';
 import type {
   ApplicationSummary,
@@ -41,6 +42,7 @@ export interface DataStore {
   addSavedAnswer(answer: savedAnswers.NewSavedAnswer): Promise<DataResult<SavedAnswer>>;
   updateSavedAnswer(id: string, changes: savedAnswers.SavedAnswerChanges): Promise<DataResult<SavedAnswer>>;
   saveAcceptedDraft(draft: savedAnswers.AcceptedDraft): Promise<DataResult<SavedAnswer>>;
+  saveFormAnswers(input: FormAnswers): Promise<DataResult<SavedAnswer[]>>;
   deleteSavedAnswer(id: string): Promise<DataResult<null>>;
 
   listApplications(): Promise<DataResult<ApplicationSummary[]>>;
@@ -84,6 +86,7 @@ export function createDataStore(db: IDBDatabase, deps: StoreDeps): DataStore {
     addSavedAnswer: (answer) => savedAnswers.addSavedAnswer(ctx, answer),
     updateSavedAnswer: (id, changes) => savedAnswers.updateSavedAnswer(ctx, id, changes),
     saveAcceptedDraft: (draft) => savedAnswers.saveAcceptedDraft(ctx, draft),
+    saveFormAnswers: (input) => saveFormAnswers(ctx, input),
     deleteSavedAnswer: (id) => savedAnswers.deleteSavedAnswer(ctx, id),
 
     listApplications: () => applications.listApplications(ctx),
